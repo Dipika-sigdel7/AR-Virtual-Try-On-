@@ -43,7 +43,7 @@ router.get("/", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "Failed to load products."
+            message: error.message
         });
 
     }
@@ -80,7 +80,7 @@ router.get("/categories", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "Failed to load categories."
+            message: error.message
         });
 
     }
