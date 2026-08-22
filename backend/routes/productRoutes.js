@@ -4,10 +4,10 @@ const db = require("../config/db");
 const router = express.Router();
 
 
-/* =========================================
-   GET ALL PRODUCTS
-   USER
-========================================= */
+// =====================================================
+// GET ALL PRODUCTS
+// GET /api/products
+// =====================================================
 
 router.get("/", async (req, res) => {
 
@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
             FROM products p
             INNER JOIN categories c
                 ON p.category_id = c.id
-            WHERE p.is_available = TRUE
+            WHERE p.is_available = 1
             ORDER BY p.created_at DESC
         `);
 
@@ -51,10 +51,10 @@ router.get("/", async (req, res) => {
 });
 
 
-/* =========================================
-   GET CATEGORIES
-   ADMIN PRODUCT FORM
-========================================= */
+// =====================================================
+// GET CATEGORIES
+// GET /api/products/categories
+// =====================================================
 
 router.get("/categories", async (req, res) => {
 
@@ -66,7 +66,7 @@ router.get("/categories", async (req, res) => {
                 name,
                 description
             FROM categories
-            ORDER BY name
+            ORDER BY name ASC
         `);
 
         res.json({
@@ -88,15 +88,26 @@ router.get("/categories", async (req, res) => {
 });
 
 
-/* =========================================
-   GET SINGLE PRODUCT
-========================================= */
+// =====================================================
+// GET SINGLE PRODUCT
+// GET /api/products/:id
+// =====================================================
 
 router.get("/:id", async (req, res) => {
 
     try {
 
-        const { id } = req.params;
+        const productId = Number(req.params.id);
+
+        if (!Number.isInteger(productId)) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid product ID."
+            });
+
+        }
+
 
         const [products] = await db.execute(
             `
@@ -108,6 +119,7 @@ router.get("/:id", async (req, res) => {
                 p.stock,
                 p.rating,
                 p.is_available,
+                p.created_at,
                 c.id AS category_id,
                 c.name AS category_name
             FROM products p
@@ -115,8 +127,9 @@ router.get("/:id", async (req, res) => {
                 ON p.category_id = c.id
             WHERE p.id = ?
             `,
-            [id]
+            [productId]
         );
+
 
         if (products.length === 0) {
 
@@ -126,6 +139,7 @@ router.get("/:id", async (req, res) => {
             });
 
         }
+
 
         res.json({
             success: true,
