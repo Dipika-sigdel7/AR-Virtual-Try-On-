@@ -9,8 +9,12 @@ const PORT = process.env.PORT || 3000;
 /* =========================================
    ROUTES
 ========================================= */
-const adminProductRoutes = require("./routes/adminProductRoutes");
-const productRoutes = require("./routes/productRoutes");
+
+const adminProductRoutes =
+    require("./routes/adminProductRoutes");
+
+const productRoutes =
+    require("./routes/productRoutes");
 
 
 /* =========================================
@@ -27,40 +31,120 @@ app.use(
 
 
 /* =========================================
-   API ROUTES
+   FRONTEND PATHS
 ========================================= */
-app.use("/api/admin/products", adminProductRoutes);
-app.use("/api/products", productRoutes);
+
+const frontendPath =
+    path.join(__dirname, "../frontend");
+
+const pagesPath =
+    path.join(frontendPath, "pages");
 
 
 /* =========================================
-   STATIC ASSETS (css/js served from /css, /js)
+   STATIC FRONTEND FILES
 ========================================= */
 
-const frontendPath = path.join(__dirname, "../frontend");
-const pagesPath = path.join(frontendPath, "pages");
+app.use(
+    express.static(frontendPath)
+);
 
-app.use(express.static(frontendPath));
+
+/* =========================================
+   PRODUCT IMAGE UPLOADS
+========================================= */
+
+app.use(
+    "/uploads",
+    express.static(
+        path.join(__dirname, "uploads")
+    )
+);
+
+
+/* =========================================
+   API ROUTES
+========================================= */
+
+// Admin product management
+app.use(
+    "/api/admin/products",
+    adminProductRoutes
+);
+
+// Public product API
+app.use(
+    "/api/products",
+    productRoutes
+);
 
 
 /* =========================================
    PAGES
 ========================================= */
 
+// Home
 app.get("/", (req, res) => {
-    res.sendFile(path.join(pagesPath, "index.html"));
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "index.html"
+        )
+    );
+
 });
 
+
+// Products
 app.get("/products", (req, res) => {
-    res.sendFile(path.join(pagesPath, "products.html"));
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "products.html"
+        )
+    );
+
 });
 
+
+// Admin Dashboard
+app.get("/admin", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "admin.html"
+        )
+    );
+
+});
+
+
+// Services
 app.get("/services", (req, res) => {
-    res.sendFile(path.join(pagesPath, "services.html"));
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "services.html"
+        )
+    );
+
 });
 
+
+// About
 app.get("/about", (req, res) => {
-    res.sendFile(path.join(pagesPath, "about.html"));
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "about.html"
+        )
+    );
+
 });
 
 
@@ -69,5 +153,9 @@ app.get("/about", (req, res) => {
 ========================================= */
 
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+
+    console.log(
+        `Server running at http://localhost:${PORT}`
+    );
+
 });
