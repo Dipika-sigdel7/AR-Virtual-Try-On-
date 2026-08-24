@@ -26,108 +26,105 @@
 
 <body>
 
+    <!-- =====================================================
+         NAVBAR
+    ====================================================== -->
 
-<!-- =========================================================
-     NAVBAR
-========================================================= -->
+    <header class="navbar">
 
-<header class="navbar">
-
-    <div class="logo">
-        AR <span>Ecommerce</span>
-    </div>
-
-
-    <nav>
-
-        <a href="/">
-            Home
-        </a>
-
-        <a
-            href="/products"
-            class="active"
-        >
-            Products
-        </a>
-
-        <a href="/services">
-            Services
-        </a>
-
-        <a href="/about">
-            About
-        </a>
-
-    </nav>
+        <div class="logo">
+            AR <span>Ecommerce</span>
+        </div>
 
 
-    <!-- CART -->
+        <nav>
 
-    <div class="nav-actions">
+            <a href="/">
+                Home
+            </a>
 
-        <button
-            class="cart-btn"
-            id="cart-btn"
-            type="button"
-        >
+            <a
+                href="/products"
+                class="active"
+            >
+                Products
+            </a>
 
-            🛒
+            <a href="/services">
+                Services
+            </a>
 
-            <span>
-                Cart
-            </span>
+            <a href="/about">
+                About
+            </a>
 
-            <b id="cart-count">
-                0
-            </b>
-
-        </button>
-
-    </div>
-
-</header>
+        </nav>
 
 
+        <!-- CART -->
 
-<!-- =========================================================
-     PRODUCTS
-========================================================= -->
+        <div class="nav-actions">
 
-<main class="products-page">
+            <button
+                class="cart-btn"
+                id="cart-btn"
+                type="button"
+            >
 
+                🛒
 
-    <!-- PAGE HEADING -->
+                <span>
+                    Cart
+                </span>
 
-    <section class="page-heading">
+                <b id="cart-count">
+                    0
+                </b>
 
-        <p class="section-label">
-            OUR COLLECTION
-        </p>
+            </button>
 
-        <h1>
-            Featured Products
-        </h1>
+        </div>
 
-        <p>
-            Explore our products and experience
-            a smarter way of online shopping.
-        </p>
-
-    </section>
-
+    </header>
 
 
     <!-- =====================================================
-         PRODUCTS LOADED FROM DATABASE
+         PRODUCTS PAGE
     ====================================================== -->
 
-    <section class="products">
+    <main class="products-page">
 
-        <div
-            class="product-grid"
-            id="product-grid"
+
+        <!-- PAGE HEADING -->
+
+        <section class="products-heading">
+
+            <p class="section-label">
+                OUR COLLECTION
+            </p>
+
+            <h1>
+                Explore Our Products
+            </h1>
+
+            <p>
+                Browse products by category and find exactly
+                what you are looking for.
+            </p>
+
+        </section>
+
+
+        <!-- =================================================
+             CATEGORY PRODUCTS
+        ================================================== -->
+
+        <section
+            id="category-products"
+            class="category-products"
         >
+
+            <!-- Products will be loaded here by JavaScript -->
 
             <div class="products-loading">
 
@@ -139,110 +136,182 @@
 
             </div>
 
-        </div>
-
-    </section>
-
-</main>
+        </section>
 
 
-
-<!-- =========================================================
-     CART MODAL
-========================================================= -->
-
-<div
-    class="cart-modal"
-    id="cart-modal"
->
-
-    <div class="cart-content">
+    </main>
 
 
-        <!-- CART HEADER -->
+    <!-- =====================================================
+         CART MODAL
+    ====================================================== -->
 
-        <div class="cart-header">
+    <div
+        class="cart-modal"
+        id="cart-modal"
+    >
 
-            <h2>
-                🛒 Your Cart
-            </h2>
+        <div class="cart-content">
+
+            <div class="cart-header">
+
+                <h2>
+                    🛒 Your Cart
+                </h2>
+
+                <button
+                    class="cart-close"
+                    id="cart-close"
+                    type="button"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+
+            <div id="cart-items">
+
+                <p class="cart-empty">
+                    Your cart is empty.
+                </p>
+
+            </div>
+
+
+            <div class="cart-total">
+
+                <strong>
+                    Total:
+                </strong>
+
+                <strong id="cart-total">
+                    $0
+                </strong>
+
+            </div>
 
 
             <button
-                class="cart-close"
-                id="cart-close"
+                class="checkout-btn"
+                id="checkout-btn"
+                type="button"
+            >
+                Proceed to Checkout
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PRODUCT DETAILS MODAL
+    ====================================================== -->
+
+    <div
+        class="product-modal"
+        id="product-modal"
+    >
+
+        <div class="product-modal-content">
+
+            <button
+                class="modal-close"
+                id="modal-close"
                 type="button"
             >
                 ✕
             </button>
 
+
+            <div class="modal-product">
+
+                <div class="modal-product-image">
+
+                    <img
+                        id="modal-image"
+                        src=""
+                        alt="Product"
+                    >
+
+                </div>
+
+
+                <div class="modal-product-details">
+
+                    <p
+                        class="category"
+                        id="modal-category"
+                    >
+                    </p>
+
+
+                    <h2 id="modal-name">
+                    </h2>
+
+
+                    <h3 id="modal-price">
+                    </h3>
+
+
+                    <p id="modal-description">
+                    </p>
+
+
+                    <p
+                        id="modal-stock"
+                        class="modal-stock"
+                    >
+                    </p>
+
+
+                    <button
+                        id="modal-add-cart"
+                        class="add-btn modal-add-btn"
+                        type="button"
+                    >
+                        Add to Cart
+                    </button>
+
+                </div>
+
+            </div>
+
         </div>
-
-
-
-        <!-- CART ITEMS -->
-
-        <div id="cart-items">
-
-            <p class="cart-empty">
-                Your cart is empty.
-            </p>
-
-        </div>
-
-
-
-        <!-- TOTAL -->
-
-        <div class="cart-total">
-
-            <strong>
-                Total:
-            </strong>
-
-            <strong id="cart-total">
-                $0.00
-            </strong>
-
-        </div>
-
-
-
-        <!-- CHECKOUT -->
-
-        <button
-            class="checkout-btn"
-            id="checkout-btn"
-            type="button"
-        >
-            Proceed to Checkout
-        </button>
 
     </div>
 
-</div>
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer>
+
+        <div class="footer-logo">
+            AR Ecommerce
+        </div>
+
+        <p>
+            © 2026 AR Ecommerce. All rights reserved.
+        </p>
+
+    </footer>
 
 
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
 
-<!-- =========================================================
-     FOOTER
-========================================================= -->
+    <!-- IMPORTANT:
+         app.js first because it contains the common
+         cart functionality.
+    -->
 
-<footer>
+    <script src="/js/app.js"></script>
 
-    <div class="footer-logo">
-        AR Ecommerce
-    </div>
-
-    <p>
-        © 2026 AR Ecommerce. All Rights Reserved.
-    </p>
-
-</footer>
-
-
-
-<script src="/js/products.js"></script>
+    <script src="/js/products.js"></script>
 
 </body>
 
