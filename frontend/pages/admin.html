@@ -23,13 +23,18 @@
 
     <div class="admin-container">
 
-        <!-- HEADER -->
+        <!-- =========================
+             HEADER
+        ========================== -->
 
         <header class="admin-header">
 
-            <div>
+            <div class="admin-title">
+
                 <h1>AR E-Commerce</h1>
+
                 <p>Admin Dashboard</p>
+
             </div>
 
             <button
@@ -43,11 +48,13 @@
         </header>
 
 
-        <!-- LOGIN -->
+        <!-- =========================
+             LOGIN SECTION
+        ========================== -->
 
         <section
             id="loginSection"
-            class="card"
+            class="card login-card"
         >
 
             <h2>Admin Login</h2>
@@ -104,7 +111,9 @@
         </section>
 
 
-        <!-- DASHBOARD -->
+        <!-- =========================
+             ADMIN DASHBOARD
+        ========================== -->
 
         <section
             id="dashboardSection"
@@ -112,104 +121,30 @@
         >
 
 
-            <!-- CATEGORY MANAGEMENT -->
-
-            <div class="card">
-
-                <h2>Category Management</h2>
-
-                <p>
-                    Add categories for your products.
-                </p>
-
-                <form id="categoryForm">
-
-                    <div class="form-group">
-
-                        <label for="categoryName">
-                            Category Name
-                        </label>
-
-                        <input
-                            type="text"
-                            id="categoryName"
-                            placeholder="Example: Makeup"
-                            maxlength="100"
-                            required
-                        >
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label for="categoryDescription">
-                            Description
-                        </label>
-
-                        <textarea
-                            id="categoryDescription"
-                            rows="3"
-                            placeholder="Category description"
-                        ></textarea>
-
-                    </div>
-
-                    <button
-                        type="submit"
-                        id="addCategoryBtn"
-                        class="primary-btn"
-                    >
-                        Add Category
-                    </button>
-
-                </form>
-
-                <p
-                    id="categoryMessage"
-                    class="message"
-                ></p>
 
 
-                <!-- CATEGORY LIST -->
 
-                <div class="products-header">
+            <!-- =========================
+                 PRODUCT MANAGEMENT
+            ========================== -->
 
-                    <h3>
-                        Existing Categories
-                    </h3>
-
-                    <button
-                        type="button"
-                        id="refreshCategoriesBtn"
-                        class="secondary-btn"
-                    >
-                        Refresh
-                    </button>
-
-                </div>
-
-                <div
-                    id="adminCategoryList"
-                    class="admin-category-list"
-                >
-                    Loading categories...
-                </div>
-
-            </div>
-
-
-            <!-- PRODUCT MANAGEMENT -->
-
-            <div class="card">
+            <div class="card product-form-card">
 
                 <h2 id="formTitle">
                     Add Product
                 </h2>
 
+                <p>
+                    Add a new product to your store.
+                </p>
+
+
                 <form
                     id="productForm"
                     enctype="multipart/form-data"
                 >
+
+                    <!-- PRODUCT ID -->
 
                     <input
                         type="hidden"
@@ -217,7 +152,7 @@
                     >
 
 
-                    <!-- NAME -->
+                    <!-- PRODUCT NAME -->
 
                     <div class="form-group">
 
@@ -228,8 +163,10 @@
                         <input
                             type="text"
                             id="name"
+                            name="name"
                             placeholder="Enter product name"
                             maxlength="150"
+                            autocomplete="off"
                             required
                         >
 
@@ -246,7 +183,9 @@
 
                         <textarea
                             id="description"
+                            name="description"
                             rows="4"
+                            maxlength="1000"
                             placeholder="Enter product description"
                         ></textarea>
 
@@ -263,6 +202,7 @@
 
                         <select
                             id="category"
+                            name="category"
                             required
                         >
 
@@ -271,6 +211,10 @@
                             </option>
 
                         </select>
+
+                        <small>
+                            Categories added above will appear here automatically.
+                        </small>
 
                     </div>
 
@@ -286,6 +230,7 @@
                         <input
                             type="number"
                             id="price"
+                            name="price"
                             placeholder="Enter price"
                             min="0.01"
                             step="0.01"
@@ -306,6 +251,7 @@
                         <input
                             type="number"
                             id="stock"
+                            name="stock"
                             placeholder="Enter stock quantity"
                             min="0"
                             step="1"
@@ -313,10 +259,14 @@
                             required
                         >
 
+                        <small>
+                            Stock will automatically decrease when a customer purchases this product.
+                        </small>
+
                     </div>
 
 
-                    <!-- IMAGE -->
+                    <!-- PRODUCT IMAGE -->
 
                     <div class="form-group">
 
@@ -327,11 +277,12 @@
                         <input
                             type="file"
                             id="image"
+                            name="image"
                             accept="image/jpeg,image/png,image/webp,image/gif"
                         >
 
                         <small>
-                            JPG, PNG, WEBP or GIF — maximum 5 MB
+                            JPG, PNG, WEBP or GIF — maximum 5 MB.
                         </small>
 
                     </div>
@@ -345,7 +296,7 @@
                     ></div>
 
 
-                    <!-- BUTTONS -->
+                    <!-- FORM BUTTONS -->
 
                     <div class="form-buttons">
 
@@ -368,6 +319,7 @@
 
                 </form>
 
+
                 <p
                     id="productMessage"
                     class="message"
@@ -376,31 +328,44 @@
             </div>
 
 
-            <!-- EXISTING PRODUCTS -->
+            <!-- =========================
+                 EXISTING PRODUCTS
+            ========================== -->
 
             <div class="card">
 
                 <div class="products-header">
 
-                    <h2>
-                        Existing Products
-                    </h2>
+                    <div>
+
+                        <h2>
+                            Existing Products
+                        </h2>
+
+                        <p>
+                            View, edit and manage your products.
+                        </p>
+
+                    </div>
 
                     <button
                         type="button"
                         id="refreshBtn"
                         class="secondary-btn"
                     >
-                        Refresh
+                        ↻ Refresh
                     </button>
 
                 </div>
+
 
                 <div
                     id="productsContainer"
                     class="products-container"
                 >
-                    Loading products...
+                    <div class="loading-message">
+                        Loading products...
+                    </div>
                 </div>
 
             </div>
@@ -409,6 +374,144 @@
 
     </div>
 
+
+    <!-- =========================
+     CATEGORY BUTTON
+========================== -->
+
+<div class="category-bottom-section">
+
+    <button
+        type="button"
+        id="showCategoriesBtn"
+        class="add-categories-btn"
+    >
+        + Add Categories
+    </button>
+
+</div>
+
+
+<!-- =========================
+     CATEGORY MANAGEMENT
+========================== -->
+
+<div
+    id="categoryManagement"
+    class="card category-card hidden"
+>
+
+    <div class="products-header">
+
+        <div>
+
+            <h2>Category Management</h2>
+
+            <p>
+                Add and manage product categories.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            id="hideCategoriesBtn"
+            class="secondary-btn"
+        >
+            Close
+        </button>
+
+    </div>
+
+
+    <!-- ADD CATEGORY -->
+
+    <form id="categoryForm">
+
+        <div class="form-group">
+
+            <label for="categoryName">
+                Category Name
+            </label>
+
+            <input
+                type="text"
+                id="categoryName"
+                name="categoryName"
+                placeholder="Example: Makeup"
+                maxlength="100"
+                autocomplete="off"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="categoryDescription">
+                Description
+            </label>
+
+            <textarea
+                id="categoryDescription"
+                name="categoryDescription"
+                rows="3"
+                maxlength="500"
+                placeholder="Enter category description"
+            ></textarea>
+
+        </div>
+
+
+        <button
+            type="submit"
+            id="addCategoryBtn"
+            class="primary-btn"
+        >
+            + Add Category
+        </button>
+
+    </form>
+
+
+    <p
+        id="categoryMessage"
+        class="message"
+    ></p>
+
+
+    <!-- EXISTING CATEGORIES -->
+
+    <div class="products-header">
+
+        <h3>
+            Existing Categories
+        </h3>
+
+        <button
+            type="button"
+            id="refreshCategoriesBtn"
+            class="secondary-btn"
+        >
+            ↻ Refresh
+        </button>
+
+    </div>
+
+
+    <div
+        id="adminCategoryList"
+        class="admin-category-list"
+    >
+        Loading categories...
+    </div>
+
+</div>
+
+    <!-- =========================
+         ADMIN JAVASCRIPT
+    ========================== -->
 
     <script src="/js/admin.js"></script>
 

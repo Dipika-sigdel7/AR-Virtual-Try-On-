@@ -1,101 +1,214 @@
-const loginSection = document.getElementById("loginSection");
-const dashboardSection = document.getElementById("dashboardSection");
+/* =========================================================
+   ELEMENTS
+========================================================= */
 
-const loginForm = document.getElementById("loginForm");
-const adminTokenInput = document.getElementById("adminToken");
-const loginMessage = document.getElementById("loginMessage");
+const loginSection =
+    document.getElementById("loginSection");
 
-const productForm = document.getElementById("productForm");
-const productMessage = document.getElementById("productMessage");
+const dashboardSection =
+    document.getElementById("dashboardSection");
 
-const categorySelect = document.getElementById("category");
-const productsContainer = document.getElementById("productsContainer");
+const loginForm =
+    document.getElementById("loginForm");
 
-const imageInput = document.getElementById("image");
-const imagePreview = document.getElementById("imagePreview");
+const adminTokenInput =
+    document.getElementById("adminToken");
 
-const productIdInput = document.getElementById("productId");
-const formTitle = document.getElementById("formTitle");
+const loginMessage =
+    document.getElementById("loginMessage");
 
-const cancelBtn = document.getElementById("cancelBtn");
-const refreshBtn = document.getElementById("refreshBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+const productForm =
+    document.getElementById("productForm");
+
+const productMessage =
+    document.getElementById("productMessage");
+
+const categorySelect =
+    document.getElementById("category");
+
+const productsContainer =
+    document.getElementById("productsContainer");
+
+const imageInput =
+    document.getElementById("image");
+
+const imagePreview =
+    document.getElementById("imagePreview");
+
+const productIdInput =
+    document.getElementById("productId");
+
+const formTitle =
+    document.getElementById("formTitle");
+
+const cancelBtn =
+    document.getElementById("cancelBtn");
+
+const refreshBtn =
+    document.getElementById("refreshBtn");
+
+const logoutBtn =
+    document.getElementById("logoutBtn");
+
+const toggleToken =
+    document.getElementById("toggleToken");
 
 
-/* =========================================
+/* =========================================================
+   CATEGORY ELEMENTS
+========================================================= */
+
+const categoryForm =
+    document.getElementById("categoryForm");
+
+const categoryNameInput =
+    document.getElementById("categoryName");
+
+const categoryDescriptionInput =
+    document.getElementById("categoryDescription");
+
+const categoryMessage =
+    document.getElementById("categoryMessage");
+
+const addCategoryBtn =
+    document.getElementById("addCategoryBtn");
+
+const adminCategoryList =
+    document.getElementById("adminCategoryList");
+
+const refreshCategoriesBtn =
+    document.getElementById("refreshCategoriesBtn");
+
+const showCategoriesBtn =
+    document.getElementById("showCategoriesBtn");
+
+const hideCategoriesBtn =
+    document.getElementById("hideCategoriesBtn");
+
+const categoryManagement =
+    document.getElementById("categoryManagement");
+
+
+/* =========================================================
    ADMIN TOKEN
-========================================= */
+========================================================= */
 
-let adminToken = localStorage.getItem("adminToken");
+let adminToken =
+    localStorage.getItem("adminToken");
 
 
-/* =========================================
+/* =========================================================
    INITIAL PAGE
-========================================= */
+========================================================= */
 
 if (adminToken) {
+
     showDashboard();
+
+} else {
+
+    loginSection.classList.remove("hidden");
+
+    dashboardSection.classList.add("hidden");
+
+    logoutBtn.style.display = "none";
+
 }
 
 
-/* =========================================
+/* =========================================================
    LOGIN
-========================================= */
+========================================================= */
 
-loginForm.addEventListener("submit", async function (event) {
+loginForm.addEventListener(
+    "submit",
+    async function (event) {
 
-    event.preventDefault();
+        event.preventDefault();
 
-    const token = adminTokenInput.value.trim();
+        const token =
+            adminTokenInput.value.trim();
 
-    if (!token) {
-        loginMessage.textContent = "Please enter your admin token.";
-        return;
-    }
 
-    try {
-
-        loginMessage.textContent = "Checking token...";
-
-        const response = await fetch("/api/admin/products", {
-            method: "GET",
-            headers: {
-                "x-admin-token": token
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
+        if (!token) {
 
             loginMessage.textContent =
-                data.message || "Invalid admin token.";
+                "Please enter your admin token.";
 
             return;
         }
 
-        localStorage.setItem("adminToken", token);
 
-        adminToken = token;
+        try {
 
-        loginMessage.textContent = "";
+            loginMessage.textContent =
+                "Checking token...";
 
-        showDashboard();
 
-    } catch (error) {
+            const response =
+                await fetch(
+                    "/api/admin/products",
+                    {
+                        method: "GET",
 
-        console.error("LOGIN ERROR:", error);
+                        headers: {
+                            "x-admin-token": token
+                        }
+                    }
+                );
 
-        loginMessage.textContent =
-            "Unable to connect to server.";
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                loginMessage.textContent =
+                    data.message ||
+                    "Invalid admin token.";
+
+                return;
+            }
+
+
+            localStorage.setItem(
+                "adminToken",
+                token
+            );
+
+
+            adminToken =
+                token;
+
+
+            loginMessage.textContent =
+                "";
+
+
+            showDashboard();
+
+
+        } catch (error) {
+
+            console.error(
+                "LOGIN ERROR:",
+                error
+            );
+
+
+            loginMessage.textContent =
+                "Unable to connect to server.";
+
+        }
+
     }
+);
 
-});
 
-
-/* =========================================
+/* =========================================================
    SHOW DASHBOARD
-========================================= */
+========================================================= */
 
 async function showDashboard() {
 
@@ -105,31 +218,48 @@ async function showDashboard() {
 
     logoutBtn.style.display = "block";
 
+
     await loadCategories();
 
     await loadProducts();
+
 }
 
 
-/* =========================================
+/* =========================================================
    LOAD CATEGORIES
-========================================= */
+========================================================= */
 
 async function loadCategories() {
 
     try {
 
-        const response = await fetch(
-            "/api/products/categories"
-        );
+        categorySelect.innerHTML = `
+            <option value="">
+                Loading categories...
+            </option>
+        `;
 
-        const data = await response.json();
+
+        const response =
+            await fetch(
+                "/api/products/categories"
+            );
+
+
+        const data =
+            await response.json();
+
 
         if (!response.ok || !data.success) {
+
             throw new Error(
-                data.message || "Failed to load categories"
+                data.message ||
+                "Failed to load categories."
             );
+
         }
+
 
         categorySelect.innerHTML = `
             <option value="">
@@ -137,17 +267,46 @@ async function loadCategories() {
             </option>
         `;
 
-        data.categories.forEach(function (category) {
 
-            const option =
-                document.createElement("option");
+        if (
+            !data.categories ||
+            data.categories.length === 0
+        ) {
 
-            option.value = category.id;
-            option.textContent = category.name;
+            categorySelect.innerHTML = `
+                <option value="">
+                    No categories available
+                </option>
+            `;
 
-            categorySelect.appendChild(option);
+            return;
+        }
 
-        });
+
+        data.categories.forEach(
+            function (category) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    category.id;
+
+
+                option.textContent =
+                    category.name;
+
+
+                categorySelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
 
     } catch (error) {
 
@@ -156,18 +315,21 @@ async function loadCategories() {
             error
         );
 
+
         categorySelect.innerHTML = `
             <option value="">
                 Failed to load categories
             </option>
         `;
+
     }
+
 }
 
 
-/* =========================================
+/* =========================================================
    LOAD PRODUCTS
-========================================= */
+========================================================= */
 
 async function loadProducts() {
 
@@ -176,26 +338,39 @@ async function loadProducts() {
         productsContainer.innerHTML =
             "<p>Loading products...</p>";
 
-        const response = await fetch(
-            "/api/admin/products",
-            {
-                headers: {
-                    "x-admin-token": adminToken
-                }
-            }
-        );
 
-        const data = await response.json();
+        const response =
+            await fetch(
+                "/api/admin/products",
+                {
+                    method: "GET",
+
+                    headers: {
+                        "x-admin-token":
+                            adminToken
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
 
         if (!response.ok) {
 
             throw new Error(
                 data.message ||
-                "Failed to load products"
+                "Failed to load products."
             );
+
         }
 
-        displayProducts(data.products);
+
+        displayProducts(
+            data.products
+        );
+
 
     } catch (error) {
 
@@ -204,19 +379,28 @@ async function loadProducts() {
             error
         );
 
-        productsContainer.innerHTML =
-            `<p>${escapeHTML(error.message)}</p>`;
+
+        productsContainer.innerHTML = `
+            <p>
+                ${escapeHTML(error.message)}
+            </p>
+        `;
+
     }
+
 }
 
 
-/* =========================================
+/* =========================================================
    DISPLAY PRODUCTS
-========================================= */
+========================================================= */
 
 function displayProducts(products) {
 
-    if (!products || products.length === 0) {
+    if (
+        !products ||
+        products.length === 0
+    ) {
 
         productsContainer.innerHTML =
             "<p>No products found.</p>";
@@ -224,85 +408,118 @@ function displayProducts(products) {
         return;
     }
 
-    productsContainer.innerHTML = "";
 
-    products.forEach(function (product) {
+    productsContainer.innerHTML =
+        "";
 
-        const card =
-            document.createElement("div");
 
-        card.className = "product-card";
+    products.forEach(
+        function (product) {
 
-        card.innerHTML = `
+            const card =
+                document.createElement(
+                    "div"
+                );
 
-            <div class="product-card-content">
 
-                <h3>
-                    ${escapeHTML(product.name)}
-                </h3>
+            card.className =
+                "product-card";
 
-                <p>
-                    ${escapeHTML(
-                        product.description || ""
-                    )}
-                </p>
 
-                <p>
-                    <strong>Price:</strong>
-                    Rs. ${Number(product.price).toFixed(2)}
-                </p>
+            card.innerHTML = `
 
-                <p>
-                    <strong>Category:</strong>
-                    ${escapeHTML(
-                        product.category_name || ""
-                    )}
-                </p>
+                <div class="product-card-content">
 
-                <p>
-                    <strong>Stock:</strong>
-                    ${product.stock}
-                </p>
+                    <h3>
+                        ${escapeHTML(
+                            product.name
+                        )}
+                    </h3>
 
-                <p>
-                    <strong>Available:</strong>
-                    ${
-                        Number(product.is_available) === 1
-                            ? "Yes"
-                            : "No"
-                    }
-                </p>
 
-                <div class="product-actions">
+                    <p>
+                        ${escapeHTML(
+                            product.description || ""
+                        )}
+                    </p>
 
-                    <button
-                        class="edit-btn"
-                        onclick="editProduct(${product.id})"
-                    >
-                        Edit
-                    </button>
 
-                    <button
-                        class="delete-btn"
-                        onclick="deleteProduct(${product.id})"
-                    >
-                        Delete
-                    </button>
+                    <p>
+                        <strong>Price:</strong>
+                        Rs.
+                        ${Number(
+                            product.price
+                        ).toFixed(2)}
+                    </p>
+
+
+                    <p>
+                        <strong>Category:</strong>
+                        ${escapeHTML(
+                            product.category_name || ""
+                        )}
+                    </p>
+
+
+                    <p>
+                        <strong>Stock:</strong>
+                        ${Number(
+                            product.stock || 0
+                        )}
+                    </p>
+
+
+                    <p>
+                        <strong>Available:</strong>
+                        ${
+                            Number(
+                                product.is_available
+                            ) === 1
+                                ? "Yes"
+                                : "No"
+                        }
+                    </p>
+
+
+                    <div class="product-actions">
+
+                        <button
+                            type="button"
+                            class="edit-btn"
+                            onclick="editProduct(${product.id})"
+                        >
+                            Edit
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="delete-btn"
+                            onclick="deleteProduct(${product.id})"
+                        >
+                            Delete
+                        </button>
+
+                    </div>
 
                 </div>
 
-            </div>
-        `;
+            `;
 
-        productsContainer.appendChild(card);
 
-    });
+            productsContainer.appendChild(
+                card
+            );
+
+        }
+    );
+
 }
 
 
-/* =========================================
+/* =========================================================
    ADD / UPDATE PRODUCT
-========================================= */
+========================================================= */
 
 productForm.addEventListener(
     "submit",
@@ -310,28 +527,42 @@ productForm.addEventListener(
 
         event.preventDefault();
 
+
         const productId =
             productIdInput.value;
 
+
         const name =
-            document.getElementById("name")
-                .value.trim();
+            document.getElementById(
+                "name"
+            ).value.trim();
+
 
         const description =
-            document.getElementById("description")
-                .value.trim();
+            document.getElementById(
+                "description"
+            ).value.trim();
+
 
         const category_id =
             categorySelect.value;
 
+
         const price =
-            document.getElementById("price")
-                .value;
+            document.getElementById(
+                "price"
+            ).value;
+
 
         const stock =
-            document.getElementById("stock")
-                .value;
+            document.getElementById(
+                "stock"
+            ).value;
 
+
+        /* -------------------------
+           VALIDATION
+        ------------------------- */
 
         if (!name) {
 
@@ -341,6 +572,7 @@ productForm.addEventListener(
             return;
         }
 
+
         if (!category_id) {
 
             productMessage.textContent =
@@ -349,7 +581,11 @@ productForm.addEventListener(
             return;
         }
 
-        if (!price || Number(price) <= 0) {
+
+        if (
+            !price ||
+            Number(price) <= 0
+        ) {
 
             productMessage.textContent =
                 "Price must be greater than 0.";
@@ -357,7 +593,11 @@ productForm.addEventListener(
             return;
         }
 
-        if (Number(stock) < 0) {
+
+        if (
+            stock === "" ||
+            Number(stock) < 0
+        ) {
 
             productMessage.textContent =
                 "Stock cannot be negative.";
@@ -365,6 +605,10 @@ productForm.addEventListener(
             return;
         }
 
+
+        /* -------------------------
+           PRODUCT DATA
+        ------------------------- */
 
         const productData = {
 
@@ -381,6 +625,7 @@ productForm.addEventListener(
 
             stock:
                 Number(stock)
+
         };
 
 
@@ -392,33 +637,41 @@ productForm.addEventListener(
                     : "Adding product...";
 
 
-            const url = productId
-                ? `/api/admin/products/${productId}`
-                : "/api/admin/products";
+            const url =
+                productId
+                    ? `/api/admin/products/${productId}`
+                    : "/api/admin/products";
 
 
-            const method = productId
-                ? "PUT"
-                : "POST";
+            const method =
+                productId
+                    ? "PUT"
+                    : "POST";
 
 
-            const response = await fetch(
-                url,
-                {
-                    method: method,
+            const response =
+                await fetch(
+                    url,
+                    {
+                        method: method,
 
-                    headers: {
-                        "Content-Type":
-                            "application/json",
+                        headers: {
 
-                        "x-admin-token":
-                            adminToken
-                    },
+                            "Content-Type":
+                                "application/json",
 
-                    body:
-                        JSON.stringify(productData)
-                }
-            );
+                            "x-admin-token":
+                                adminToken
+
+                        },
+
+                        body:
+                            JSON.stringify(
+                                productData
+                            )
+
+                    }
+                );
 
 
             const data =
@@ -429,16 +682,19 @@ productForm.addEventListener(
 
                 throw new Error(
                     data.message ||
-                    "Failed to save product"
+                    "Failed to save product."
                 );
+
             }
 
 
             productMessage.textContent =
-                data.message;
+                data.message ||
+                "Product saved successfully.";
 
 
             resetForm();
+
 
             await loadProducts();
 
@@ -450,31 +706,36 @@ productForm.addEventListener(
                 error
             );
 
+
             productMessage.textContent =
                 error.message;
+
         }
 
     }
 );
 
 
-/* =========================================
+/* =========================================================
    EDIT PRODUCT
-========================================= */
+========================================================= */
 
 async function editProduct(id) {
 
     try {
 
-        const response = await fetch(
-            `/api/admin/products/${id}`,
-            {
-                headers: {
-                    "x-admin-token":
-                        adminToken
+        const response =
+            await fetch(
+                `/api/admin/products/${id}`,
+                {
+                    method: "GET",
+
+                    headers: {
+                        "x-admin-token":
+                            adminToken
+                    }
                 }
-            }
-        );
+            );
 
 
         const data =
@@ -485,8 +746,9 @@ async function editProduct(id) {
 
             throw new Error(
                 data.message ||
-                "Failed to load product"
+                "Failed to load product."
             );
+
         }
 
 
@@ -497,19 +759,32 @@ async function editProduct(id) {
         productIdInput.value =
             product.id;
 
-        document.getElementById("name").value =
+
+        document.getElementById(
+            "name"
+        ).value =
             product.name;
 
-        document.getElementById("description").value =
+
+        document.getElementById(
+            "description"
+        ).value =
             product.description || "";
+
 
         categorySelect.value =
             product.category_id;
 
-        document.getElementById("price").value =
+
+        document.getElementById(
+            "price"
+        ).value =
             product.price;
 
-        document.getElementById("stock").value =
+
+        document.getElementById(
+            "stock"
+        ).value =
             product.stock;
 
 
@@ -517,12 +792,15 @@ async function editProduct(id) {
             "Edit Product";
 
 
-        imagePreview.innerHTML = "";
+        imagePreview.innerHTML =
+            "";
 
 
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
+        document.getElementById(
+            "productForm"
+        ).scrollIntoView({
+            behavior: "smooth",
+            block: "start"
         });
 
 
@@ -533,14 +811,19 @@ async function editProduct(id) {
             error
         );
 
-        alert(error.message);
+
+        alert(
+            error.message
+        );
+
     }
+
 }
 
 
-/* =========================================
+/* =========================================================
    DELETE PRODUCT
-========================================= */
+========================================================= */
 
 async function deleteProduct(id) {
 
@@ -557,17 +840,18 @@ async function deleteProduct(id) {
 
     try {
 
-        const response = await fetch(
-            `/api/admin/products/${id}`,
-            {
-                method: "DELETE",
+        const response =
+            await fetch(
+                `/api/admin/products/${id}`,
+                {
+                    method: "DELETE",
 
-                headers: {
-                    "x-admin-token":
-                        adminToken
+                    headers: {
+                        "x-admin-token":
+                            adminToken
+                    }
                 }
-            }
-        );
+            );
 
 
         const data =
@@ -578,12 +862,17 @@ async function deleteProduct(id) {
 
             throw new Error(
                 data.message ||
-                "Failed to delete product"
+                "Failed to delete product."
             );
+
         }
 
 
-        alert(data.message);
+        alert(
+            data.message ||
+            "Product deleted successfully."
+        );
+
 
         await loadProducts();
 
@@ -595,14 +884,19 @@ async function deleteProduct(id) {
             error
         );
 
-        alert(error.message);
+
+        alert(
+            error.message
+        );
+
     }
+
 }
 
 
-/* =========================================
-   IMAGE PREVIEW ONLY
-========================================= */
+/* =========================================================
+   IMAGE PREVIEW
+========================================================= */
 
 imageInput.addEventListener(
     "change",
@@ -614,43 +908,63 @@ imageInput.addEventListener(
 
         if (!file) {
 
-            imagePreview.innerHTML = "";
+            imagePreview.innerHTML =
+                "";
 
             return;
         }
 
 
         const allowedTypes = [
+
             "image/jpeg",
             "image/png",
             "image/webp",
             "image/gif"
+
         ];
 
 
-        if (!allowedTypes.includes(file.type)) {
+        if (
+            !allowedTypes.includes(
+                file.type
+            )
+        ) {
 
             alert(
                 "Only JPG, PNG, WEBP and GIF images are allowed."
             );
 
-            imageInput.value = "";
 
-            imagePreview.innerHTML = "";
+            imageInput.value =
+                "";
+
+
+            imagePreview.innerHTML =
+                "";
+
 
             return;
         }
 
 
-        if (file.size > 5 * 1024 * 1024) {
+        if (
+            file.size >
+            5 * 1024 * 1024
+        ) {
 
             alert(
                 "Image must be smaller than 5 MB."
             );
 
-            imageInput.value = "";
 
-            imagePreview.innerHTML = "";
+            imageInput.value =
+                "";
+
+
+            imagePreview.innerHTML =
+                "";
+
 
             return;
         }
@@ -664,10 +978,12 @@ imageInput.addEventListener(
             function (event) {
 
                 imagePreview.innerHTML = `
+
                     <img
                         src="${event.target.result}"
                         alt="Image Preview"
                     >
+
                 `;
 
             };
@@ -679,9 +995,9 @@ imageInput.addEventListener(
 );
 
 
-/* =========================================
+/* =========================================================
    CANCEL / RESET
-========================================= */
+========================================================= */
 
 cancelBtn.addEventListener(
     "click",
@@ -697,21 +1013,28 @@ function resetForm() {
 
     productForm.reset();
 
-    productIdInput.value = "";
+
+    productIdInput.value =
+        "";
+
 
     formTitle.textContent =
         "Add Product";
 
-    imagePreview.innerHTML = "";
 
-    productMessage.textContent = "";
+    imagePreview.innerHTML =
+        "";
+
+
+    productMessage.textContent =
+        "";
 
 }
 
 
-/* =========================================
-   REFRESH
-========================================= */
+/* =========================================================
+   REFRESH PRODUCTS
+========================================================= */
 
 refreshBtn.addEventListener(
     "click",
@@ -723,9 +1046,9 @@ refreshBtn.addEventListener(
 );
 
 
-/* =========================================
+/* =========================================================
    LOGOUT
-========================================= */
+========================================================= */
 
 logoutBtn.addEventListener(
     "click",
@@ -735,103 +1058,186 @@ logoutBtn.addEventListener(
             "adminToken"
         );
 
-        adminToken = null;
+
+        adminToken =
+            null;
+
 
         dashboardSection.classList.add(
             "hidden"
         );
 
+
         loginSection.classList.remove(
             "hidden"
         );
 
-        adminTokenInput.value = "";
+
+        logoutBtn.style.display =
+            "none";
+
+
+        adminTokenInput.value =
+            "";
+
 
         resetForm();
+
+
+        /*
+         * Also close category management
+         */
+
+        if (categoryManagement) {
+
+            categoryManagement.classList.add(
+                "hidden"
+            );
+
+        }
 
     }
 );
 
 
-/* =========================================
-   HTML ESCAPE
-========================================= */
+/* =========================================================
+   SHOW / HIDE ADMIN TOKEN
+========================================================= */
 
-function escapeHTML(value) {
+if (toggleToken) {
 
-    const div =
-        document.createElement("div");
+    toggleToken.addEventListener(
+        "click",
+        function () {
 
-    div.textContent =
-        value ?? "";
+            if (
+                adminTokenInput.type ===
+                "password"
+            ) {
 
-    return div.innerHTML;
+                adminTokenInput.type =
+                    "text";
+
+
+                toggleToken.textContent =
+                    "🙈";
+
+
+                toggleToken.setAttribute(
+                    "aria-label",
+                    "Hide token"
+                );
+
+            } else {
+
+                adminTokenInput.type =
+                    "password";
+
+
+                toggleToken.textContent =
+                    "👁";
+
+
+                toggleToken.setAttribute(
+                    "aria-label",
+                    "Show token"
+                );
+
+            }
+
+        }
+    );
+
 }
 
-/* =========================================
-   SHOW / HIDE ADMIN TOKEN
-========================================= */
 
-const tokenInput = document.getElementById("adminToken");
-const toggleToken = document.getElementById("toggleToken");
+/* =========================================================
+   CATEGORY MANAGEMENT
+   SHOW
+========================================================= */
 
-toggleToken.addEventListener("click", function () {
+if (showCategoriesBtn) {
 
-    if (tokenInput.type === "password") {
+    showCategoriesBtn.addEventListener(
+        "click",
+        async function () {
 
-        tokenInput.type = "text";
-
-        toggleToken.textContent = "🙈";
-        toggleToken.setAttribute("aria-label", "Hide token");
-
-    } else {
-
-        tokenInput.type = "password";
-
-        toggleToken.textContent = "👁";
-        toggleToken.setAttribute("aria-label", "Show token");
-
-    }
-
-});
+            categoryManagement.classList.remove(
+                "hidden"
+            );
 
 
-// =========================================
-// CATEGORY MANAGEMENT
-// =========================================
-
-const categoryNameInput =
-    document.querySelector("#category-name");
-
-const categoryDescriptionInput =
-    document.querySelector("#category-description");
-
-const addCategoryButton =
-    document.querySelector("#add-category-btn");
-
-const adminCategoryList =
-    document.querySelector("#admin-category-list");
+            categoryManagement.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
 
 
-// =========================================
-// LOAD CATEGORIES
-// =========================================
+            await loadAdminCategories();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CATEGORY MANAGEMENT
+   HIDE
+========================================================= */
+
+if (hideCategoriesBtn) {
+
+    hideCategoriesBtn.addEventListener(
+        "click",
+        function () {
+
+            categoryManagement.classList.add(
+                "hidden"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   LOAD ADMIN CATEGORIES
+========================================================= */
 
 async function loadAdminCategories() {
 
+    if (!adminCategoryList) {
+        return;
+    }
+
+
     try {
 
-        const response = await fetch(
-            "/api/products/categories"
-        );
-
-        const data = await response.json();
+        adminCategoryList.innerHTML = `
+            <p>Loading categories...</p>
+        `;
 
 
-        if (!data.success) {
+        const response =
+            await fetch(
+                "/api/products/categories"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
 
             throw new Error(
-                data.message || "Failed to load categories."
+                data.message ||
+                "Failed to load categories."
             );
 
         }
@@ -849,9 +1255,12 @@ async function loadAdminCategories() {
             error
         );
 
+
         adminCategoryList.innerHTML = `
             <p>
-                Failed to load categories.
+                ${escapeHTML(
+                    error.message
+                )}
             </p>
         `;
 
@@ -860,13 +1269,18 @@ async function loadAdminCategories() {
 }
 
 
-// =========================================
-// DISPLAY CATEGORIES
-// =========================================
+/* =========================================================
+   DISPLAY ADMIN CATEGORIES
+========================================================= */
 
-function displayAdminCategories(categories) {
+function displayAdminCategories(
+    categories
+) {
 
-    if (!categories || categories.length === 0) {
+    if (
+        !categories ||
+        categories.length === 0
+    ) {
 
         adminCategoryList.innerHTML = `
             <p>
@@ -878,45 +1292,66 @@ function displayAdminCategories(categories) {
     }
 
 
-    adminCategoryList.innerHTML = "";
+    adminCategoryList.innerHTML =
+        "";
 
 
-    categories.forEach(category => {
+    categories.forEach(
+        function (category) {
 
-        const card =
-            document.createElement("div");
-
-        card.className =
-            "admin-category-card";
-
-
-        card.innerHTML = `
-
-            <h4>
-                ${category.name}
-            </h4>
-
-            <p>
-                ${category.description || "No description"}
-            </p>
-
-            <button
-                type="button"
-                class="delete-category-btn"
-                data-id="${category.id}"
-            >
-                Delete
-            </button>
-
-        `;
+            const card =
+                document.createElement(
+                    "div"
+                );
 
 
-        adminCategoryList.appendChild(card);
+            card.className =
+                "admin-category-card";
 
-    });
+
+            card.innerHTML = `
+
+                <div class="category-info">
+
+                    <h4>
+                        ${escapeHTML(
+                            category.name
+                        )}
+                    </h4>
 
 
-    // Delete buttons
+                    <p>
+                        ${escapeHTML(
+                            category.description ||
+                            "No description"
+                        )}
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="delete-category-btn"
+                    data-id="${category.id}"
+                >
+                    Delete
+                </button>
+
+            `;
+
+
+            adminCategoryList.appendChild(
+                card
+            );
+
+        }
+    );
+
+
+    /*
+     * Add delete events
+     */
 
     const deleteButtons =
         document.querySelectorAll(
@@ -924,122 +1359,198 @@ function displayAdminCategories(categories) {
         );
 
 
-    deleteButtons.forEach(button => {
+    deleteButtons.forEach(
+        function (button) {
 
-        button.addEventListener(
-            "click",
-            () => {
+            button.addEventListener(
+                "click",
+                function () {
 
-                const categoryId =
-                    button.dataset.id;
+                    const categoryId =
+                        button.dataset.id;
 
-                deleteCategory(categoryId);
 
-            }
-        );
+                    deleteCategory(
+                        categoryId
+                    );
 
-    });
+                }
+            );
+
+        }
+    );
 
 }
 
 
-// =========================================
-// ADD CATEGORY
-// =========================================
+/* =========================================================
+   ADD CATEGORY
+========================================================= */
 
-addCategoryButton.addEventListener(
-    "click",
-    async () => {
+if (categoryForm) {
 
-        const name =
-            categoryNameInput.value.trim();
+    categoryForm.addEventListener(
+        "submit",
+        async function (event) {
 
-        const description =
-            categoryDescriptionInput.value.trim();
+            event.preventDefault();
 
 
-        if (!name) {
-
-            alert(
-                "Please enter a category name."
-            );
-
-            categoryNameInput.focus();
-
-            return;
-        }
+            const name =
+                categoryNameInput.value.trim();
 
 
-        try {
-
-            const response =
-                await fetch(
-                    "/api/admin/categories",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-                            name,
-                            description
-                        })
-                    }
-                );
+            const description =
+                categoryDescriptionInput.value.trim();
 
 
-            const data =
-                await response.json();
+            if (!name) {
 
+                categoryMessage.textContent =
+                    "Please enter a category name.";
 
-            if (!response.ok || !data.success) {
+                categoryNameInput.focus();
 
-                throw new Error(
-                    data.message ||
-                    "Failed to add category."
-                );
-
+                return;
             }
 
 
-            alert(
-                "Category added successfully."
-            );
+            try {
+
+                categoryMessage.textContent =
+                    "Adding category...";
 
 
-            categoryNameInput.value = "";
-
-            categoryDescriptionInput.value = "";
-
-
-            loadAdminCategories();
+                addCategoryBtn.disabled =
+                    true;
 
 
-        } catch (error) {
+                const response =
+                    await fetch(
+                        "/api/admin/categories",
+                        {
+                            method: "POST",
 
-            console.error(
-                "ADD CATEGORY ERROR:",
-                error
-            );
+                            headers: {
 
-            alert(
-                error.message
-            );
+                                "Content-Type":
+                                    "application/json",
+
+                                "x-admin-token":
+                                    adminToken
+
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    name:
+                                        name,
+
+                                    description:
+                                        description ||
+                                        null
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    throw new Error(
+                        data.message ||
+                        "Failed to add category."
+                    );
+
+                }
+
+
+                categoryMessage.textContent =
+                    data.message ||
+                    "Category added successfully.";
+
+
+                categoryNameInput.value =
+                    "";
+
+
+                categoryDescriptionInput.value =
+                    "";
+
+
+                /*
+                 * Reload category list
+                 */
+
+                await loadAdminCategories();
+
+
+                /*
+                 * Reload product dropdown
+                 */
+
+                await loadCategories();
+
+
+            } catch (error) {
+
+                console.error(
+                    "ADD CATEGORY ERROR:",
+                    error
+                );
+
+
+                categoryMessage.textContent =
+                    error.message;
+
+
+            } finally {
+
+                addCategoryBtn.disabled =
+                    false;
+
+            }
 
         }
+    );
 
-    }
-);
+}
 
 
-// =========================================
-// DELETE CATEGORY
-// =========================================
+/* =========================================================
+   REFRESH CATEGORIES
+========================================================= */
 
-async function deleteCategory(categoryId) {
+if (refreshCategoriesBtn) {
+
+    refreshCategoriesBtn.addEventListener(
+        "click",
+        async function () {
+
+            await loadAdminCategories();
+
+            await loadCategories();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   DELETE CATEGORY
+========================================================= */
+
+async function deleteCategory(
+    categoryId
+) {
 
     const confirmed =
         confirm(
@@ -1058,7 +1569,12 @@ async function deleteCategory(categoryId) {
             await fetch(
                 `/api/admin/categories/${categoryId}`,
                 {
-                    method: "DELETE"
+                    method: "DELETE",
+
+                    headers: {
+                        "x-admin-token":
+                            adminToken
+                    }
                 }
             );
 
@@ -1067,7 +1583,10 @@ async function deleteCategory(categoryId) {
             await response.json();
 
 
-        if (!response.ok || !data.success) {
+        if (
+            !response.ok ||
+            !data.success
+        ) {
 
             throw new Error(
                 data.message ||
@@ -1077,12 +1596,23 @@ async function deleteCategory(categoryId) {
         }
 
 
-        alert(
-            "Category deleted successfully."
-        );
+        categoryMessage.textContent =
+            data.message ||
+            "Category deleted successfully.";
 
 
-        loadAdminCategories();
+        /*
+         * Refresh category list
+         */
+
+        await loadAdminCategories();
+
+
+        /*
+         * Refresh product category dropdown
+         */
+
+        await loadCategories();
 
 
     } catch (error) {
@@ -1092,17 +1622,31 @@ async function deleteCategory(categoryId) {
             error
         );
 
-        alert(
-            error.message
-        );
+
+        categoryMessage.textContent =
+            error.message;
 
     }
 
 }
 
 
-// =========================================
-// INITIAL LOAD
-// =========================================
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
 
-loadAdminCategories();
+function escapeHTML(value) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        value ?? "";
+
+
+    return div.innerHTML;
+
+}
