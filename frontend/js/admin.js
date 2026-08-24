@@ -76,17 +76,23 @@ const addCategoryBtn =
 const adminCategoryList =
     document.getElementById("adminCategoryList");
 
-const refreshCategoriesBtn =
-    document.getElementById("refreshCategoriesBtn");
-
-const showCategoriesBtn =
-    document.getElementById("showCategoriesBtn");
-
 const hideCategoriesBtn =
     document.getElementById("hideCategoriesBtn");
 
 const categoryManagement =
     document.getElementById("categoryManagement");
+
+const addMoreCategoriesBtn =
+    document.getElementById("addMoreCategoriesBtn");
+
+const openCategoryFormBtn =
+    document.getElementById("openCategoryFormBtn");
+
+const cancelCategoryBtn =
+    document.getElementById("cancelCategoryBtn");
+
+const categoryFormWrapper =
+    document.getElementById("categoryFormWrapper");
 
 
 /* =========================================================
@@ -107,11 +113,30 @@ if (adminToken) {
 
 } else {
 
-    loginSection.classList.remove("hidden");
+    if (loginSection) {
 
-    dashboardSection.classList.add("hidden");
+        loginSection.classList.remove(
+            "hidden"
+        );
 
-    logoutBtn.style.display = "none";
+    }
+
+
+    if (dashboardSection) {
+
+        dashboardSection.classList.add(
+            "hidden"
+        );
+
+    }
+
+
+    if (logoutBtn) {
+
+        logoutBtn.style.display =
+            "none";
+
+    }
 
 }
 
@@ -120,90 +145,98 @@ if (adminToken) {
    LOGIN
 ========================================================= */
 
-loginForm.addEventListener(
-    "submit",
-    async function (event) {
+if (loginForm) {
 
-        event.preventDefault();
+    loginForm.addEventListener(
+        "submit",
+        async function (event) {
 
-        const token =
-            adminTokenInput.value.trim();
-
-
-        if (!token) {
-
-            loginMessage.textContent =
-                "Please enter your admin token.";
-
-            return;
-        }
+            event.preventDefault();
 
 
-        try {
-
-            loginMessage.textContent =
-                "Checking token...";
+            const token =
+                adminTokenInput.value.trim();
 
 
-            const response =
-                await fetch(
-                    "/api/admin/products",
-                    {
-                        method: "GET",
-
-                        headers: {
-                            "x-admin-token": token
-                        }
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (!response.ok) {
+            if (!token) {
 
                 loginMessage.textContent =
-                    data.message ||
-                    "Invalid admin token.";
+                    "Please enter your admin token.";
 
                 return;
+
             }
 
 
-            localStorage.setItem(
-                "adminToken",
-                token
-            );
+            try {
+
+                loginMessage.textContent =
+                    "Checking token...";
 
 
-            adminToken =
-                token;
+                const response =
+                    await fetch(
+                        "/api/admin/products",
+                        {
+                            method: "GET",
+
+                            headers: {
+                                "x-admin-token":
+                                    token
+                            }
+                        }
+                    );
 
 
-            loginMessage.textContent =
-                "";
+                const data =
+                    await response.json();
 
 
-            showDashboard();
+                if (!response.ok) {
+
+                    loginMessage.textContent =
+                        data.message ||
+                        "Invalid admin token.";
+
+                    return;
+
+                }
 
 
-        } catch (error) {
-
-            console.error(
-                "LOGIN ERROR:",
-                error
-            );
+                localStorage.setItem(
+                    "adminToken",
+                    token
+                );
 
 
-            loginMessage.textContent =
-                "Unable to connect to server.";
+                adminToken =
+                    token;
+
+
+                loginMessage.textContent =
+                    "";
+
+
+                await showDashboard();
+
+
+            } catch (error) {
+
+                console.error(
+                    "LOGIN ERROR:",
+                    error
+                );
+
+
+                loginMessage.textContent =
+                    "Unable to connect to server.";
+
+            }
 
         }
+    );
 
-    }
-);
+}
 
 
 /* =========================================================
@@ -212,11 +245,30 @@ loginForm.addEventListener(
 
 async function showDashboard() {
 
-    loginSection.classList.add("hidden");
+    if (loginSection) {
 
-    dashboardSection.classList.remove("hidden");
+        loginSection.classList.add(
+            "hidden"
+        );
 
-    logoutBtn.style.display = "block";
+    }
+
+
+    if (dashboardSection) {
+
+        dashboardSection.classList.remove(
+            "hidden"
+        );
+
+    }
+
+
+    if (logoutBtn) {
+
+        logoutBtn.style.display =
+            "block";
+
+    }
 
 
     await loadCategories();
@@ -231,6 +283,11 @@ async function showDashboard() {
 ========================================================= */
 
 async function loadCategories() {
+
+    if (!categorySelect) {
+        return;
+    }
+
 
     try {
 
@@ -251,7 +308,10 @@ async function loadCategories() {
             await response.json();
 
 
-        if (!response.ok || !data.success) {
+        if (
+            !response.ok ||
+            !data.success
+        ) {
 
             throw new Error(
                 data.message ||
@@ -280,6 +340,7 @@ async function loadCategories() {
             `;
 
             return;
+
         }
 
 
@@ -332,6 +393,11 @@ async function loadCategories() {
 ========================================================= */
 
 async function loadProducts() {
+
+    if (!productsContainer) {
+        return;
+    }
+
 
     try {
 
@@ -406,6 +472,7 @@ function displayProducts(products) {
             "<p>No products found.</p>";
 
         return;
+
     }
 
 
@@ -521,199 +588,207 @@ function displayProducts(products) {
    ADD / UPDATE PRODUCT
 ========================================================= */
 
-productForm.addEventListener(
-    "submit",
-    async function (event) {
+if (productForm) {
 
-        event.preventDefault();
+    productForm.addEventListener(
+        "submit",
+        async function (event) {
 
-
-        const productId =
-            productIdInput.value;
+            event.preventDefault();
 
 
-        const name =
-            document.getElementById(
-                "name"
-            ).value.trim();
+            const productId =
+                productIdInput.value;
 
 
-        const description =
-            document.getElementById(
-                "description"
-            ).value.trim();
+            const name =
+                document.getElementById(
+                    "name"
+                ).value.trim();
 
 
-        const category_id =
-            categorySelect.value;
+            const description =
+                document.getElementById(
+                    "description"
+                ).value.trim();
 
 
-        const price =
-            document.getElementById(
-                "price"
-            ).value;
+            const category_id =
+                categorySelect.value;
 
 
-        const stock =
-            document.getElementById(
-                "stock"
-            ).value;
+            const price =
+                document.getElementById(
+                    "price"
+                ).value;
 
 
-        /* -------------------------
-           VALIDATION
-        ------------------------- */
-
-        if (!name) {
-
-            productMessage.textContent =
-                "Product name is required.";
-
-            return;
-        }
+            const stock =
+                document.getElementById(
+                    "stock"
+                ).value;
 
 
-        if (!category_id) {
+            /* -------------------------
+               VALIDATION
+            ------------------------- */
 
-            productMessage.textContent =
-                "Please select a category.";
+            if (!name) {
 
-            return;
-        }
+                productMessage.textContent =
+                    "Product name is required.";
 
-
-        if (
-            !price ||
-            Number(price) <= 0
-        ) {
-
-            productMessage.textContent =
-                "Price must be greater than 0.";
-
-            return;
-        }
-
-
-        if (
-            stock === "" ||
-            Number(stock) < 0
-        ) {
-
-            productMessage.textContent =
-                "Stock cannot be negative.";
-
-            return;
-        }
-
-
-        /* -------------------------
-           PRODUCT DATA
-        ------------------------- */
-
-        const productData = {
-
-            name: name,
-
-            description:
-                description || null,
-
-            category_id:
-                Number(category_id),
-
-            price:
-                Number(price),
-
-            stock:
-                Number(stock)
-
-        };
-
-
-        try {
-
-            productMessage.textContent =
-                productId
-                    ? "Updating product..."
-                    : "Adding product...";
-
-
-            const url =
-                productId
-                    ? `/api/admin/products/${productId}`
-                    : "/api/admin/products";
-
-
-            const method =
-                productId
-                    ? "PUT"
-                    : "POST";
-
-
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: method,
-
-                        headers: {
-
-                            "Content-Type":
-                                "application/json",
-
-                            "x-admin-token":
-                                adminToken
-
-                        },
-
-                        body:
-                            JSON.stringify(
-                                productData
-                            )
-
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.message ||
-                    "Failed to save product."
-                );
+                return;
 
             }
 
 
-            productMessage.textContent =
-                data.message ||
-                "Product saved successfully.";
+            if (!category_id) {
+
+                productMessage.textContent =
+                    "Please select a category.";
+
+                return;
+
+            }
 
 
-            resetForm();
+            if (
+                !price ||
+                Number(price) <= 0
+            ) {
+
+                productMessage.textContent =
+                    "Price must be greater than 0.";
+
+                return;
+
+            }
 
 
-            await loadProducts();
+            if (
+                stock === "" ||
+                Number(stock) < 0
+            ) {
+
+                productMessage.textContent =
+                    "Stock cannot be negative.";
+
+                return;
+
+            }
 
 
-        } catch (error) {
+            /* -------------------------
+               PRODUCT DATA
+            ------------------------- */
 
-            console.error(
-                "SAVE PRODUCT ERROR:",
-                error
-            );
+            const productData = {
+
+                name: name,
+
+                description:
+                    description || null,
+
+                category_id:
+                    Number(category_id),
+
+                price:
+                    Number(price),
+
+                stock:
+                    Number(stock)
+
+            };
 
 
-            productMessage.textContent =
-                error.message;
+            try {
+
+                productMessage.textContent =
+                    productId
+                        ? "Updating product..."
+                        : "Adding product...";
+
+
+                const url =
+                    productId
+                        ? `/api/admin/products/${productId}`
+                        : "/api/admin/products";
+
+
+                const method =
+                    productId
+                        ? "PUT"
+                        : "POST";
+
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method: method,
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json",
+
+                                "x-admin-token":
+                                    adminToken
+
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    productData
+                                )
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.message ||
+                        "Failed to save product."
+                    );
+
+                }
+
+
+                productMessage.textContent =
+                    data.message ||
+                    "Product saved successfully.";
+
+
+                resetForm();
+
+
+                await loadProducts();
+
+
+            } catch (error) {
+
+                console.error(
+                    "SAVE PRODUCT ERROR:",
+                    error
+                );
+
+
+                productMessage.textContent =
+                    error.message;
+
+            }
 
         }
+    );
 
-    }
-);
+}
 
 
 /* =========================================================
@@ -796,9 +871,12 @@ async function editProduct(id) {
             "";
 
 
-        document.getElementById(
-            "productForm"
-        ).scrollIntoView({
+        /*
+         * This scroll is ONLY for editing a product.
+         * It does not affect category buttons.
+         */
+
+        productForm.scrollIntoView({
             behavior: "smooth",
             block: "start"
         });
@@ -898,136 +976,167 @@ async function deleteProduct(id) {
    IMAGE PREVIEW
 ========================================================= */
 
-imageInput.addEventListener(
-    "change",
-    function () {
+if (imageInput) {
 
-        const file =
-            imageInput.files[0];
+    imageInput.addEventListener(
+        "change",
+        function () {
+
+            const file =
+                imageInput.files[0];
 
 
-        if (!file) {
+            if (!file) {
 
-            imagePreview.innerHTML =
-                "";
+                imagePreview.innerHTML =
+                    "";
 
-            return;
+                return;
+
+            }
+
+
+            const allowedTypes = [
+
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/gif"
+
+            ];
+
+
+            if (
+                !allowedTypes.includes(
+                    file.type
+                )
+            ) {
+
+                alert(
+                    "Only JPG, PNG, WEBP and GIF images are allowed."
+                );
+
+
+                imageInput.value =
+                    "";
+
+
+                imagePreview.innerHTML =
+                    "";
+
+
+                return;
+
+            }
+
+
+            if (
+                file.size >
+                5 * 1024 * 1024
+            ) {
+
+                alert(
+                    "Image must be smaller than 5 MB."
+                );
+
+
+                imageInput.value =
+                    "";
+
+
+                imagePreview.innerHTML =
+                    "";
+
+
+                return;
+
+            }
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function (event) {
+
+                    imagePreview.innerHTML = `
+
+                        <img
+                            src="${event.target.result}"
+                            alt="Image Preview"
+                        >
+
+                    `;
+
+                };
+
+
+            reader.readAsDataURL(file);
+
         }
+    );
 
-
-        const allowedTypes = [
-
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/gif"
-
-        ];
-
-
-        if (
-            !allowedTypes.includes(
-                file.type
-            )
-        ) {
-
-            alert(
-                "Only JPG, PNG, WEBP and GIF images are allowed."
-            );
-
-
-            imageInput.value =
-                "";
-
-
-            imagePreview.innerHTML =
-                "";
-
-
-            return;
-        }
-
-
-        if (
-            file.size >
-            5 * 1024 * 1024
-        ) {
-
-            alert(
-                "Image must be smaller than 5 MB."
-            );
-
-
-            imageInput.value =
-                "";
-
-
-            imagePreview.innerHTML =
-                "";
-
-
-            return;
-        }
-
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload =
-            function (event) {
-
-                imagePreview.innerHTML = `
-
-                    <img
-                        src="${event.target.result}"
-                        alt="Image Preview"
-                    >
-
-                `;
-
-            };
-
-
-        reader.readAsDataURL(file);
-
-    }
-);
+}
 
 
 /* =========================================================
-   CANCEL / RESET
+   CANCEL / RESET PRODUCT
 ========================================================= */
 
-cancelBtn.addEventListener(
-    "click",
-    function () {
+if (cancelBtn) {
 
-        resetForm();
+    cancelBtn.addEventListener(
+        "click",
+        function () {
 
-    }
-);
+            resetForm();
+
+        }
+    );
+
+}
 
 
 function resetForm() {
 
-    productForm.reset();
+    if (productForm) {
+
+        productForm.reset();
+
+    }
 
 
-    productIdInput.value =
-        "";
+    if (productIdInput) {
+
+        productIdInput.value =
+            "";
+
+    }
 
 
-    formTitle.textContent =
-        "Add Product";
+    if (formTitle) {
+
+        formTitle.textContent =
+            "Add Product";
+
+    }
 
 
-    imagePreview.innerHTML =
-        "";
+    if (imagePreview) {
+
+        imagePreview.innerHTML =
+            "";
+
+    }
 
 
-    productMessage.textContent =
-        "";
+    if (productMessage) {
+
+        productMessage.textContent =
+            "";
+
+    }
 
 }
 
@@ -1036,68 +1145,88 @@ function resetForm() {
    REFRESH PRODUCTS
 ========================================================= */
 
-refreshBtn.addEventListener(
-    "click",
-    function () {
+if (refreshBtn) {
 
-        loadProducts();
+    refreshBtn.addEventListener(
+        "click",
+        function () {
 
-    }
-);
+            loadProducts();
+
+        }
+    );
+
+}
 
 
 /* =========================================================
    LOGOUT
 ========================================================= */
 
-logoutBtn.addEventListener(
-    "click",
-    function () {
+if (logoutBtn) {
 
-        localStorage.removeItem(
-            "adminToken"
-        );
+    logoutBtn.addEventListener(
+        "click",
+        function () {
 
-
-        adminToken =
-            null;
-
-
-        dashboardSection.classList.add(
-            "hidden"
-        );
-
-
-        loginSection.classList.remove(
-            "hidden"
-        );
-
-
-        logoutBtn.style.display =
-            "none";
-
-
-        adminTokenInput.value =
-            "";
-
-
-        resetForm();
-
-
-        /*
-         * Also close category management
-         */
-
-        if (categoryManagement) {
-
-            categoryManagement.classList.add(
-                "hidden"
+            localStorage.removeItem(
+                "adminToken"
             );
 
-        }
 
-    }
-);
+            adminToken =
+                null;
+
+
+            if (dashboardSection) {
+
+                dashboardSection.classList.add(
+                    "hidden"
+                );
+
+            }
+
+
+            if (loginSection) {
+
+                loginSection.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+
+            logoutBtn.style.display =
+                "none";
+
+
+            if (adminTokenInput) {
+
+                adminTokenInput.value =
+                    "";
+
+            }
+
+
+            resetForm();
+
+
+            /*
+             * Close category management
+             */
+
+            if (categoryManagement) {
+
+                categoryManagement.classList.add(
+                    "hidden"
+                );
+
+            }
+
+        }
+    );
+
+}
 
 
 /* =========================================================
@@ -1152,26 +1281,40 @@ if (toggleToken) {
 
 
 /* =========================================================
-   CATEGORY MANAGEMENT
-   SHOW
+   OPEN CATEGORY MANAGEMENT
 ========================================================= */
 
-if (showCategoriesBtn) {
+if (addMoreCategoriesBtn) {
 
-    showCategoriesBtn.addEventListener(
+    addMoreCategoriesBtn.addEventListener(
         "click",
-        async function () {
+        async function (event) {
+
+            event.preventDefault();
+
+
+            if (!categoryManagement) {
+                return;
+            }
+
+
+            /*
+             * Open category management.
+             *
+             * IMPORTANT:
+             * There is NO scrollIntoView() here.
+             *
+             * Therefore the page will not jump.
+             */
 
             categoryManagement.classList.remove(
                 "hidden"
             );
 
 
-            categoryManagement.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-
+            /*
+             * Load latest categories.
+             */
 
             await loadAdminCategories();
 
@@ -1182,8 +1325,7 @@ if (showCategoriesBtn) {
 
 
 /* =========================================================
-   CATEGORY MANAGEMENT
-   HIDE
+   CLOSE CATEGORY MANAGEMENT
 ========================================================= */
 
 if (hideCategoriesBtn) {
@@ -1192,12 +1334,143 @@ if (hideCategoriesBtn) {
         "click",
         function () {
 
+            if (!categoryManagement) {
+                return;
+            }
+
+
             categoryManagement.classList.add(
                 "hidden"
             );
 
+
+            /*
+             * Also close the add-category form.
+             */
+
+            closeCategoryForm();
+
         }
     );
+
+}
+
+
+/* =========================================================
+   OPEN ADD CATEGORY FORM
+========================================================= */
+
+if (openCategoryFormBtn) {
+
+    openCategoryFormBtn.addEventListener(
+        "click",
+        function (event) {
+
+            event.preventDefault();
+
+
+            /*
+             * Show form inside the
+             * category scroll area.
+             */
+
+            if (categoryFormWrapper) {
+
+                categoryFormWrapper.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+
+            /*
+             * Hide Add Category button.
+             */
+
+            openCategoryFormBtn.classList.add(
+                "hidden"
+            );
+
+
+            /*
+             * Focus input.
+             *
+             * preventScroll prevents the browser
+             * from moving the whole page.
+             */
+
+            if (categoryNameInput) {
+
+                setTimeout(
+                    function () {
+
+                        categoryNameInput.focus({
+                            preventScroll: true
+                        });
+
+                    },
+                    50
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE ADD CATEGORY FORM
+========================================================= */
+
+if (cancelCategoryBtn) {
+
+    cancelCategoryBtn.addEventListener(
+        "click",
+        function () {
+
+            closeCategoryForm();
+
+        }
+    );
+
+}
+
+
+function closeCategoryForm() {
+
+    if (categoryFormWrapper) {
+
+        categoryFormWrapper.classList.add(
+            "hidden"
+        );
+
+    }
+
+
+    if (openCategoryFormBtn) {
+
+        openCategoryFormBtn.classList.remove(
+            "hidden"
+        );
+
+    }
+
+
+    if (categoryForm) {
+
+        categoryForm.reset();
+
+    }
+
+
+    if (categoryMessage) {
+
+        categoryMessage.textContent =
+            "";
+
+    }
 
 }
 
@@ -1216,7 +1489,9 @@ async function loadAdminCategories() {
     try {
 
         adminCategoryList.innerHTML = `
-            <p>Loading categories...</p>
+            <div class="loading-message">
+                Loading categories...
+            </div>
         `;
 
 
@@ -1289,6 +1564,7 @@ function displayAdminCategories(
         `;
 
         return;
+
     }
 
 
@@ -1304,6 +1580,11 @@ function displayAdminCategories(
                     "div"
                 );
 
+
+            /*
+             * This class can be styled
+             * by admin.css.
+             */
 
             card.className =
                 "admin-category-card";
@@ -1350,11 +1631,11 @@ function displayAdminCategories(
 
 
     /*
-     * Add delete events
+     * Add delete events.
      */
 
     const deleteButtons =
-        document.querySelectorAll(
+        adminCategoryList.querySelectorAll(
             ".delete-category-btn"
         );
 
@@ -1412,6 +1693,7 @@ if (categoryForm) {
                 categoryNameInput.focus();
 
                 return;
+
             }
 
 
@@ -1443,12 +1725,14 @@ if (categoryForm) {
 
                             body:
                                 JSON.stringify({
+
                                     name:
                                         name,
 
                                     description:
                                         description ||
                                         null
+
                                 })
 
                         }
@@ -1477,26 +1761,41 @@ if (categoryForm) {
                     "Category added successfully.";
 
 
+                /*
+                 * Clear form.
+                 */
+
                 categoryNameInput.value =
                     "";
-
 
                 categoryDescriptionInput.value =
                     "";
 
 
                 /*
-                 * Reload category list
+                 * Refresh category list.
                  */
 
                 await loadAdminCategories();
 
 
                 /*
-                 * Reload product dropdown
+                 * Refresh product category dropdown.
                  */
 
                 await loadCategories();
+
+
+                /*
+                 * Keep the form open.
+                 *
+                 * This allows the admin to
+                 * immediately add another category.
+                 */
+
+                categoryNameInput.focus({
+                    preventScroll: true
+                });
 
 
             } catch (error) {
@@ -1517,26 +1816,6 @@ if (categoryForm) {
                     false;
 
             }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   REFRESH CATEGORIES
-========================================================= */
-
-if (refreshCategoriesBtn) {
-
-    refreshCategoriesBtn.addEventListener(
-        "click",
-        async function () {
-
-            await loadAdminCategories();
-
-            await loadCategories();
 
         }
     );
@@ -1602,14 +1881,14 @@ async function deleteCategory(
 
 
         /*
-         * Refresh category list
+         * Reload category list.
          */
 
         await loadAdminCategories();
 
 
         /*
-         * Refresh product category dropdown
+         * Reload product dropdown.
          */
 
         await loadCategories();

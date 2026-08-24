@@ -132,7 +132,6 @@
         >
 
 
-
             <!-- =================================================
                  PRODUCT MANAGEMENT
             ================================================== -->
@@ -217,6 +216,14 @@
                         </label>
 
 
+                        <!--
+                            JavaScript will automatically add:
+
+                            + Add More Categories
+
+                            as the LAST option.
+                        -->
+
                         <select
                             id="category"
                             name="category"
@@ -233,19 +240,6 @@
                         <small>
                             Select a category for this product.
                         </small>
-
-
-                        <!-- =================================================
-                             ADD MORE CATEGORIES BUTTON
-                        ================================================== -->
-
-                        <button
-                            type="button"
-                            id="addMoreCategoriesBtn"
-                            class="add-more-category-btn"
-                        >
-                            + Add More Categories
-                        </button>
 
                     </div>
 
@@ -423,25 +417,6 @@
 
 
             <!-- =====================================================
-                 CATEGORY BUTTON
-                 BELOW EXISTING PRODUCTS
-            ====================================================== -->
-
-            <div class="category-bottom-section">
-
-                <button
-                    type="button"
-                    id="showCategoriesBtn"
-                    class="add-categories-btn"
-                >
-                    + Add Categories
-                </button>
-
-            </div>
-
-
-
-            <!-- =====================================================
                  CATEGORY MANAGEMENT
             ====================================================== -->
 
@@ -481,65 +456,145 @@
 
 
                 <!-- =================================================
-                     ADD CATEGORY FORM
+                     CATEGORY SCROLL AREA
                 ================================================== -->
 
-                <form id="categoryForm">
+                <div
+                    id="categoryScrollArea"
+                    class="category-scroll-area"
+                >
 
 
-                    <!-- CATEGORY NAME -->
+                    <!-- =================================================
+                         EXISTING CATEGORIES
+                    ================================================== -->
 
-                    <div class="form-group">
+                    <div
+                        id="adminCategoryList"
+                        class="admin-category-list"
+                    >
 
-                        <label for="categoryName">
-                            Category Name
-                        </label>
+                        <div class="loading-message">
+                            Loading categories...
+                        </div>
 
-                        <input
-                            type="text"
-                            id="categoryName"
-                            name="categoryName"
-                            placeholder="Example: Makeup"
-                            maxlength="100"
-                            autocomplete="off"
-                            required
+                    </div>
+
+
+
+                    <!-- =================================================
+                         ADD CATEGORY AREA
+                    ================================================== -->
+
+                    <div
+                        id="categoryAddArea"
+                        class="category-add-area"
+                    >
+
+
+                        <!--
+                            This button is inside the category
+                            management area.
+
+                            It opens the text fields.
+                        -->
+
+                        <button
+                            type="button"
+                            id="openCategoryFormBtn"
+                            class="add-category-scroll-btn"
+                        >
+                            + Add Category
+                        </button>
+
+
+
+                        <!-- =================================================
+                             CATEGORY FORM
+                        ================================================== -->
+
+                        <div
+                            id="categoryFormWrapper"
+                            class="category-form-wrapper hidden"
                         >
 
+                            <form id="categoryForm">
+
+
+                                <!-- CATEGORY NAME -->
+
+                                <div class="form-group">
+
+                                    <label for="categoryName">
+                                        Category Name
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        id="categoryName"
+                                        name="categoryName"
+                                        placeholder="Enter category name"
+                                        maxlength="100"
+                                        autocomplete="off"
+                                        required
+                                    >
+
+                                </div>
+
+
+
+                                <!-- CATEGORY DESCRIPTION -->
+
+                                <div class="form-group">
+
+                                    <label for="categoryDescription">
+                                        Category Description
+                                    </label>
+
+                                    <textarea
+                                        id="categoryDescription"
+                                        name="categoryDescription"
+                                        rows="3"
+                                        maxlength="500"
+                                        placeholder="Enter category description"
+                                    ></textarea>
+
+                                </div>
+
+
+
+                                <!-- =================================================
+                                     CATEGORY FORM BUTTONS
+                                ================================================== -->
+
+                                <div class="form-buttons">
+
+                                    <button
+                                        type="submit"
+                                        id="addCategoryBtn"
+                                        class="primary-btn"
+                                    >
+                                        Add Category
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        id="cancelCategoryBtn"
+                                        class="secondary-btn"
+                                    >
+                                        Cancel
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                        </div>
+
                     </div>
 
-
-
-                    <!-- CATEGORY DESCRIPTION -->
-
-                    <div class="form-group">
-
-                        <label for="categoryDescription">
-                            Category Description
-                        </label>
-
-                        <textarea
-                            id="categoryDescription"
-                            name="categoryDescription"
-                            rows="3"
-                            maxlength="500"
-                            placeholder="Enter category description"
-                        ></textarea>
-
-                    </div>
-
-
-
-                    <!-- ADD CATEGORY -->
-
-                    <button
-                        type="submit"
-                        id="addCategoryBtn"
-                        class="primary-btn"
-                    >
-                        + Add Category
-                    </button>
-
-                </form>
+                </div>
 
 
 
@@ -549,52 +604,6 @@
                     id="categoryMessage"
                     class="message"
                 ></p>
-
-
-
-                <!-- =================================================
-                     EXISTING CATEGORIES
-                ================================================== -->
-
-                <div class="products-header category-list-header">
-
-                    <div>
-
-                        <h3>
-                            Existing Categories
-                        </h3>
-
-                        <p>
-                            Manage categories already added to your store.
-                        </p>
-
-                    </div>
-
-
-                    <button
-                        type="button"
-                        id="refreshCategoriesBtn"
-                        class="secondary-btn"
-                    >
-                        ↻ Refresh
-                    </button>
-
-                </div>
-
-
-
-                <!-- CATEGORY LIST -->
-
-                <div
-                    id="adminCategoryList"
-                    class="admin-category-list"
-                >
-
-                    <div class="loading-message">
-                        Loading categories...
-                    </div>
-
-                </div>
 
             </div>
 
@@ -609,93 +618,6 @@
     ====================================================== -->
 
     <script src="/js/admin.js"></script>
-
-
-
-    <!-- =====================================================
-         ADD MORE CATEGORIES BUTTON
-    ====================================================== -->
-
-    <script>
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            function () {
-
-                const addMoreCategoriesBtn =
-                    document.getElementById(
-                        "addMoreCategoriesBtn"
-                    );
-
-
-                const categoryManagement =
-                    document.getElementById(
-                        "categoryManagement"
-                    );
-
-
-                const categoryName =
-                    document.getElementById(
-                        "categoryName"
-                    );
-
-
-                if (addMoreCategoriesBtn) {
-
-                    addMoreCategoriesBtn.addEventListener(
-                        "click",
-                        function () {
-
-                            /*
-                             * Open category management
-                             */
-
-                            if (categoryManagement) {
-
-                                categoryManagement.classList.remove(
-                                    "hidden"
-                                );
-
-
-                                /*
-                                 * Scroll smoothly to
-                                 * category management
-                                 */
-
-                                categoryManagement.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "start"
-                                });
-
-                            }
-
-
-                            /*
-                             * Focus category name
-                             */
-
-                            setTimeout(
-                                function () {
-
-                                    if (categoryName) {
-
-                                        categoryName.focus();
-
-                                    }
-
-                                },
-                                500
-                            );
-
-                        }
-                    );
-
-                }
-
-            }
-        );
-
-    </script>
 
 </body>
 
