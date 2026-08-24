@@ -794,3 +794,315 @@ toggleToken.addEventListener("click", function () {
     }
 
 });
+
+
+// =========================================
+// CATEGORY MANAGEMENT
+// =========================================
+
+const categoryNameInput =
+    document.querySelector("#category-name");
+
+const categoryDescriptionInput =
+    document.querySelector("#category-description");
+
+const addCategoryButton =
+    document.querySelector("#add-category-btn");
+
+const adminCategoryList =
+    document.querySelector("#admin-category-list");
+
+
+// =========================================
+// LOAD CATEGORIES
+// =========================================
+
+async function loadAdminCategories() {
+
+    try {
+
+        const response = await fetch(
+            "/api/products/categories"
+        );
+
+        const data = await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message || "Failed to load categories."
+            );
+
+        }
+
+
+        displayAdminCategories(
+            data.categories
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "CATEGORY LOAD ERROR:",
+            error
+        );
+
+        adminCategoryList.innerHTML = `
+            <p>
+                Failed to load categories.
+            </p>
+        `;
+
+    }
+
+}
+
+
+// =========================================
+// DISPLAY CATEGORIES
+// =========================================
+
+function displayAdminCategories(categories) {
+
+    if (!categories || categories.length === 0) {
+
+        adminCategoryList.innerHTML = `
+            <p>
+                No categories found.
+            </p>
+        `;
+
+        return;
+    }
+
+
+    adminCategoryList.innerHTML = "";
+
+
+    categories.forEach(category => {
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "admin-category-card";
+
+
+        card.innerHTML = `
+
+            <h4>
+                ${category.name}
+            </h4>
+
+            <p>
+                ${category.description || "No description"}
+            </p>
+
+            <button
+                type="button"
+                class="delete-category-btn"
+                data-id="${category.id}"
+            >
+                Delete
+            </button>
+
+        `;
+
+
+        adminCategoryList.appendChild(card);
+
+    });
+
+
+    // Delete buttons
+
+    const deleteButtons =
+        document.querySelectorAll(
+            ".delete-category-btn"
+        );
+
+
+    deleteButtons.forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const categoryId =
+                    button.dataset.id;
+
+                deleteCategory(categoryId);
+
+            }
+        );
+
+    });
+
+}
+
+
+// =========================================
+// ADD CATEGORY
+// =========================================
+
+addCategoryButton.addEventListener(
+    "click",
+    async () => {
+
+        const name =
+            categoryNameInput.value.trim();
+
+        const description =
+            categoryDescriptionInput.value.trim();
+
+
+        if (!name) {
+
+            alert(
+                "Please enter a category name."
+            );
+
+            categoryNameInput.focus();
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/admin/categories",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            name,
+                            description
+                        })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok || !data.success) {
+
+                throw new Error(
+                    data.message ||
+                    "Failed to add category."
+                );
+
+            }
+
+
+            alert(
+                "Category added successfully."
+            );
+
+
+            categoryNameInput.value = "";
+
+            categoryDescriptionInput.value = "";
+
+
+            loadAdminCategories();
+
+
+        } catch (error) {
+
+            console.error(
+                "ADD CATEGORY ERROR:",
+                error
+            );
+
+            alert(
+                error.message
+            );
+
+        }
+
+    }
+);
+
+
+// =========================================
+// DELETE CATEGORY
+// =========================================
+
+async function deleteCategory(categoryId) {
+
+    const confirmed =
+        confirm(
+            "Are you sure you want to delete this category?"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/admin/categories/${categoryId}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.message ||
+                "Failed to delete category."
+            );
+
+        }
+
+
+        alert(
+            "Category deleted successfully."
+        );
+
+
+        loadAdminCategories();
+
+
+    } catch (error) {
+
+        console.error(
+            "DELETE CATEGORY ERROR:",
+            error
+        );
+
+        alert(
+            error.message
+        );
+
+    }
+
+}
+
+
+// =========================================
+// INITIAL LOAD
+// =========================================
+
+loadAdminCategories();
