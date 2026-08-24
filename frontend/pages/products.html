@@ -12,15 +12,9 @@
 
     <title>Products | AR Ecommerce</title>
 
-    <link
-        rel="stylesheet"
-        href="/css/style.css"
-    >
+    <link rel="stylesheet" href="/css/style.css">
 
-    <link
-        rel="stylesheet"
-        href="/css/products.css"
-    >
+    <link rel="stylesheet" href="/css/products.css">
 
 </head>
 
@@ -35,7 +29,6 @@
         <div class="logo">
             AR <span>Ecommerce</span>
         </div>
-
 
         <nav>
 
@@ -94,50 +87,37 @@
 
     <main class="products-page">
 
-
-        <!-- PAGE HEADING -->
-
-        <section class="products-heading">
+        <div class="page-heading">
 
             <p class="section-label">
                 OUR COLLECTION
             </p>
 
             <h1>
-                Explore Our Products
+                All Products
             </h1>
 
             <p>
-                Browse products by category and find exactly
-                what you are looking for.
+                Explore products organized by category.
             </p>
 
-        </section>
+        </div>
 
 
         <!-- =================================================
-             CATEGORY PRODUCTS
+             DYNAMIC CATEGORIES
         ================================================== -->
 
-        <section
-            id="category-products"
-            class="category-products"
+        <div
+            id="categories-container"
+            class="categories-container"
         >
 
-            <!-- Products will be loaded here by JavaScript -->
-
-            <div class="products-loading">
-
-                <div class="loading-spinner"></div>
-
-                <p>
-                    Loading products...
-                </p>
-
+            <div class="loading-products">
+                Loading products...
             </div>
 
-        </section>
-
+        </div>
 
     </main>
 
@@ -206,84 +186,6 @@
 
 
     <!-- =====================================================
-         PRODUCT DETAILS MODAL
-    ====================================================== -->
-
-    <div
-        class="product-modal"
-        id="product-modal"
-    >
-
-        <div class="product-modal-content">
-
-            <button
-                class="modal-close"
-                id="modal-close"
-                type="button"
-            >
-                ✕
-            </button>
-
-
-            <div class="modal-product">
-
-                <div class="modal-product-image">
-
-                    <img
-                        id="modal-image"
-                        src=""
-                        alt="Product"
-                    >
-
-                </div>
-
-
-                <div class="modal-product-details">
-
-                    <p
-                        class="category"
-                        id="modal-category"
-                    >
-                    </p>
-
-
-                    <h2 id="modal-name">
-                    </h2>
-
-
-                    <h3 id="modal-price">
-                    </h3>
-
-
-                    <p id="modal-description">
-                    </p>
-
-
-                    <p
-                        id="modal-stock"
-                        class="modal-stock"
-                    >
-                    </p>
-
-
-                    <button
-                        id="modal-add-cart"
-                        class="add-btn modal-add-btn"
-                        type="button"
-                    >
-                        Add to Cart
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
          FOOTER
     ====================================================== -->
 
@@ -305,11 +207,11 @@
     ====================================================== -->
 
     <!-- IMPORTANT:
-         app.js first because it contains the common
-         cart functionality.
-    -->
+         app.js contains the same cart system used by Home -->
 
     <script src="/js/app.js"></script>
+
+    <!-- Products page logic -->
 
     <script src="/js/products.js"></script>
 
