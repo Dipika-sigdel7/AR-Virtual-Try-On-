@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -27,141 +27,114 @@
 <body>
 
 
+<!-- =========================================================
+     NAVBAR
+========================================================= -->
+
+<header class="navbar">
+
+    <div class="logo">
+        AR <span>Ecommerce</span>
+    </div>
+
+
+    <nav>
+
+        <a href="/">
+            Home
+        </a>
+
+        <a
+            href="/products"
+            class="active"
+        >
+            Products
+        </a>
+
+        <a href="/services">
+            Services
+        </a>
+
+        <a href="/about">
+            About
+        </a>
+
+    </nav>
+
+
+    <!-- CART -->
+
+    <div class="nav-actions">
+
+        <button
+            class="cart-btn"
+            id="cart-btn"
+            type="button"
+        >
+
+            🛒
+
+            <span>
+                Cart
+            </span>
+
+            <b id="cart-count">
+                0
+            </b>
+
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<!-- =========================================================
+     PRODUCTS
+========================================================= -->
+
+<main class="products-page">
+
+
+    <!-- PAGE HEADING -->
+
+    <section class="page-heading">
+
+        <p class="section-label">
+            OUR COLLECTION
+        </p>
+
+        <h1>
+            Featured Products
+        </h1>
+
+        <p>
+            Explore our products and experience
+            a smarter way of online shopping.
+        </p>
+
+    </section>
+
+
+
     <!-- =====================================================
-         NAVBAR
+         PRODUCTS LOADED FROM DATABASE
     ====================================================== -->
 
-    <header class="navbar">
+    <section class="products">
 
-        <div class="logo">
-            AR <span>Ecommerce</span>
-        </div>
+        <div
+            class="product-grid"
+            id="product-grid"
+        >
 
+            <div class="products-loading">
 
-        <nav>
-
-            <a href="/">
-                Home
-            </a>
-
-            <a
-                href="/products"
-                class="active"
-            >
-                Products
-            </a>
-
-            <a href="/services">
-                Services
-            </a>
-
-            <a href="/about">
-                About
-            </a>
-
-        </nav>
-
-    </header>
-
-
-
-    <!-- =====================================================
-         CATEGORY MANAGEMENT
-    ====================================================== -->
-
-    <section
-        class="admin-section category-management"
-    >
-
-        <div class="section-header">
-
-            <div>
-
-                <p class="section-label">
-                    PRODUCT MANAGEMENT
-                </p>
-
-                <h2>
-                    Categories
-                </h2>
+                <div class="loading-spinner"></div>
 
                 <p>
-                    Create and manage product categories.
-                </p>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- =================================================
-             ADD CATEGORY FORM
-        ================================================== -->
-
-        <div class="category-form">
-
-            <div class="form-group">
-
-                <label for="category-name">
-                    Category Name
-                </label>
-
-                <input
-                    type="text"
-                    id="category-name"
-                    placeholder="Example: Makeup"
-                    required
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="category-description">
-                    Description
-                </label>
-
-                <textarea
-                    id="category-description"
-                    placeholder="Enter category description"
-                    rows="3"
-                ></textarea>
-
-            </div>
-
-
-            <button
-                type="button"
-                id="add-category-btn"
-                class="admin-btn"
-            >
-                + Add Category
-            </button>
-
-        </div>
-
-
-
-        <!-- =================================================
-             CATEGORY LIST
-        ================================================== -->
-
-        <div class="category-list-section">
-
-            <h3>
-                Existing Categories
-            </h3>
-
-
-            <div
-                id="admin-category-list"
-                class="admin-category-list"
-            >
-
-                <p>
-                    Loading categories...
+                    Loading products...
                 </p>
 
             </div>
@@ -170,305 +143,106 @@
 
     </section>
 
+</main>
 
 
-    <!-- =====================================================
-         PRODUCTS
-    ====================================================== -->
 
-    <main class="products-page">
+<!-- =========================================================
+     CART MODAL
+========================================================= -->
+
+<div
+    class="cart-modal"
+    id="cart-modal"
+>
+
+    <div class="cart-content">
 
 
-        <!-- PAGE HEADING -->
+        <!-- CART HEADER -->
 
-        <div class="page-heading">
+        <div class="cart-header">
 
-            <p class="section-label">
-                OUR COLLECTION
-            </p>
+            <h2>
+                🛒 Your Cart
+            </h2>
 
-            <h1>
-                Featured Products
-            </h1>
 
-            <p>
-                Explore our products and experience
-                a smarter way of online shopping.
+            <button
+                class="cart-close"
+                id="cart-close"
+                type="button"
+            >
+                ✕
+            </button>
+
+        </div>
+
+
+
+        <!-- CART ITEMS -->
+
+        <div id="cart-items">
+
+            <p class="cart-empty">
+                Your cart is empty.
             </p>
 
         </div>
 
 
 
-        <!-- =================================================
-             PRODUCT GRID
-        ================================================== -->
+        <!-- TOTAL -->
 
-        <div class="product-grid">
+        <div class="cart-total">
 
+            <strong>
+                Total:
+            </strong>
 
-
-            <!-- =================================================
-                 PRODUCT 1
-            ================================================== -->
-
-            <div
-                class="product-card"
-                data-product="smartphone"
-            >
-
-                <div class="product-image">
-
-                    📱
-
-                    <span class="ar-badge">
-                        AR
-                    </span>
-
-                </div>
-
-
-                <div class="product-info">
-
-                    <small>
-                        ELECTRONICS
-                    </small>
-
-                    <h2>
-                        Smartphone
-                    </h2>
-
-                    <p>
-                        Modern smartphone with powerful
-                        performance and stylish design.
-                    </p>
-
-
-                    <div class="product-bottom">
-
-                        <strong>
-                            $499
-                        </strong>
-
-
-                        <button
-                            class="add-btn"
-                            type="button"
-                            data-product-action="cart"
-                        >
-                            Add to Cart
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- =================================================
-                 PRODUCT 2
-            ================================================== -->
-
-            <div
-                class="product-card"
-                data-product="sneakers"
-            >
-
-                <div class="product-image">
-
-                    👟
-
-                    <span class="ar-badge">
-                        AR
-                    </span>
-
-                </div>
-
-
-                <div class="product-info">
-
-                    <small>
-                        FASHION
-                    </small>
-
-                    <h2>
-                        Premium Sneakers
-                    </h2>
-
-                    <p>
-                        Comfortable and stylish sneakers
-                        designed for everyday use.
-                    </p>
-
-
-                    <div class="product-bottom">
-
-                        <strong>
-                            $99
-                        </strong>
-
-
-                        <button
-                            class="add-btn"
-                            type="button"
-                            data-product-action="cart"
-                        >
-                            Add to Cart
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- =================================================
-                 PRODUCT 3
-            ================================================== -->
-
-            <div
-                class="product-card"
-                data-product="smartwatch"
-            >
-
-                <div class="product-image">
-
-                    ⌚
-
-                    <span class="ar-badge">
-                        AR
-                    </span>
-
-                </div>
-
-
-                <div class="product-info">
-
-                    <small>
-                        ACCESSORIES
-                    </small>
-
-                    <h2>
-                        Smart Watch
-                    </h2>
-
-                    <p>
-                        Track your activities and stay connected
-                        with a modern smart watch.
-                    </p>
-
-
-                    <div class="product-bottom">
-
-                        <strong>
-                            $149
-                        </strong>
-
-
-                        <button
-                            class="add-btn"
-                            type="button"
-                            data-product-action="cart"
-                        >
-                            Add to Cart
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- =================================================
-                 PRODUCT 4
-            ================================================== -->
-
-            <div
-                class="product-card"
-                data-product="headphones"
-            >
-
-                <div class="product-image">
-
-                    🎧
-
-                    <span class="ar-badge">
-                        AR
-                    </span>
-
-                </div>
-
-
-                <div class="product-info">
-
-                    <small>
-                        ELECTRONICS
-                    </small>
-
-                    <h2>
-                        Wireless Headphones
-                    </h2>
-
-                    <p>
-                        Enjoy high-quality sound with comfortable
-                        wireless headphones.
-                    </p>
-
-
-                    <div class="product-bottom">
-
-                        <strong>
-                            $129
-                        </strong>
-
-
-                        <button
-                            class="add-btn"
-                            type="button"
-                            data-product-action="cart"
-                        >
-                            Add to Cart
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
+            <strong id="cart-total">
+                $0.00
+            </strong>
 
         </div>
 
-    </main>
+
+
+        <!-- CHECKOUT -->
+
+        <button
+            class="checkout-btn"
+            id="checkout-btn"
+            type="button"
+        >
+            Proceed to Checkout
+        </button>
+
+    </div>
+
+</div>
 
 
 
-    <!-- =====================================================
-         FOOTER
-    ====================================================== -->
+<!-- =========================================================
+     FOOTER
+========================================================= -->
 
-    <footer>
+<footer>
 
-        <p>
-            © 2026 AR Ecommerce. All Rights Reserved.
-        </p>
+    <div class="footer-logo">
+        AR Ecommerce
+    </div>
 
-    </footer>
+    <p>
+        © 2026 AR Ecommerce. All Rights Reserved.
+    </p>
+
+</footer>
 
 
 
-    <!-- =====================================================
-         JAVASCRIPT
-    ====================================================== -->
-
-    <script src="/js/products.js"></script>
+<script src="/js/products.js"></script>
 
 </body>
 
