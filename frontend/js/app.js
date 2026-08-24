@@ -1,4 +1,3 @@
-
 // ==========================
 // PRODUCT DATA
 // ==========================
@@ -6,6 +5,7 @@
 const products = {
 
   smartphone: {
+    id: 1,
     name: "Smartphone",
     category: "Electronics",
     price: 499,
@@ -14,6 +14,7 @@ const products = {
   },
 
   sneakers: {
+    id: 2,
     name: "Premium Sneakers",
     category: "Fashion",
     price: 99,
@@ -22,6 +23,7 @@ const products = {
   },
 
   smartwatch: {
+    id: 3,
     name: "Smart Watch",
     category: "Accessories",
     price: 149,
@@ -65,7 +67,9 @@ const modalRating =
   document.querySelector("#modal-rating");
 
 
-// Cart elements
+// ==========================
+// CART ELEMENTS
+// ==========================
 
 const cartButton =
   document.querySelector("#cart-btn");
@@ -101,8 +105,8 @@ productCards.forEach((card) => {
 
   card.addEventListener("click", (event) => {
 
-    // Prevent product modal when
-    // Add to Cart is clicked
+    // Do not open product modal
+    // when Add to Cart is clicked
 
     if (
       event.target.closest(
@@ -131,7 +135,9 @@ productCards.forEach((card) => {
     }
 
 
-    // Update image
+    // --------------------------
+    // IMAGE
+    // --------------------------
 
     if (modalProductImage) {
 
@@ -141,7 +147,9 @@ productCards.forEach((card) => {
     }
 
 
-    // Update name
+    // --------------------------
+    // NAME
+    // --------------------------
 
     if (modalProductName) {
 
@@ -151,7 +159,9 @@ productCards.forEach((card) => {
     }
 
 
-    // Update category
+    // --------------------------
+    // CATEGORY
+    // --------------------------
 
     if (modalProductCategory) {
 
@@ -161,7 +171,9 @@ productCards.forEach((card) => {
     }
 
 
-    // Update price
+    // --------------------------
+    // PRICE
+    // --------------------------
 
     if (modalProductPrice) {
 
@@ -171,7 +183,9 @@ productCards.forEach((card) => {
     }
 
 
-    // Update rating
+    // --------------------------
+    // RATING
+    // --------------------------
 
     if (modalRating) {
 
@@ -181,12 +195,18 @@ productCards.forEach((card) => {
     }
 
 
-    // Open modal
+    // --------------------------
+    // OPEN MODAL
+    // --------------------------
 
-    productModal.classList.add("active");
+    if (productModal) {
 
-    document.body.style.overflow =
-      "hidden";
+      productModal.classList.add("active");
+
+      document.body.style.overflow =
+        "hidden";
+
+    }
 
   });
 
@@ -199,19 +219,27 @@ productCards.forEach((card) => {
 
 function closeProductModal() {
 
-  productModal.classList.remove(
-    "active"
-  );
+  if (productModal) {
+
+    productModal.classList.remove(
+      "active"
+    );
+
+  }
 
   document.body.style.overflow = "";
 
 }
 
 
-modalClose.addEventListener(
-  "click",
-  closeProductModal
-);
+if (modalClose) {
+
+  modalClose.addEventListener(
+    "click",
+    closeProductModal
+  );
+
+}
 
 
 // ==========================
@@ -219,20 +247,24 @@ modalClose.addEventListener(
 // CLICK OUTSIDE
 // ==========================
 
-productModal.addEventListener(
-  "click",
-  (event) => {
+if (productModal) {
 
-    if (
-      event.target === productModal
-    ) {
+  productModal.addEventListener(
+    "click",
+    (event) => {
 
-      closeProductModal();
+      if (
+        event.target === productModal
+      ) {
+
+        closeProductModal();
+
+      }
 
     }
+  );
 
-  }
-);
+}
 
 
 // ==========================
@@ -265,18 +297,27 @@ const exploreProducts =
   );
 
 
-exploreProducts.addEventListener(
-  "click",
-  () => {
+if (exploreProducts) {
 
-    document
-      .querySelector("#products")
-      .scrollIntoView({
-        behavior: "smooth"
-      });
+  exploreProducts.addEventListener(
+    "click",
+    () => {
 
-  }
-);
+      const productsSection =
+        document.querySelector("#products");
+
+      if (productsSection) {
+
+        productsSection.scrollIntoView({
+          behavior: "smooth"
+        });
+
+      }
+
+    }
+  );
+
+}
 
 
 // ==========================
@@ -289,18 +330,27 @@ const tryArButton =
   );
 
 
-tryArButton.addEventListener(
-  "click",
-  () => {
+if (tryArButton) {
 
-    document
-      .querySelector("#products")
-      .scrollIntoView({
-        behavior: "smooth"
-      });
+  tryArButton.addEventListener(
+    "click",
+    () => {
 
-  }
-);
+      const productsSection =
+        document.querySelector("#products");
+
+      if (productsSection) {
+
+        productsSection.scrollIntoView({
+          behavior: "smooth"
+        });
+
+      }
+
+    }
+  );
+
+}
 
 
 // ==========================
@@ -313,18 +363,27 @@ const viewAllButton =
   );
 
 
-viewAllButton.addEventListener(
-  "click",
-  () => {
+if (viewAllButton) {
 
-    document
-      .querySelector("#products")
-      .scrollIntoView({
-        behavior: "smooth"
-      });
+  viewAllButton.addEventListener(
+    "click",
+    () => {
 
-  }
-);
+      const productsSection =
+        document.querySelector("#products");
+
+      if (productsSection) {
+
+        productsSection.scrollIntoView({
+          behavior: "smooth"
+        });
+
+      }
+
+    }
+  );
+
+}
 
 
 // ==========================
@@ -346,6 +405,10 @@ addButtons.forEach((button) => {
       event.stopPropagation();
 
 
+      // --------------------------
+      // GET PRODUCT CARD
+      // --------------------------
+
       const card =
         button.closest(".product-card");
 
@@ -354,6 +417,10 @@ addButtons.forEach((button) => {
         return;
       }
 
+
+      // --------------------------
+      // GET PRODUCT ID
+      // --------------------------
 
       const productId =
         card.getAttribute(
@@ -366,6 +433,10 @@ addButtons.forEach((button) => {
       }
 
 
+      // --------------------------
+      // GET PRODUCT
+      // --------------------------
+
       const product =
         products[productId];
 
@@ -375,19 +446,62 @@ addButtons.forEach((button) => {
       }
 
 
-      cart.push(product);
+      // --------------------------
+      // CHECK EXISTING CART ITEM
+      // --------------------------
 
+      const existingItem =
+        cart.find(
+          item => item.id === product.id
+        );
+
+
+      // --------------------------
+      // INCREASE QUANTITY
+      // --------------------------
+
+      if (existingItem) {
+
+        existingItem.quantity += 1;
+
+      }
+
+
+      // --------------------------
+      // ADD NEW PRODUCT
+      // --------------------------
+
+      else {
+
+        cart.push({
+
+          ...product,
+
+          quantity: 1
+
+        });
+
+      }
+
+
+      // --------------------------
+      // UPDATE CART
+      // --------------------------
 
       updateCart();
 
 
-      // Button feedback
+      // --------------------------
+      // BUTTON FEEDBACK
+      // --------------------------
 
       const originalText =
         button.textContent;
 
+
       button.textContent =
         "Added ✓";
+
 
       button.style.background =
         "#00a8cc";
@@ -415,47 +529,94 @@ addButtons.forEach((button) => {
 
 function updateCart() {
 
-  // Update cart count
+  // --------------------------
+  // TOTAL QUANTITY
+  // --------------------------
 
-  cartCount.textContent =
-    cart.length;
-
-
-  // Empty cart
-
-  if (cart.length === 0) {
-
-    cartItems.innerHTML = `
-      <p class="empty-cart">
-        Your cart is empty.
-      </p>
-    `;
-
-    cartTotal.textContent =
-      "$0";
-
-    return;
-  }
-
-
-  // Calculate total
-
-  const total =
+  const totalQuantity =
     cart.reduce(
       (sum, product) =>
-        sum + product.price,
+        sum + product.quantity,
       0
     );
 
 
-  cartTotal.textContent =
-    `$${total}`;
+  if (cartCount) {
+
+    cartCount.textContent =
+      totalQuantity;
+
+  }
 
 
-  // Display cart items
+  // --------------------------
+  // EMPTY CART
+  // --------------------------
 
-  cartItems.innerHTML = "";
+  if (cart.length === 0) {
 
+    if (cartItems) {
+
+      cartItems.innerHTML = `
+        <p class="empty-cart">
+          Your cart is empty.
+        </p>
+      `;
+
+    }
+
+
+    if (cartTotal) {
+
+      cartTotal.textContent =
+        "$0.00";
+
+    }
+
+
+    return;
+
+  }
+
+
+  // --------------------------
+  // CALCULATE TOTAL
+  // --------------------------
+
+  const total =
+    cart.reduce(
+      (sum, product) =>
+        sum +
+        (
+          Number(product.price) *
+          Number(product.quantity)
+        ),
+      0
+    );
+
+
+  if (cartTotal) {
+
+    cartTotal.textContent =
+      `$${total.toFixed(2)}`;
+
+  }
+
+
+  // --------------------------
+  // CLEAR CART DISPLAY
+  // --------------------------
+
+  if (cartItems) {
+
+    cartItems.innerHTML = "";
+
+  }
+
+
+  // --------------------------
+  // DISPLAY CART ITEMS
+  // --------------------------
 
   cart.forEach(
     (product, index) => {
@@ -485,7 +646,9 @@ function updateCart() {
             </div>
 
             <div class="cart-item-price">
-              $${product.price}
+              $${Number(product.price).toFixed(2)}
+              ×
+              ${product.quantity}
             </div>
 
           </div>
@@ -503,13 +666,19 @@ function updateCart() {
       `;
 
 
-      cartItems.appendChild(item);
+      if (cartItems) {
+
+        cartItems.appendChild(item);
+
+      }
 
     }
   );
 
 
-  // Remove buttons
+  // --------------------------
+  // REMOVE CART ITEMS
+  // --------------------------
 
   const removeButtons =
     document.querySelectorAll(
@@ -532,7 +701,16 @@ function updateCart() {
             );
 
 
-          cart.splice(index, 1);
+          if (
+            Number.isInteger(index)
+          ) {
+
+            cart.splice(
+              index,
+              1
+            );
+
+          }
 
 
           updateCart();
@@ -550,21 +728,31 @@ function updateCart() {
 // OPEN CART
 // ==========================
 
-cartButton.addEventListener(
-  "click",
-  () => {
+if (cartButton) {
 
-    updateCart();
+  cartButton.addEventListener(
+    "click",
+    () => {
 
-    cartModal.classList.add(
-      "active"
-    );
+      updateCart();
 
-    document.body.style.overflow =
-      "hidden";
 
-  }
-);
+      if (cartModal) {
+
+        cartModal.classList.add(
+          "active"
+        );
+
+      }
+
+
+      document.body.style.overflow =
+        "hidden";
+
+    }
+  );
+
+}
 
 
 // ==========================
@@ -573,66 +761,268 @@ cartButton.addEventListener(
 
 function closeCartModal() {
 
-  cartModal.classList.remove(
-    "active"
-  );
+  if (cartModal) {
 
-  document.body.style.overflow = "";
+    cartModal.classList.remove(
+      "active"
+    );
+
+  }
+
+
+  document.body.style.overflow =
+    "";
 
 }
 
 
-cartClose.addEventListener(
-  "click",
-  closeCartModal
-);
+if (cartClose) {
+
+  cartClose.addEventListener(
+    "click",
+    closeCartModal
+  );
+
+}
 
 
 // ==========================
 // CLICK OUTSIDE CART
 // ==========================
 
-cartModal.addEventListener(
-  "click",
-  (event) => {
+if (cartModal) {
 
-    if (
-      event.target === cartModal
-    ) {
+  cartModal.addEventListener(
+    "click",
+    (event) => {
 
-      closeCartModal();
+      if (
+        event.target === cartModal
+      ) {
+
+        closeCartModal();
+
+      }
 
     }
+  );
 
-  }
-);
+}
 
 
 // ==========================
 // CHECKOUT
 // ==========================
 
-checkoutButton.addEventListener(
-  "click",
-  () => {
+if (checkoutButton) {
 
-    if (cart.length === 0) {
+  checkoutButton.addEventListener(
+    "click",
+    async () => {
 
-      alert(
-        "Your cart is empty."
-      );
+      // --------------------------
+      // CHECK EMPTY CART
+      // --------------------------
 
-      return;
+      if (cart.length === 0) {
+
+        alert(
+          "Your cart is empty."
+        );
+
+        return;
+
+      }
+
+
+      // --------------------------
+      // GET USER ID
+      // --------------------------
+
+      const userId =
+        localStorage.getItem(
+          "user_id"
+        );
+
+
+      if (!userId) {
+
+        alert(
+          "Please login before checkout."
+        );
+
+        return;
+
+      }
+
+
+      // --------------------------
+      // GET SHIPPING ADDRESS
+      // --------------------------
+
+      const shippingAddress =
+        prompt(
+          "Enter your shipping address:"
+        );
+
+
+      if (!shippingAddress) {
+
+        alert(
+          "Shipping address is required."
+        );
+
+        return;
+
+      }
+
+
+      // --------------------------
+      // PREPARE CART ITEMS
+      // --------------------------
+
+      const items =
+        cart.map(
+          (product) => {
+
+            return {
+
+              product_id:
+                product.id,
+
+              quantity:
+                product.quantity
+
+            };
+
+          }
+        );
+
+
+      try {
+
+        // --------------------------
+        // SEND CHECKOUT REQUEST
+        // --------------------------
+
+        const response =
+          await fetch(
+            "/api/products/checkout",
+            {
+
+              method: "POST",
+
+              headers: {
+
+                "Content-Type":
+                  "application/json"
+
+              },
+
+              body:
+                JSON.stringify({
+
+                  user_id:
+                    Number(userId),
+
+                  shipping_address:
+                    shippingAddress,
+
+                  items:
+                    items
+
+                })
+
+            }
+          );
+
+
+        // --------------------------
+        // GET SERVER RESPONSE
+        // --------------------------
+
+        const data =
+          await response.json();
+
+
+        console.log(
+          "CHECKOUT RESPONSE:",
+          data
+        );
+
+
+        // --------------------------
+        // CHECK ERROR
+        // --------------------------
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+
+          alert(
+            data.message ||
+            "Checkout failed."
+          );
+
+          return;
+
+        }
+
+
+        // --------------------------
+        // SUCCESS
+        // --------------------------
+
+        alert(
+          "Order placed successfully!\n\n" +
+          "Order ID: " +
+          data.order_id +
+          "\n" +
+          "Total: $" +
+          Number(
+            data.total_amount
+          ).toFixed(2)
+        );
+
+
+        // --------------------------
+        // CLEAR CART
+        // --------------------------
+
+        cart = [];
+
+
+        updateCart();
+
+
+        // --------------------------
+        // CLOSE CART
+        // --------------------------
+
+        closeCartModal();
+
+      }
+
+
+      catch (error) {
+
+        console.error(
+          "CHECKOUT ERROR:",
+          error
+        );
+
+
+        alert(
+          "Unable to connect to the server."
+        );
+
+      }
 
     }
+  );
 
-
-    alert(
-      "Checkout system will be connected to the backend."
-    );
-
-  }
-);
+}
 
 
 // ==========================
@@ -677,4 +1067,3 @@ navLinks.forEach((link) => {
 // ==========================
 
 updateCart();
-
