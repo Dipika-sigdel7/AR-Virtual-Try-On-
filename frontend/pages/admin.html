@@ -32,9 +32,13 @@
 
             <div class="admin-title">
 
-                <h1>AR E-Commerce</h1>
+                <h1>
+                    AR E-Commerce
+                </h1>
 
-                <p>Admin Dashboard</p>
+                <p>
+                    Admin Dashboard
+                </p>
 
             </div>
 
@@ -60,7 +64,9 @@
             class="card login-card"
         >
 
-            <h2>Admin Login</h2>
+            <h2>
+                Admin Login
+            </h2>
 
             <p>
                 Enter your admin token to continue.
@@ -209,20 +215,12 @@
                          PRODUCT CATEGORY
                     ================================================== -->
 
-                    <div class="form-group">
+                    <div class="form-group category-product-group">
 
                         <label for="category">
                             Category
                         </label>
 
-
-                        <!--
-                            JavaScript will automatically add:
-
-                            + Add More Categories
-
-                            as the LAST option.
-                        -->
 
                         <select
                             id="category"
@@ -234,12 +232,136 @@
                                 Select Category
                             </option>
 
+                            <!--
+                                Categories will be loaded
+                                automatically by JavaScript.
+                            -->
+
                         </select>
 
 
                         <small>
                             Select a category for this product.
                         </small>
+
+
+
+                        <!-- =================================================
+                             INLINE ADD CATEGORY FORM
+
+                             This appears directly below
+                             the category dropdown.
+                        ================================================== -->
+
+                        <div
+                            id="inlineCategoryForm"
+                            class="inline-category-form hidden"
+                        >
+
+
+                            <!-- INLINE CATEGORY HEADER -->
+
+                            <div class="inline-category-header">
+
+                                <div>
+
+                                    <h3>
+                                        Add New Category
+                                    </h3>
+
+                                    <p>
+                                        Create a new product category.
+                                    </p>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    id="closeInlineCategoryBtn"
+                                    class="inline-close-btn"
+                                    aria-label="Close"
+                                    title="Close"
+                                >
+                                    ×
+                                </button>
+
+                            </div>
+
+
+
+                            <!-- CATEGORY NAME -->
+
+                            <div class="form-group">
+
+                                <label for="inlineCategoryName">
+                                    Category Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="inlineCategoryName"
+                                    placeholder="Enter category name"
+                                    maxlength="100"
+                                    autocomplete="off"
+                                >
+
+                            </div>
+
+
+
+                            <!-- CATEGORY DESCRIPTION -->
+
+                            <div class="form-group">
+
+                                <label for="inlineCategoryDescription">
+                                    Category Description
+                                </label>
+
+                                <textarea
+                                    id="inlineCategoryDescription"
+                                    rows="3"
+                                    maxlength="500"
+                                    placeholder="Enter category description"
+                                ></textarea>
+
+                            </div>
+
+
+
+                            <!-- CATEGORY BUTTONS -->
+
+                            <div class="form-buttons">
+
+                                <button
+                                    type="button"
+                                    id="saveInlineCategoryBtn"
+                                    class="primary-btn"
+                                >
+                                    + Add Category
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    id="cancelInlineCategoryBtn"
+                                    class="secondary-btn"
+                                >
+                                    Cancel
+                                </button>
+
+                            </div>
+
+
+
+                            <!-- CATEGORY MESSAGE -->
+
+                            <p
+                                id="inlineCategoryMessage"
+                                class="message"
+                            ></p>
+
+                        </div>
 
                     </div>
 
@@ -411,199 +533,6 @@
                     </div>
 
                 </div>
-
-            </div>
-
-
-
-            <!-- =====================================================
-                 CATEGORY MANAGEMENT
-            ====================================================== -->
-
-            <div
-                id="categoryManagement"
-                class="card category-card hidden"
-            >
-
-
-                <!-- CATEGORY HEADER -->
-
-                <div class="products-header">
-
-                    <div>
-
-                        <h2>
-                            Category Management
-                        </h2>
-
-                        <p>
-                            Add and manage product categories.
-                        </p>
-
-                    </div>
-
-
-                    <button
-                        type="button"
-                        id="hideCategoriesBtn"
-                        class="secondary-btn"
-                    >
-                        Close
-                    </button>
-
-                </div>
-
-
-
-                <!-- =================================================
-                     CATEGORY SCROLL AREA
-                ================================================== -->
-
-                <div
-                    id="categoryScrollArea"
-                    class="category-scroll-area"
-                >
-
-
-                    <!-- =================================================
-                         EXISTING CATEGORIES
-                    ================================================== -->
-
-                    <div
-                        id="adminCategoryList"
-                        class="admin-category-list"
-                    >
-
-                        <div class="loading-message">
-                            Loading categories...
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- =================================================
-                         ADD CATEGORY AREA
-                    ================================================== -->
-
-                    <div
-                        id="categoryAddArea"
-                        class="category-add-area"
-                    >
-
-
-                        <!--
-                            This button is inside the category
-                            management area.
-
-                            It opens the text fields.
-                        -->
-
-                        <button
-                            type="button"
-                            id="openCategoryFormBtn"
-                            class="add-category-scroll-btn"
-                        >
-                            + Add Category
-                        </button>
-
-
-
-                        <!-- =================================================
-                             CATEGORY FORM
-                        ================================================== -->
-
-                        <div
-                            id="categoryFormWrapper"
-                            class="category-form-wrapper hidden"
-                        >
-
-                            <form id="categoryForm">
-
-
-                                <!-- CATEGORY NAME -->
-
-                                <div class="form-group">
-
-                                    <label for="categoryName">
-                                        Category Name
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="categoryName"
-                                        name="categoryName"
-                                        placeholder="Enter category name"
-                                        maxlength="100"
-                                        autocomplete="off"
-                                        required
-                                    >
-
-                                </div>
-
-
-
-                                <!-- CATEGORY DESCRIPTION -->
-
-                                <div class="form-group">
-
-                                    <label for="categoryDescription">
-                                        Category Description
-                                    </label>
-
-                                    <textarea
-                                        id="categoryDescription"
-                                        name="categoryDescription"
-                                        rows="3"
-                                        maxlength="500"
-                                        placeholder="Enter category description"
-                                    ></textarea>
-
-                                </div>
-
-
-
-                                <!-- =================================================
-                                     CATEGORY FORM BUTTONS
-                                ================================================== -->
-
-                                <div class="form-buttons">
-
-                                    <button
-                                        type="submit"
-                                        id="addCategoryBtn"
-                                        class="primary-btn"
-                                    >
-                                        Add Category
-                                    </button>
-
-
-                                    <button
-                                        type="button"
-                                        id="cancelCategoryBtn"
-                                        class="secondary-btn"
-                                    >
-                                        Cancel
-                                    </button>
-
-                                </div>
-
-                            </form>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-
-                <!-- CATEGORY MESSAGE -->
-
-                <p
-                    id="categoryMessage"
-                    class="message"
-                ></p>
 
             </div>
 

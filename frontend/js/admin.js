@@ -55,44 +55,43 @@ const toggleToken =
 
 
 /* =========================================================
-   CATEGORY ELEMENTS
+   INLINE CATEGORY ELEMENTS
 ========================================================= */
 
-const categoryForm =
-    document.getElementById("categoryForm");
+const inlineCategoryForm =
+    document.getElementById(
+        "inlineCategoryForm"
+    );
 
-const categoryNameInput =
-    document.getElementById("categoryName");
+const inlineCategoryName =
+    document.getElementById(
+        "inlineCategoryName"
+    );
 
-const categoryDescriptionInput =
-    document.getElementById("categoryDescription");
+const inlineCategoryDescription =
+    document.getElementById(
+        "inlineCategoryDescription"
+    );
 
-const categoryMessage =
-    document.getElementById("categoryMessage");
+const saveInlineCategoryBtn =
+    document.getElementById(
+        "saveInlineCategoryBtn"
+    );
 
-const addCategoryBtn =
-    document.getElementById("addCategoryBtn");
+const cancelInlineCategoryBtn =
+    document.getElementById(
+        "cancelInlineCategoryBtn"
+    );
 
-const adminCategoryList =
-    document.getElementById("adminCategoryList");
+const closeInlineCategoryBtn =
+    document.getElementById(
+        "closeInlineCategoryBtn"
+    );
 
-const hideCategoriesBtn =
-    document.getElementById("hideCategoriesBtn");
-
-const categoryManagement =
-    document.getElementById("categoryManagement");
-
-const addMoreCategoriesBtn =
-    document.getElementById("addMoreCategoriesBtn");
-
-const openCategoryFormBtn =
-    document.getElementById("openCategoryFormBtn");
-
-const cancelCategoryBtn =
-    document.getElementById("cancelCategoryBtn");
-
-const categoryFormWrapper =
-    document.getElementById("categoryFormWrapper");
+const inlineCategoryMessage =
+    document.getElementById(
+        "inlineCategoryMessage"
+    );
 
 
 /* =========================================================
@@ -203,6 +202,10 @@ if (loginForm) {
                 }
 
 
+                /*
+                 * Save token
+                 */
+
                 localStorage.setItem(
                     "adminToken",
                     token
@@ -282,7 +285,9 @@ async function showDashboard() {
    LOAD CATEGORIES
 ========================================================= */
 
-async function loadCategories() {
+async function loadCategories(
+    selectedCategoryId = null
+) {
 
     if (!categorySelect) {
         return;
@@ -290,6 +295,10 @@ async function loadCategories() {
 
 
     try {
+
+        /*
+         * Temporary loading option
+         */
 
         categorySelect.innerHTML = `
             <option value="">
@@ -321,52 +330,122 @@ async function loadCategories() {
         }
 
 
-        categorySelect.innerHTML = `
-            <option value="">
-                Select Category
-            </option>
-        `;
+        /*
+         * Clear dropdown
+         */
 
+        categorySelect.innerHTML = "";
+
+
+        /*
+         * Default option
+         */
+
+        const defaultOption =
+            document.createElement(
+                "option"
+            );
+
+
+        defaultOption.value =
+            "";
+
+
+        defaultOption.textContent =
+            "Select Category";
+
+
+        categorySelect.appendChild(
+            defaultOption
+        );
+
+
+        /*
+         * Existing categories
+         */
 
         if (
-            !data.categories ||
-            data.categories.length === 0
+            data.categories &&
+            data.categories.length > 0
         ) {
 
-            categorySelect.innerHTML = `
-                <option value="">
-                    No categories available
-                </option>
-            `;
+            data.categories.forEach(
+                function (category) {
 
-            return;
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    option.value =
+                        category.id;
+
+
+                    option.textContent =
+                        category.name;
+
+
+                    categorySelect.appendChild(
+                        option
+                    );
+
+                }
+            );
 
         }
 
 
-        data.categories.forEach(
-            function (category) {
+        /*
+         * IMPORTANT
+         *
+         * This option is always LAST.
+         *
+         * Therefore when the admin opens
+         * the dropdown they will see:
+         *
+         * Category 1
+         * Category 2
+         * Category 3
+         * + Add More Categories
+         */
 
-                const option =
-                    document.createElement(
-                        "option"
-                    );
+        const addCategoryOption =
+            document.createElement(
+                "option"
+            );
 
 
-                option.value =
-                    category.id;
+        addCategoryOption.value =
+            "__add_category__";
 
 
-                option.textContent =
-                    category.name;
+        addCategoryOption.textContent =
+            "+ Add More Categories";
 
 
-                categorySelect.appendChild(
-                    option
-                );
+        addCategoryOption.className =
+            "add-category-option";
 
-            }
+
+        categorySelect.appendChild(
+            addCategoryOption
         );
+
+
+        /*
+         * Restore selected category
+         */
+
+        if (
+            selectedCategoryId !== null &&
+            selectedCategoryId !== undefined
+        ) {
+
+            categorySelect.value =
+                String(selectedCategoryId);
+
+        }
 
 
     } catch (error) {
@@ -381,9 +460,385 @@ async function loadCategories() {
             <option value="">
                 Failed to load categories
             </option>
+
+            <option value="__add_category__">
+                + Add More Categories
+            </option>
         `;
 
     }
+
+}
+
+
+/* =========================================================
+   CATEGORY DROPDOWN
+========================================================= */
+
+if (categorySelect) {
+
+    categorySelect.addEventListener(
+        "change",
+        function () {
+
+            /*
+             * Check if the special
+             * Add More Categories option
+             * was selected.
+             */
+
+            if (
+                categorySelect.value ===
+                "__add_category__"
+            ) {
+
+                /*
+                 * Return dropdown to normal
+                 * selection.
+                 */
+
+                categorySelect.value =
+                    "";
+
+
+                /*
+                 * Open the form DIRECTLY
+                 * below the dropdown.
+                 */
+
+                openInlineCategoryForm();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   OPEN INLINE CATEGORY FORM
+========================================================= */
+
+function openInlineCategoryForm() {
+
+    if (!inlineCategoryForm) {
+        return;
+    }
+
+
+    /*
+     * Show the form.
+     *
+     * It is physically located directly
+     * below the category dropdown in HTML.
+     */
+
+    inlineCategoryForm.classList.remove(
+        "hidden"
+    );
+
+
+    /*
+     * Clear old message.
+     */
+
+    if (inlineCategoryMessage) {
+
+        inlineCategoryMessage.textContent =
+            "";
+
+    }
+
+
+    /*
+     * Focus category name.
+     *
+     * preventScroll is intentional.
+     *
+     * It prevents the page from jumping.
+     */
+
+    setTimeout(
+        function () {
+
+            if (inlineCategoryName) {
+
+                inlineCategoryName.focus({
+                    preventScroll: true
+                });
+
+            }
+
+        },
+        50
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE INLINE CATEGORY FORM
+========================================================= */
+
+function closeInlineCategoryForm() {
+
+    if (inlineCategoryForm) {
+
+        inlineCategoryForm.classList.add(
+            "hidden"
+        );
+
+    }
+
+
+    if (inlineCategoryName) {
+
+        inlineCategoryName.value =
+            "";
+
+    }
+
+
+    if (inlineCategoryDescription) {
+
+        inlineCategoryDescription.value =
+            "";
+
+    }
+
+
+    if (inlineCategoryMessage) {
+
+        inlineCategoryMessage.textContent =
+            "";
+
+    }
+
+
+    /*
+     * Reset dropdown
+     */
+
+    if (categorySelect) {
+
+        categorySelect.value =
+            "";
+
+    }
+
+}
+
+
+/* =========================================================
+   CANCEL INLINE CATEGORY
+========================================================= */
+
+if (cancelInlineCategoryBtn) {
+
+    cancelInlineCategoryBtn.addEventListener(
+        "click",
+        function () {
+
+            closeInlineCategoryForm();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE INLINE CATEGORY X BUTTON
+========================================================= */
+
+if (closeInlineCategoryBtn) {
+
+    closeInlineCategoryBtn.addEventListener(
+        "click",
+        function () {
+
+            closeInlineCategoryForm();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SAVE INLINE CATEGORY
+========================================================= */
+
+if (saveInlineCategoryBtn) {
+
+    saveInlineCategoryBtn.addEventListener(
+        "click",
+        async function () {
+
+            const name =
+                inlineCategoryName.value.trim();
+
+
+            const description =
+                inlineCategoryDescription.value.trim();
+
+
+            /*
+             * Validate category name
+             */
+
+            if (!name) {
+
+                inlineCategoryMessage.textContent =
+                    "Please enter a category name.";
+
+                inlineCategoryName.focus();
+
+                return;
+
+            }
+
+
+            /*
+             * Disable button
+             */
+
+            saveInlineCategoryBtn.disabled =
+                true;
+
+
+            inlineCategoryMessage.textContent =
+                "Adding category...";
+
+
+            try {
+
+                /*
+                 * Send category to backend
+                 */
+
+                const response =
+                    await fetch(
+                        "/api/admin/categories",
+                        {
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json",
+
+                                "x-admin-token":
+                                    adminToken
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    name:
+                                        name,
+
+                                    description:
+                                        description ||
+                                        null
+
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                /*
+                 * Check response
+                 */
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    throw new Error(
+                        data.message ||
+                        "Failed to add category."
+                    );
+
+                }
+
+
+                /*
+                 * Try to get new category ID
+                 */
+
+                const newCategoryId =
+                    data.category?.id ||
+                    data.category_id ||
+                    data.id ||
+                    null;
+
+
+                /*
+                 * Success message
+                 */
+
+                inlineCategoryMessage.textContent =
+                    data.message ||
+                    "Category added successfully.";
+
+
+                /*
+                 * Reload categories.
+                 *
+                 * This makes the new category
+                 * immediately available in
+                 * the product dropdown.
+                 */
+
+                await loadCategories(
+                    newCategoryId
+                );
+
+
+                /*
+                 * Close form after successful
+                 * creation.
+                 */
+
+                setTimeout(
+                    function () {
+
+                        closeInlineCategoryForm();
+
+                    },
+                    500
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "ADD CATEGORY ERROR:",
+                    error
+                );
+
+
+                inlineCategoryMessage.textContent =
+                    error.message;
+
+            } finally {
+
+                saveInlineCategoryBtn.disabled =
+                    false;
+
+            }
+
+        }
+    );
 
 }
 
@@ -448,7 +903,9 @@ async function loadProducts() {
 
         productsContainer.innerHTML = `
             <p>
-                ${escapeHTML(error.message)}
+                ${escapeHTML(
+                    error.message
+                )}
             </p>
         `;
 
@@ -515,7 +972,7 @@ function displayProducts(products) {
                         <strong>Price:</strong>
                         Rs.
                         ${Number(
-                            product.price
+                            product.price || 0
                         ).toFixed(2)}
                     </p>
 
@@ -601,57 +1058,90 @@ if (productForm) {
                 productIdInput.value;
 
 
-            const name =
+            const nameInput =
                 document.getElementById(
                     "name"
-                ).value.trim();
+                );
+
+
+            const descriptionInput =
+                document.getElementById(
+                    "description"
+                );
+
+
+            const priceInput =
+                document.getElementById(
+                    "price"
+                );
+
+
+            const stockInput =
+                document.getElementById(
+                    "stock"
+                );
+
+
+            const name =
+                nameInput.value.trim();
 
 
             const description =
-                document.getElementById(
-                    "description"
-                ).value.trim();
+                descriptionInput.value.trim();
 
 
-            const category_id =
+            const categoryId =
                 categorySelect.value;
 
 
             const price =
-                document.getElementById(
-                    "price"
-                ).value;
+                priceInput.value;
 
 
             const stock =
-                document.getElementById(
-                    "stock"
-                ).value;
+                stockInput.value;
 
 
-            /* -------------------------
-               VALIDATION
-            ------------------------- */
+            /*
+             * Validate name
+             */
 
             if (!name) {
 
                 productMessage.textContent =
                     "Product name is required.";
 
+                nameInput.focus();
+
                 return;
 
             }
 
 
-            if (!category_id) {
+            /*
+             * Prevent special category option
+             * from being submitted.
+             */
+
+            if (
+                !categoryId ||
+                categoryId ===
+                "__add_category__"
+            ) {
 
                 productMessage.textContent =
                     "Please select a category.";
 
+                categorySelect.focus();
+
                 return;
 
             }
 
+
+            /*
+             * Validate price
+             */
 
             if (
                 !price ||
@@ -661,10 +1151,16 @@ if (productForm) {
                 productMessage.textContent =
                     "Price must be greater than 0.";
 
+                priceInput.focus();
+
                 return;
 
             }
 
+
+            /*
+             * Validate stock
+             */
 
             if (
                 stock === "" ||
@@ -674,24 +1170,27 @@ if (productForm) {
                 productMessage.textContent =
                     "Stock cannot be negative.";
 
+                stockInput.focus();
+
                 return;
 
             }
 
 
-            /* -------------------------
-               PRODUCT DATA
-            ------------------------- */
+            /*
+             * Product data
+             */
 
             const productData = {
 
-                name: name,
+                name:
+                    name,
 
                 description:
                     description || null,
 
                 category_id:
-                    Number(category_id),
+                    Number(categoryId),
 
                 price:
                     Number(price),
@@ -726,7 +1225,8 @@ if (productForm) {
                     await fetch(
                         url,
                         {
-                            method: method,
+                            method:
+                                method,
 
                             headers: {
 
@@ -847,8 +1347,13 @@ async function editProduct(id) {
             product.description || "";
 
 
-        categorySelect.value =
-            product.category_id;
+        /*
+         * Make sure categories are loaded.
+         */
+
+        await loadCategories(
+            product.category_id
+        );
 
 
         document.getElementById(
@@ -872,8 +1377,10 @@ async function editProduct(id) {
 
 
         /*
-         * This scroll is ONLY for editing a product.
-         * It does not affect category buttons.
+         * Product editing can scroll to
+         * the product form.
+         *
+         * This is NOT used for categories.
          */
 
         productForm.scrollIntoView({
@@ -1024,7 +1531,6 @@ if (imageInput) {
                 imagePreview.innerHTML =
                     "";
 
-
                 return;
 
             }
@@ -1046,7 +1552,6 @@ if (imageInput) {
 
                 imagePreview.innerHTML =
                     "";
-
 
                 return;
 
@@ -1138,6 +1643,14 @@ function resetForm() {
 
     }
 
+
+    /*
+     * Close inline category form
+     * when product form is reset.
+     */
+
+    closeInlineCategoryForm();
+
 }
 
 
@@ -1149,9 +1662,11 @@ if (refreshBtn) {
 
     refreshBtn.addEventListener(
         "click",
-        function () {
+        async function () {
 
-            loadProducts();
+            await loadCategories();
+
+            await loadProducts();
 
         }
     );
@@ -1210,19 +1725,6 @@ if (logoutBtn) {
 
             resetForm();
 
-
-            /*
-             * Close category management
-             */
-
-            if (categoryManagement) {
-
-                categoryManagement.classList.add(
-                    "hidden"
-                );
-
-            }
-
         }
     );
 
@@ -1276,636 +1778,6 @@ if (toggleToken) {
 
         }
     );
-
-}
-
-
-/* =========================================================
-   OPEN CATEGORY MANAGEMENT
-========================================================= */
-
-if (addMoreCategoriesBtn) {
-
-    addMoreCategoriesBtn.addEventListener(
-        "click",
-        async function (event) {
-
-            event.preventDefault();
-
-
-            if (!categoryManagement) {
-                return;
-            }
-
-
-            /*
-             * Open category management.
-             *
-             * IMPORTANT:
-             * There is NO scrollIntoView() here.
-             *
-             * Therefore the page will not jump.
-             */
-
-            categoryManagement.classList.remove(
-                "hidden"
-            );
-
-
-            /*
-             * Load latest categories.
-             */
-
-            await loadAdminCategories();
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CLOSE CATEGORY MANAGEMENT
-========================================================= */
-
-if (hideCategoriesBtn) {
-
-    hideCategoriesBtn.addEventListener(
-        "click",
-        function () {
-
-            if (!categoryManagement) {
-                return;
-            }
-
-
-            categoryManagement.classList.add(
-                "hidden"
-            );
-
-
-            /*
-             * Also close the add-category form.
-             */
-
-            closeCategoryForm();
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   OPEN ADD CATEGORY FORM
-========================================================= */
-
-if (openCategoryFormBtn) {
-
-    openCategoryFormBtn.addEventListener(
-        "click",
-        function (event) {
-
-            event.preventDefault();
-
-
-            /*
-             * Show form inside the
-             * category scroll area.
-             */
-
-            if (categoryFormWrapper) {
-
-                categoryFormWrapper.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-
-            /*
-             * Hide Add Category button.
-             */
-
-            openCategoryFormBtn.classList.add(
-                "hidden"
-            );
-
-
-            /*
-             * Focus input.
-             *
-             * preventScroll prevents the browser
-             * from moving the whole page.
-             */
-
-            if (categoryNameInput) {
-
-                setTimeout(
-                    function () {
-
-                        categoryNameInput.focus({
-                            preventScroll: true
-                        });
-
-                    },
-                    50
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CLOSE ADD CATEGORY FORM
-========================================================= */
-
-if (cancelCategoryBtn) {
-
-    cancelCategoryBtn.addEventListener(
-        "click",
-        function () {
-
-            closeCategoryForm();
-
-        }
-    );
-
-}
-
-
-function closeCategoryForm() {
-
-    if (categoryFormWrapper) {
-
-        categoryFormWrapper.classList.add(
-            "hidden"
-        );
-
-    }
-
-
-    if (openCategoryFormBtn) {
-
-        openCategoryFormBtn.classList.remove(
-            "hidden"
-        );
-
-    }
-
-
-    if (categoryForm) {
-
-        categoryForm.reset();
-
-    }
-
-
-    if (categoryMessage) {
-
-        categoryMessage.textContent =
-            "";
-
-    }
-
-}
-
-
-/* =========================================================
-   LOAD ADMIN CATEGORIES
-========================================================= */
-
-async function loadAdminCategories() {
-
-    if (!adminCategoryList) {
-        return;
-    }
-
-
-    try {
-
-        adminCategoryList.innerHTML = `
-            <div class="loading-message">
-                Loading categories...
-            </div>
-        `;
-
-
-        const response =
-            await fetch(
-                "/api/products/categories"
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !data.success
-        ) {
-
-            throw new Error(
-                data.message ||
-                "Failed to load categories."
-            );
-
-        }
-
-
-        displayAdminCategories(
-            data.categories
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "CATEGORY LOAD ERROR:",
-            error
-        );
-
-
-        adminCategoryList.innerHTML = `
-            <p>
-                ${escapeHTML(
-                    error.message
-                )}
-            </p>
-        `;
-
-    }
-
-}
-
-
-/* =========================================================
-   DISPLAY ADMIN CATEGORIES
-========================================================= */
-
-function displayAdminCategories(
-    categories
-) {
-
-    if (
-        !categories ||
-        categories.length === 0
-    ) {
-
-        adminCategoryList.innerHTML = `
-            <p>
-                No categories found.
-            </p>
-        `;
-
-        return;
-
-    }
-
-
-    adminCategoryList.innerHTML =
-        "";
-
-
-    categories.forEach(
-        function (category) {
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-
-            /*
-             * This class can be styled
-             * by admin.css.
-             */
-
-            card.className =
-                "admin-category-card";
-
-
-            card.innerHTML = `
-
-                <div class="category-info">
-
-                    <h4>
-                        ${escapeHTML(
-                            category.name
-                        )}
-                    </h4>
-
-
-                    <p>
-                        ${escapeHTML(
-                            category.description ||
-                            "No description"
-                        )}
-                    </p>
-
-                </div>
-
-
-                <button
-                    type="button"
-                    class="delete-category-btn"
-                    data-id="${category.id}"
-                >
-                    Delete
-                </button>
-
-            `;
-
-
-            adminCategoryList.appendChild(
-                card
-            );
-
-        }
-    );
-
-
-    /*
-     * Add delete events.
-     */
-
-    const deleteButtons =
-        adminCategoryList.querySelectorAll(
-            ".delete-category-btn"
-        );
-
-
-    deleteButtons.forEach(
-        function (button) {
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    const categoryId =
-                        button.dataset.id;
-
-
-                    deleteCategory(
-                        categoryId
-                    );
-
-                }
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ADD CATEGORY
-========================================================= */
-
-if (categoryForm) {
-
-    categoryForm.addEventListener(
-        "submit",
-        async function (event) {
-
-            event.preventDefault();
-
-
-            const name =
-                categoryNameInput.value.trim();
-
-
-            const description =
-                categoryDescriptionInput.value.trim();
-
-
-            if (!name) {
-
-                categoryMessage.textContent =
-                    "Please enter a category name.";
-
-                categoryNameInput.focus();
-
-                return;
-
-            }
-
-
-            try {
-
-                categoryMessage.textContent =
-                    "Adding category...";
-
-
-                addCategoryBtn.disabled =
-                    true;
-
-
-                const response =
-                    await fetch(
-                        "/api/admin/categories",
-                        {
-                            method: "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json",
-
-                                "x-admin-token":
-                                    adminToken
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    name:
-                                        name,
-
-                                    description:
-                                        description ||
-                                        null
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    !response.ok ||
-                    !data.success
-                ) {
-
-                    throw new Error(
-                        data.message ||
-                        "Failed to add category."
-                    );
-
-                }
-
-
-                categoryMessage.textContent =
-                    data.message ||
-                    "Category added successfully.";
-
-
-                /*
-                 * Clear form.
-                 */
-
-                categoryNameInput.value =
-                    "";
-
-                categoryDescriptionInput.value =
-                    "";
-
-
-                /*
-                 * Refresh category list.
-                 */
-
-                await loadAdminCategories();
-
-
-                /*
-                 * Refresh product category dropdown.
-                 */
-
-                await loadCategories();
-
-
-                /*
-                 * Keep the form open.
-                 *
-                 * This allows the admin to
-                 * immediately add another category.
-                 */
-
-                categoryNameInput.focus({
-                    preventScroll: true
-                });
-
-
-            } catch (error) {
-
-                console.error(
-                    "ADD CATEGORY ERROR:",
-                    error
-                );
-
-
-                categoryMessage.textContent =
-                    error.message;
-
-
-            } finally {
-
-                addCategoryBtn.disabled =
-                    false;
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   DELETE CATEGORY
-========================================================= */
-
-async function deleteCategory(
-    categoryId
-) {
-
-    const confirmed =
-        confirm(
-            "Are you sure you want to delete this category?"
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/admin/categories/${categoryId}`,
-                {
-                    method: "DELETE",
-
-                    headers: {
-                        "x-admin-token":
-                            adminToken
-                    }
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !data.success
-        ) {
-
-            throw new Error(
-                data.message ||
-                "Failed to delete category."
-            );
-
-        }
-
-
-        categoryMessage.textContent =
-            data.message ||
-            "Category deleted successfully.";
-
-
-        /*
-         * Reload category list.
-         */
-
-        await loadAdminCategories();
-
-
-        /*
-         * Reload product dropdown.
-         */
-
-        await loadCategories();
-
-
-    } catch (error) {
-
-        console.error(
-            "DELETE CATEGORY ERROR:",
-            error
-        );
-
-
-        categoryMessage.textContent =
-            error.message;
-
-    }
 
 }
 
