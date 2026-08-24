@@ -1,13 +1,13 @@
 /* =========================================================
    AR E-COMMERCE — PREMIUM ADMIN DASHBOARD
-   ========================================================= */
+========================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 
 /* =========================================================
    RESET
-   ========================================================= */
+========================================================= */
 
 * {
     margin: 0;
@@ -15,16 +15,14 @@
     box-sizing: border-box;
 }
 
-
 html {
     scroll-behavior: smooth;
 }
 
-
 body {
-    font-family: "Inter", Arial, sans-serif;
-
     min-height: 100vh;
+
+    font-family: "Inter", Arial, sans-serif;
 
     color: #f8fafc;
 
@@ -52,7 +50,7 @@ body {
 
 /* =========================================================
    ANIMATED BACKGROUND
-   ========================================================= */
+========================================================= */
 
 body::before,
 body::after {
@@ -73,25 +71,25 @@ body::after {
 
     z-index: -1;
 
-    animation: floatingGlow 10s ease-in-out infinite alternate;
+    animation:
+        floatingGlow 10s ease-in-out infinite alternate;
 }
 
 body::before {
-    background: #6366f1;
-
     top: -100px;
     left: -100px;
+
+    background: #6366f1;
 }
 
 body::after {
-    background: #a855f7;
-
-    bottom: -100px;
     right: -100px;
+    bottom: -100px;
+
+    background: #a855f7;
 
     animation-delay: 3s;
 }
-
 
 @keyframes floatingGlow {
 
@@ -111,12 +109,10 @@ body::after {
 
 /* =========================================================
    MAIN CONTAINER
-   ========================================================= */
+========================================================= */
 
 .admin-container {
-
     width: 100%;
-
     max-width: 1250px;
 
     margin: auto;
@@ -125,7 +121,6 @@ body::after {
 
     animation: pageEnter 0.8s ease;
 }
-
 
 @keyframes pageEnter {
 
@@ -143,20 +138,17 @@ body::after {
 
 /* =========================================================
    HEADER
-   ========================================================= */
+========================================================= */
 
 .admin-header {
-
     position: relative;
 
     display: flex;
 
+    align-items: center;
     justify-content: space-between;
 
-    align-items: center;
-
     padding: 25px 30px;
-
     margin-bottom: 30px;
 
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -173,9 +165,7 @@ body::after {
     overflow: hidden;
 }
 
-
 .admin-header::before {
-
     content: "";
 
     position: absolute;
@@ -186,53 +176,50 @@ body::after {
     width: 100%;
     height: 2px;
 
-    background: linear-gradient(
-        90deg,
-        transparent,
-        #6366f1,
-        #a855f7,
-        transparent
-    );
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #6366f1,
+            #a855f7,
+            transparent
+        );
 
-    animation: headerLight 4s linear infinite;
+    animation:
+        headerLight 4s linear infinite;
 }
-
 
 @keyframes headerLight {
 
-    0% {
+    from {
         left: -100%;
     }
 
-    100% {
+    to {
         left: 100%;
     }
 }
 
-
 .admin-header h1 {
-
     font-size: 30px;
 
     font-weight: 800;
 
     letter-spacing: -1px;
 
-    background: linear-gradient(
-        90deg,
-        #ffffff,
-        #a5b4fc,
-        #c084fc
-    );
+    background:
+        linear-gradient(
+            90deg,
+            #ffffff,
+            #a5b4fc,
+            #c084fc
+        );
 
     -webkit-background-clip: text;
-
     -webkit-text-fill-color: transparent;
 }
 
-
 .admin-header p {
-
     margin-top: 6px;
 
     color: #94a3b8;
@@ -242,26 +229,28 @@ body::after {
 
 
 /* =========================================================
-   LOGOUT
-   ========================================================= */
+   LOGOUT BUTTON
+========================================================= */
 
 .logout-btn {
-
     position: relative;
-
-    border: none;
 
     padding: 12px 22px;
 
+    border: none;
+
     border-radius: 10px;
 
-    background: linear-gradient(
-        135deg,
-        #ef4444,
-        #dc2626
-    );
+    background:
+        linear-gradient(
+            135deg,
+            #ef4444,
+            #dc2626
+        );
 
     color: white;
+
+    font-family: inherit;
 
     font-weight: 600;
 
@@ -274,37 +263,31 @@ body::after {
         box-shadow 0.25s ease;
 }
 
-
 .logout-btn:hover {
-
     transform: translateY(-3px);
 
     box-shadow:
         0 10px 25px rgba(239, 68, 68, 0.35);
 }
 
-
 .logout-btn:active {
-
     transform: scale(0.96);
 }
 
 
 /* =========================================================
    CARDS
-   ========================================================= */
+========================================================= */
 
 .card {
-
     position: relative;
 
     padding: 30px;
-
     margin-bottom: 25px;
 
-    border-radius: 20px;
-
     border: 1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 20px;
 
     background: rgba(15, 23, 42, 0.72);
 
@@ -313,14 +296,17 @@ body::after {
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.30);
 
-    animation: cardEnter 0.7s ease both;
+    animation:
+        cardEnter 0.7s ease both;
 
     overflow: hidden;
+
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
-
 .card::before {
-
     content: "";
 
     position: absolute;
@@ -331,28 +317,26 @@ body::after {
     width: 100%;
     height: 1px;
 
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(129, 140, 248, 0.7),
-        transparent
-    );
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(129, 140, 248, 0.7),
+            transparent
+        );
 }
 
-
 .card:hover {
-
-    border-color: rgba(129, 140, 248, 0.20);
+    border-color:
+        rgba(129, 140, 248, 0.20);
 
     box-shadow:
         0 25px 60px rgba(0, 0, 0, 0.40);
 }
 
-
 @keyframes cardEnter {
 
     from {
-
         opacity: 0;
 
         transform:
@@ -361,7 +345,6 @@ body::after {
     }
 
     to {
-
         opacity: 1;
 
         transform:
@@ -372,26 +355,23 @@ body::after {
 
 
 /* =========================================================
-   HEADINGS
-   ========================================================= */
+   CARD HEADINGS
+========================================================= */
 
 .card h2 {
+    margin-bottom: 10px;
+
+    color: #f8fafc;
 
     font-size: 24px;
 
     font-weight: 700;
-
-    margin-bottom: 10px;
-
-    color: #f8fafc;
 }
 
-
 .card > p {
+    margin-bottom: 25px;
 
     color: #94a3b8;
-
-    margin-bottom: 25px;
 
     font-size: 14px;
 }
@@ -399,23 +379,35 @@ body::after {
 
 /* =========================================================
    LOGIN
-   ========================================================= */
+========================================================= */
 
 #loginSection {
-
     max-width: 650px;
 
     margin: 70px auto;
 
     animation:
-        loginEnter 0.8s cubic-bezier(.2,.8,.2,1);
+        loginEnter 0.8s cubic-bezier(.2, .8, .2, 1);
 }
 
+#loginSection h2 {
+    font-size: 28px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ffffff,
+            #a5b4fc
+        );
+
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+}
 
 @keyframes loginEnter {
 
     from {
-
         opacity: 0;
 
         transform:
@@ -424,7 +416,6 @@ body::after {
     }
 
     to {
-
         opacity: 1;
 
         transform:
@@ -434,58 +425,41 @@ body::after {
 }
 
 
-#loginSection h2 {
-
-    font-size: 28px;
-
-    background: linear-gradient(
-        90deg,
-        #ffffff,
-        #a5b4fc
-    );
-
-    -webkit-background-clip: text;
-
-    -webkit-text-fill-color: transparent;
-}
-
-
 /* =========================================================
    FORM
-   ========================================================= */
+========================================================= */
 
 .form-group {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
 
     margin-bottom: 20px;
 }
 
-
 .form-group label,
 #loginForm label {
-
     display: block;
 
-    margin-bottom: 8px;
+    color: #cbd5e1;
 
     font-size: 13px;
 
     font-weight: 600;
-
-    color: #cbd5e1;
 }
-
 
 input,
 textarea,
 select {
-
     width: 100%;
 
     padding: 13px 15px;
 
-    border-radius: 10px;
-
     border: 1px solid rgba(255, 255, 255, 0.10);
+
+    border-radius: 10px;
 
     outline: none;
 
@@ -498,23 +472,19 @@ select {
     font-size: 14px;
 
     transition:
-        border 0.25s ease,
+        border-color 0.25s ease,
         box-shadow 0.25s ease,
         transform 0.25s ease;
 }
 
-
 input::placeholder,
 textarea::placeholder {
-
     color: #64748b;
 }
-
 
 input:focus,
 textarea:focus,
 select:focus {
-
     border-color: #6366f1;
 
     box-shadow:
@@ -524,27 +494,32 @@ select:focus {
     transform: translateY(-1px);
 }
 
-
 textarea {
-
     min-height: 120px;
 
     resize: vertical;
 }
 
+.form-group small {
+    display: block;
 
-/* =========================================================
-   SELECT
-   ========================================================= */
+    margin-top: 2px;
 
-select {
+    color: #64748b;
 
-    cursor: pointer;
+    font-size: 11px;
 }
 
 
-select option {
+/* =========================================================
+   SELECT
+========================================================= */
 
+select {
+    cursor: pointer;
+}
+
+select option {
     background: #0f172a;
 
     color: white;
@@ -553,10 +528,9 @@ select option {
 
 /* =========================================================
    FILE INPUT
-   ========================================================= */
+========================================================= */
 
 input[type="file"] {
-
     padding: 10px;
 
     cursor: pointer;
@@ -564,14 +538,12 @@ input[type="file"] {
     background: rgba(2, 6, 23, 0.8);
 }
 
-
 input[type="file"]::file-selector-button {
-
-    border: none;
-
     padding: 9px 14px;
 
     margin-right: 10px;
+
+    border: none;
 
     border-radius: 7px;
 
@@ -583,42 +555,86 @@ input[type="file"]::file-selector-button {
 
     cursor: pointer;
 
-    transition: 0.2s ease;
+    transition:
+        background 0.2s ease;
 }
 
-
 input[type="file"]::file-selector-button:hover {
-
     background: #6366f1;
 }
 
 
 /* =========================================================
-   SMALL TEXT
-   ========================================================= */
+   TOKEN INPUT + EYE BUTTON
+========================================================= */
 
-.form-group small {
+.token-wrapper {
+    position: relative;
 
-    display: block;
+    width: 100%;
+}
 
-    margin-top: 7px;
+.token-wrapper input {
+    width: 100%;
+
+    padding-right: 55px;
+}
+
+.eye-btn {
+    position: absolute;
+
+    top: 50%;
+    right: 8px;
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    transform: translateY(-50%);
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: transparent;
 
     color: #64748b;
 
-    font-size: 11px;
+    font-size: 18px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        color 0.25s ease,
+        transform 0.25s ease;
+}
+
+.eye-btn:hover {
+    background:
+        rgba(99, 102, 241, 0.12);
+
+    color: #818cf8;
+}
+
+.eye-btn:active {
+    transform:
+        translateY(-50%)
+        scale(0.9);
 }
 
 
 /* =========================================================
    BUTTONS
-   ========================================================= */
+========================================================= */
 
 .primary-btn,
 .secondary-btn {
-
     position: relative;
-
-    border: none;
 
     padding: 12px 20px;
 
@@ -639,10 +655,8 @@ input[type="file"]::file-selector-button:hover {
         box-shadow 0.25s ease;
 }
 
-
 .primary-btn {
-
-    color: white;
+    border: none;
 
     background:
         linear-gradient(
@@ -651,72 +665,65 @@ input[type="file"]::file-selector-button:hover {
             #7c3aed
         );
 
+    color: white;
+
     box-shadow:
         0 8px 20px rgba(79, 70, 229, 0.25);
 }
 
-
 .primary-btn:hover {
-
     transform: translateY(-3px);
 
     box-shadow:
         0 14px 30px rgba(79, 70, 229, 0.40);
 }
 
-
-.primary-btn:active,
-.secondary-btn:active {
-
-    transform: scale(0.96);
-}
-
-
 .secondary-btn {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    background:
+        rgba(51, 65, 85, 0.65);
 
     color: #cbd5e1;
-
-    background: rgba(51, 65, 85, 0.65);
-
-    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-
 .secondary-btn:hover {
-
     transform: translateY(-2px);
 
-    background: rgba(71, 85, 105, 0.8);
+    background:
+        rgba(71, 85, 105, 0.8);
 
     box-shadow:
         0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
+.primary-btn:active,
+.secondary-btn:active {
+    transform: scale(0.96);
+}
+
 
 /* =========================================================
-   BUTTON SHINE ANIMATION
-   ========================================================= */
+   BUTTON SHINE
+========================================================= */
 
 .primary-btn::before,
 .logout-btn::before {
-
     content: "";
 
     position: absolute;
 
     top: 0;
-
     left: -100%;
 
     width: 50%;
-
     height: 100%;
 
     background:
         linear-gradient(
             90deg,
             transparent,
-            rgba(255,255,255,0.25),
+            rgba(255, 255, 255, 0.25),
             transparent
         );
 
@@ -725,20 +732,17 @@ input[type="file"]::file-selector-button:hover {
     transition: 0.6s;
 }
 
-
 .primary-btn:hover::before,
 .logout-btn:hover::before {
-
     left: 150%;
 }
 
 
 /* =========================================================
    FORM BUTTONS
-   ========================================================= */
+========================================================= */
 
 .form-buttons {
-
     display: flex;
 
     gap: 12px;
@@ -749,32 +753,27 @@ input[type="file"]::file-selector-button:hover {
 
 /* =========================================================
    PRODUCTS HEADER
-   ========================================================= */
+========================================================= */
 
 .products-header {
-
     display: flex;
 
-    justify-content: space-between;
-
     align-items: center;
+    justify-content: space-between;
 
     margin-bottom: 25px;
 }
 
-
 .products-header h2 {
-
     margin-bottom: 0;
 }
 
 
 /* =========================================================
    PRODUCT GRID
-   ========================================================= */
+========================================================= */
 
 .products-container {
-
     display: grid;
 
     grid-template-columns:
@@ -786,23 +785,22 @@ input[type="file"]::file-selector-button:hover {
 
 /* =========================================================
    PRODUCT CARD
-   ========================================================= */
+========================================================= */
 
 .product-card {
-
     position: relative;
 
     overflow: hidden;
 
-    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
-    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(30,41,59,0.8),
-            rgba(15,23,42,0.8)
+            rgba(30, 41, 59, 0.8),
+            rgba(15, 23, 42, 0.8)
         );
 
     transition:
@@ -814,33 +812,28 @@ input[type="file"]::file-selector-button:hover {
         productEnter 0.6s ease both;
 }
 
-
 .product-card:hover {
-
     transform:
         translateY(-8px)
         scale(1.015);
 
     border-color:
-        rgba(129,140,248,0.35);
+        rgba(129, 140, 248, 0.35);
 
     box-shadow:
-        0 20px 40px rgba(0,0,0,0.35),
-        0 0 25px rgba(99,102,241,0.08);
+        0 20px 40px rgba(0, 0, 0, 0.35),
+        0 0 25px rgba(99, 102, 241, 0.08);
 }
-
 
 @keyframes productEnter {
 
     from {
-
         opacity: 0;
 
         transform: translateY(20px);
     }
 
     to {
-
         opacity: 1;
 
         transform: translateY(0);
@@ -850,89 +843,75 @@ input[type="file"]::file-selector-button:hover {
 
 /* =========================================================
    PRODUCT IMAGE
-   ========================================================= */
+========================================================= */
 
 .product-card img {
+    display: block;
 
     width: 100%;
-
     height: 190px;
 
     object-fit: cover;
-
-    display: block;
 
     transition:
         transform 0.5s ease;
 }
 
-
 .product-card:hover img {
-
     transform: scale(1.08);
 }
 
 
 /* =========================================================
    PRODUCT CONTENT
-   ========================================================= */
+========================================================= */
 
 .product-card-content {
-
     padding: 18px;
 }
 
-
 .product-card h3 {
+    margin-bottom: 8px;
 
     color: #f8fafc;
 
     font-size: 17px;
-
-    margin-bottom: 8px;
 }
 
-
 .product-card p {
+    margin-bottom: 8px;
 
     color: #94a3b8;
 
     font-size: 13px;
 
     line-height: 1.6;
-
-    margin-bottom: 8px;
 }
 
-
 .product-price {
+    margin-top: 12px;
 
     color: #a5b4fc;
 
     font-size: 20px;
 
     font-weight: 800;
-
-    margin-top: 12px;
 }
 
-
 .product-stock {
+    margin-top: 5px;
 
     color: #64748b;
 
     font-size: 12px;
-
-    margin-top: 5px;
 }
 
 
 /* =========================================================
    PRODUCT ACTIONS
-   ========================================================= */
+========================================================= */
 
 .product-actions {
-
     display: flex;
 
     gap: 8px;
@@ -940,43 +919,36 @@ input[type="file"]::file-selector-button:hover {
     margin-top: 15px;
 }
 
-
 .product-actions button {
-
     flex: 1;
 }
 
 
 /* =========================================================
    IMAGE PREVIEW
-   ========================================================= */
+========================================================= */
 
 .image-preview {
-
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
     min-height: 80px;
 
     margin-top: 15px;
-
     padding: 15px;
+
+    border: 1px dashed rgba(148, 163, 184, 0.25);
 
     border-radius: 12px;
 
-    border: 1px dashed rgba(148,163,184,0.25);
-
-    background: rgba(2,6,23,0.35);
+    background:
+        rgba(2, 6, 23, 0.35);
 }
 
-
 .image-preview img {
-
     max-width: 240px;
-
     max-height: 180px;
 
     object-fit: cover;
@@ -984,24 +956,21 @@ input[type="file"]::file-selector-button:hover {
     border-radius: 10px;
 
     box-shadow:
-        0 10px 30px rgba(0,0,0,0.35);
+        0 10px 30px rgba(0, 0, 0, 0.35);
 
     animation:
         imageAppear 0.5s ease;
 }
 
-
 @keyframes imageAppear {
 
     from {
-
         opacity: 0;
 
         transform: scale(0.8);
     }
 
     to {
-
         opacity: 1;
 
         transform: scale(1);
@@ -1010,11 +979,277 @@ input[type="file"]::file-selector-button:hover {
 
 
 /* =========================================================
+   CATEGORY MANAGEMENT
+========================================================= */
+
+.category-management {
+    position: relative;
+
+    margin-top: 40px;
+    padding: 30px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 18px;
+
+    background:
+        rgba(255, 255, 255, 0.04);
+}
+
+
+/* =========================================================
+   CATEGORY CLOSE BUTTON
+========================================================= */
+
+.category-close-btn {
+    position: absolute;
+
+    top: 16px;
+    right: 16px;
+
+    z-index: 10;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid rgba(255, 255, 255, 0.10);
+
+    border-radius: 10px;
+
+    background:
+        rgba(15, 23, 42, 0.85);
+
+    color: #94a3b8;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 23px;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        color 0.25s ease,
+        border-color 0.25s ease,
+        transform 0.25s ease;
+}
+
+.category-close-btn:hover {
+    background:
+        rgba(239, 68, 68, 0.15);
+
+    border-color:
+        rgba(239, 68, 68, 0.40);
+
+    color: #f87171;
+
+    transform: rotate(90deg);
+}
+
+.category-close-btn:active {
+    transform:
+        rotate(90deg)
+        scale(0.9);
+}
+
+
+/* =========================================================
+   CATEGORY HEADER
+========================================================= */
+
+.category-management .section-header {
+    position: relative;
+
+    padding-right: 55px;
+
+    margin-bottom: 25px;
+}
+
+.category-management .section-label {
+    margin-bottom: 6px;
+
+    color: #38bdf8;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 2px;
+}
+
+.category-management h2 {
+    margin: 0;
+
+    color: #f8fafc;
+
+    font-size: 28px;
+}
+
+.category-management h3 {
+    margin-bottom: 20px;
+
+    color: #f8fafc;
+}
+
+
+/* =========================================================
+   CATEGORY FORM
+========================================================= */
+
+.category-form {
+    display: grid;
+
+    gap: 18px;
+
+    margin-bottom: 35px;
+    padding: 25px;
+
+    border-radius: 15px;
+
+    background:
+        rgba(0, 0, 0, 0.15);
+}
+
+
+/* =========================================================
+   CATEGORY BUTTON
+========================================================= */
+
+.admin-btn {
+    width: fit-content;
+
+    padding: 12px 22px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0891b2,
+            #2563eb
+        );
+
+    color: white;
+
+    font-family: inherit;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.admin-btn:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 25px rgba(14, 165, 233, 0.25);
+}
+
+.admin-btn:active {
+    transform: scale(0.96);
+}
+
+
+/* =========================================================
+   CATEGORY LIST
+========================================================= */
+
+.admin-category-list {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+
+    gap: 15px;
+}
+
+.admin-category-card {
+    padding: 20px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 14px;
+
+    background:
+        rgba(255, 255, 255, 0.05);
+
+    transition:
+        transform 0.25s ease,
+        border-color 0.25s ease;
+}
+
+.admin-category-card:hover {
+    transform: translateY(-4px);
+
+    border-color:
+        rgba(99, 102, 241, 0.30);
+}
+
+.admin-category-card h4 {
+    margin-bottom: 8px;
+
+    color: #f8fafc;
+
+    font-size: 18px;
+}
+
+.admin-category-card p {
+    margin-bottom: 15px;
+
+    color: #94a3b8;
+
+    font-size: 13px;
+}
+
+.delete-category-btn {
+    padding: 8px 14px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #e74c3c;
+
+    color: white;
+
+    font-family: inherit;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.delete-category-btn:hover {
+    opacity: 0.85;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
    MESSAGES
-   ========================================================= */
+========================================================= */
 
 .message {
-
     margin-top: 15px;
 
     padding: 10px 12px;
@@ -1029,18 +1264,15 @@ input[type="file"]::file-selector-button:hover {
         messageAppear 0.3s ease;
 }
 
-
 @keyframes messageAppear {
 
     from {
-
         opacity: 0;
 
         transform: translateY(-5px);
     }
 
     to {
-
         opacity: 1;
 
         transform: translateY(0);
@@ -1050,29 +1282,27 @@ input[type="file"]::file-selector-button:hover {
 
 /* =========================================================
    HIDDEN
-   ========================================================= */
+========================================================= */
 
 .hidden {
-
     display: none !important;
 }
 
 
 /* =========================================================
-   LOADING ANIMATION
-   ========================================================= */
+   LOADING
+========================================================= */
 
 .products-container > p {
+    padding: 30px;
 
     color: #94a3b8;
 
-    padding: 30px;
-
     text-align: center;
 
-    animation: pulse 1.5s infinite;
+    animation:
+        pulse 1.5s infinite;
 }
-
 
 @keyframes pulse {
 
@@ -1089,45 +1319,38 @@ input[type="file"]::file-selector-button:hover {
 
 /* =========================================================
    SCROLLBAR
-   ========================================================= */
+========================================================= */
 
 ::-webkit-scrollbar {
-
     width: 8px;
 }
 
-
 ::-webkit-scrollbar-track {
-
     background: #070b16;
 }
 
-
 ::-webkit-scrollbar-thumb {
-
-    background: linear-gradient(
-        #4f46e5,
-        #7c3aed
-    );
+    background:
+        linear-gradient(
+            #4f46e5,
+            #7c3aed
+        );
 
     border-radius: 10px;
 }
 
-
 ::-webkit-scrollbar-thumb:hover {
-
     background: #818cf8;
 }
 
 
 /* =========================================================
    RESPONSIVE — TABLET
-   ========================================================= */
+========================================================= */
 
 @media (max-width: 950px) {
 
     .products-container {
-
         grid-template-columns:
             repeat(2, minmax(0, 1fr));
     }
@@ -1136,56 +1359,43 @@ input[type="file"]::file-selector-button:hover {
 
 /* =========================================================
    RESPONSIVE — MOBILE
-   ========================================================= */
+========================================================= */
 
 @media (max-width: 650px) {
 
     .admin-container {
-
         padding: 15px;
     }
 
-
     .admin-header {
-
-        padding: 20px;
-
         flex-direction: column;
 
         align-items: flex-start;
 
         gap: 18px;
+
+        padding: 20px;
     }
 
-
     .admin-header h1 {
-
         font-size: 25px;
     }
 
-
     .logout-btn {
-
         width: 100%;
     }
 
-
     .card {
-
         padding: 20px;
 
         border-radius: 16px;
     }
 
-
     .products-container {
-
         grid-template-columns: 1fr;
     }
 
-
     .products-header {
-
         flex-direction: column;
 
         align-items: stretch;
@@ -1193,190 +1403,74 @@ input[type="file"]::file-selector-button:hover {
         gap: 15px;
     }
 
-
     .products-header button {
-
         width: 100%;
     }
 
-
     .form-buttons {
-
         flex-direction: column;
     }
 
-
     .form-buttons button {
-
         width: 100%;
     }
 
-
     #loginSection {
-
         margin: 35px auto;
     }
-}
 
 
+    /* CATEGORY MOBILE */
 
-/* =========================================
-   CATEGORY MANAGEMENT
-========================================= */
+    .category-management {
+        margin-top: 25px;
 
-.category-management {
-    margin-top: 40px;
-    padding: 30px;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
+        padding: 20px;
+    }
 
-.category-management .section-header {
-    margin-bottom: 25px;
-}
+    .category-close-btn {
+        top: 12px;
+        right: 12px;
 
-.category-management .section-label {
-    margin-bottom: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: #00a8cc;
-}
+        width: 36px;
+        height: 36px;
 
-.category-management h2 {
-    margin: 0;
-    font-size: 28px;
-}
+        font-size: 21px;
+    }
 
-.category-management h3 {
-    margin-bottom: 20px;
-}
+    .category-management .section-header {
+        padding-right: 50px;
 
+        margin-bottom: 20px;
+    }
 
-/* =========================================
-   CATEGORY FORM
-========================================= */
+    .category-management h2 {
+        font-size: 23px;
+    }
 
-.category-form {
-    display: grid;
-    gap: 18px;
-    margin-bottom: 35px;
-    padding: 25px;
-    border-radius: 15px;
-    background: rgba(0, 0, 0, 0.15);
-}
+    .category-form {
+        padding: 18px;
+    }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+    .admin-btn {
+        width: 100%;
+    }
 
-.form-group label {
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 13px 15px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
-    outline: none;
-    background: rgba(255, 255, 255, 0.06);
-    color: inherit;
-    font-family: inherit;
-}
-
-.form-group textarea {
-    resize: vertical;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    border-color: #00a8cc;
-}
-
-
-/* =========================================
-   ADD CATEGORY BUTTON
-========================================= */
-
-.admin-btn {
-    width: fit-content;
-    padding: 12px 22px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #00a8cc;
-    color: white;
-    font-weight: 700;
-    transition: 0.25s ease;
-}
-
-.admin-btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
-}
-
-
-/* =========================================
-   CATEGORY LIST
-========================================= */
-
-.admin-category-list {
-    display: grid;
-    grid-template-columns:
-        repeat(auto-fit, minmax(220px, 1fr));
-    gap: 15px;
-}
-
-.admin-category-card {
-    padding: 20px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.admin-category-card h4 {
-    margin: 0 0 8px;
-    font-size: 18px;
-}
-
-.admin-category-card p {
-    margin: 0 0 15px;
-    font-size: 13px;
-    opacity: 0.7;
-}
-
-.delete-category-btn {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: #e74c3c;
-    color: white;
-    font-weight: 600;
-}
-
-.delete-category-btn:hover {
-    opacity: 0.85;
+    .admin-category-list {
+        grid-template-columns: 1fr;
+    }
 }
 
 
 /* =========================================================
    REDUCED MOTION ACCESSIBILITY
-   ========================================================= */
+========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
 
     *,
     *::before,
     *::after {
-
         animation-duration: 0.01ms !important;
 
         animation-iteration-count: 1 !important;
@@ -1385,51 +1479,4 @@ input[type="file"]::file-selector-button:hover {
 
         scroll-behavior: auto !important;
     }
-}
-
-
-/* token shown or close */
-.token-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.token-wrapper input {
-    width: 100%;
-    padding-right: 50px;
-}
-
-.eye-btn {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-
-    width: 38px;
-    height: 38px;
-
-    border: none;
-    background: transparent;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    cursor: pointer;
-
-    font-size: 19px;
-    color: #6b7280;
-
-    border-radius: 8px;
-
-    transition: 0.25s ease;
-}
-
-.eye-btn:hover {
-    background: #eef4ff;
-    color: #2563eb;
-}
-
-.eye-btn:active {
-    transform: translateY(-50%) scale(0.9);
 }
