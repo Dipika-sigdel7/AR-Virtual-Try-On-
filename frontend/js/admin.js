@@ -767,3 +767,30 @@ function escapeHTML(value) {
 
     return div.innerHTML;
 }
+
+/* =========================================
+   SHOW / HIDE ADMIN TOKEN
+========================================= */
+
+const tokenInput = document.getElementById("adminToken");
+const toggleToken = document.getElementById("toggleToken");
+
+toggleToken.addEventListener("click", function () {
+
+    if (tokenInput.type === "password") {
+
+        tokenInput.type = "text";
+
+        toggleToken.textContent = "🙈";
+        toggleToken.setAttribute("aria-label", "Hide token");
+
+    } else {
+
+        tokenInput.type = "password";
+
+        toggleToken.textContent = "👁";
+        toggleToken.setAttribute("aria-label", "Show token");
+
+    }
+
+});

@@ -1,334 +1,203 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>AR E-Commerce Admin</title>
 
-    <link
-        rel="stylesheet"
-        href="/css/admin.css"
-    >
+    <link rel="stylesheet" href="/css/admin.css" />
+  </head>
 
-</head>
-
-<body>
-
+  <body>
     <div class="admin-container">
-
-
-        <!-- =========================================
+      <!-- =========================================
              HEADER
         ========================================== -->
 
-        <header class="admin-header">
+      <header class="admin-header">
+        <div>
+          <h1>AR E-Commerce</h1>
+          <p>Admin Product Management</p>
+        </div>
 
-            <div>
-                <h1>AR E-Commerce</h1>
-                <p>Admin Product Management</p>
-            </div>
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+      </header>
 
-            <button
-                id="logoutBtn"
-                class="logout-btn"
-            >
-                Logout
-            </button>
-
-        </header>
-
-
-
-        <!-- =========================================
+      <!-- =========================================
              ADMIN LOGIN
         ========================================== -->
 
-        <section
-            id="loginSection"
-            class="card"
-        >
+      <section id="loginSection" class="card">
+        <h2>Admin Login</h2>
 
-            <h2>Admin Login</h2>
+        <p>Enter your admin token to continue.</p>
 
-            <p>
-                Enter your admin token to continue.
-            </p>
+        <form id="loginForm">
+          <label for="adminToken"> Admin Token </label>
 
-            <form id="loginForm">
+          <div class="token-wrapper">
+            <input
+              type="password"
+              id="adminToken"
+              placeholder="Enter admin token"
+              autocomplete="off"
+              required
+            />
 
-                <label for="adminToken">
-                    Admin Token
-                </label>
+            <button
+              type="button"
+              id="toggleToken"
+              class="eye-btn"
+              aria-label="Show admin token"
+            >
+              👁️
+            </button>
+          </div>
+          <button type="submit" class="primary-btn">Login</button>
+        </form>
 
-                <input
-                    type="password"
-                    id="adminToken"
-                    placeholder="Enter admin token"
-                    required
-                >
+        <p id="loginMessage" class="message"></p>
+      </section>
 
-                <button
-                    type="submit"
-                    class="primary-btn"
-                >
-                    Login
-                </button>
-
-            </form>
-
-            <p
-                id="loginMessage"
-                class="message"
-            ></p>
-
-        </section>
-
-
-
-        <!-- =========================================
+      <!-- =========================================
              ADMIN DASHBOARD
         ========================================== -->
 
-        <section
-            id="dashboardSection"
-            class="hidden"
-        >
-
-
-            <!-- =====================================
+      <section id="dashboardSection" class="hidden">
+        <!-- =====================================
                  ADD / EDIT PRODUCT
             ====================================== -->
 
-            <div class="card">
+        <div class="card">
+          <h2 id="formTitle">Add Product</h2>
 
-                <h2 id="formTitle">
-                    Add Product
-                </h2>
+          <form id="productForm">
+            <!-- Product ID -->
 
-                <form id="productForm">
+            <input type="hidden" id="productId" />
 
+            <!-- Product Name -->
 
-                    <!-- Product ID -->
+            <div class="form-group">
+              <label for="name"> Product Name </label>
 
-                    <input
-                        type="hidden"
-                        id="productId"
-                    >
-
-
-                    <!-- Product Name -->
-
-                    <div class="form-group">
-
-                        <label for="name">
-                            Product Name
-                        </label>
-
-                        <input
-                            type="text"
-                            id="name"
-                            placeholder="Enter product name"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- Description -->
-
-                    <div class="form-group">
-
-                        <label for="description">
-                            Product Description
-                        </label>
-
-                        <textarea
-                            id="description"
-                            rows="5"
-                            placeholder="Enter product description"
-                        ></textarea>
-
-                    </div>
-
-
-                    <!-- Category -->
-
-                    <div class="form-group">
-
-                        <label for="category">
-                            Category
-                        </label>
-
-                        <select
-                            id="category"
-                            required
-                        >
-
-                            <option value="">
-                                Select Category
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- Price -->
-
-                    <div class="form-group">
-
-                        <label for="price">
-                            Price
-                        </label>
-
-                        <input
-                            type="number"
-                            id="price"
-                            placeholder="Enter price"
-                            min="0.01"
-                            step="0.01"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- Stock -->
-
-                    <div class="form-group">
-
-                        <label for="stock">
-                            Stock
-                        </label>
-
-                        <input
-                            type="number"
-                            id="stock"
-                            placeholder="Enter stock quantity"
-                            min="0"
-                            step="1"
-                            value="0"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- Image -->
-
-                    <div class="form-group">
-
-                        <label for="image">
-                            Product Image
-                        </label>
-
-                        <input
-                            type="file"
-                            id="image"
-                            accept="image/jpeg,image/png,image/webp,image/gif"
-                        >
-
-                        <small>
-                            JPG, PNG, WEBP or GIF — maximum 5 MB
-                        </small>
-
-                    </div>
-
-
-                    <!-- Image Preview -->
-
-                    <div
-                        id="imagePreview"
-                        class="image-preview"
-                    ></div>
-
-
-                    <!-- Buttons -->
-
-                    <div class="form-buttons">
-
-                        <button
-                            type="submit"
-                            class="primary-btn"
-                        >
-                            Save Product
-                        </button>
-
-                        <button
-                            type="button"
-                            id="cancelBtn"
-                            class="secondary-btn"
-                        >
-                            Cancel
-                        </button>
-
-                    </div>
-
-
-                    <p
-                        id="productMessage"
-                        class="message"
-                    ></p>
-
-                </form>
-
+              <input
+                type="text"
+                id="name"
+                placeholder="Enter product name"
+                required
+              />
             </div>
 
+            <!-- Description -->
 
+            <div class="form-group">
+              <label for="description"> Product Description </label>
 
-            <!-- =====================================
+              <textarea
+                id="description"
+                rows="5"
+                placeholder="Enter product description"
+              ></textarea>
+            </div>
+
+            <!-- Category -->
+
+            <div class="form-group">
+              <label for="category"> Category </label>
+
+              <select id="category" required>
+                <option value="">Select Category</option>
+              </select>
+            </div>
+
+            <!-- Price -->
+
+            <div class="form-group">
+              <label for="price"> Price </label>
+
+              <input
+                type="number"
+                id="price"
+                placeholder="Enter price"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </div>
+
+            <!-- Stock -->
+
+            <div class="form-group">
+              <label for="stock"> Stock </label>
+
+              <input
+                type="number"
+                id="stock"
+                placeholder="Enter stock quantity"
+                min="0"
+                step="1"
+                value="0"
+                required
+              />
+            </div>
+
+            <!-- Image -->
+
+            <div class="form-group">
+              <label for="image"> Product Image </label>
+
+              <input
+                type="file"
+                id="image"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+              />
+
+              <small> JPG, PNG, WEBP or GIF — maximum 5 MB </small>
+            </div>
+
+            <!-- Image Preview -->
+
+            <div id="imagePreview" class="image-preview"></div>
+
+            <!-- Buttons -->
+
+            <div class="form-buttons">
+              <button type="submit" class="primary-btn">Save Product</button>
+
+              <button type="button" id="cancelBtn" class="secondary-btn">
+                Cancel
+              </button>
+            </div>
+
+            <p id="productMessage" class="message"></p>
+          </form>
+        </div>
+
+        <!-- =====================================
                  EXISTING PRODUCTS
             ====================================== -->
 
-            <div class="card">
+        <div class="card">
+          <div class="products-header">
+            <h2>Existing Products</h2>
 
-                <div class="products-header">
+            <button id="refreshBtn" class="secondary-btn">Refresh</button>
+          </div>
 
-                    <h2>
-                        Existing Products
-                    </h2>
-
-                    <button
-                        id="refreshBtn"
-                        class="secondary-btn"
-                    >
-                        Refresh
-                    </button>
-
-                </div>
-
-
-                <div
-                    id="productsContainer"
-                    class="products-container"
-                >
-
-                    <p>
-                        Loading products...
-                    </p>
-
-                </div>
-
-            </div>
-
-        </section>
-
+          <div id="productsContainer" class="products-container">
+            <p>Loading products...</p>
+          </div>
+        </div>
+      </section>
     </div>
-
 
     <!-- =========================================
          JAVASCRIPT
     ========================================== -->
 
     <script src="/js/admin.js"></script>
-
-</body>
-
+  </body>
 </html>
