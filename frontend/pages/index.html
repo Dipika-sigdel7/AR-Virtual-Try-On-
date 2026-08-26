@@ -1,571 +1,321 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+    <title>AR Ecommerce</title>
 
-  <title>AR Ecommerce</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
 
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-
-<body>
-
-  <!-- ==========================
+  <body>
+    <!-- ==========================
        HEADER
   =========================== -->
 
-  <header class="navbar">
+    <header class="navbar">
+      <div class="logo">AR <span>Ecommerce</span></div>
 
-    <div class="logo">
-      AR <span>Ecommerce</span>
-    </div>
+      <nav>
+        <a href="/" class="active">Home</a>
+        <a href="/products">Products</a>
+        <a href="/services">Services</a>
+        <a href="/about">About</a>
+      </nav>
 
-    <nav>
-      <a href="/" class="active">Home</a>
-      <a href="/products" >Products</a>
-      <a href="/services" >Services</a>
-      <a href="/about">About</a>
-    </nav>
+      <div class="nav-actions">
+        <!-- LOGIN -->
 
-    <div class="nav-actions">
+        <a href="/login" class="login-btn"> Login </a>
 
-      <button
-        class="cart-btn"
-        id="cart-btn"
-        type="button"
-      >
-        🛒
-        <span>Cart</span>
-        <b id="cart-count">0</b>
-      </button>
+        <!-- CART -->
+        <button class="cart-btn" id="cart-btn" type="button">
+          🛒
+          <span>Cart</span>
+          <b id="cart-count">0</b>
+        </button>
+      </div>
+    </header>
 
-    </div>
-
-  </header>
-
-
-  <!-- ==========================
+    <!-- ==========================
        MAIN
   =========================== -->
 
-  <main>
-
-    <!-- ==========================
+    <main>
+      <!-- ==========================
          HERO
     =========================== -->
 
-    <section class="hero" id="home">
+      <section class="hero" id="home">
+        <div class="hero-content">
+          <div class="hero-badge">✨ NEXT GENERATION SHOPPING</div>
 
-      <div class="hero-content">
+          <h1>
+            Experience Shopping
+            <span>in Augmented Reality</span>
+          </h1>
 
-        <div class="hero-badge">
-          ✨ NEXT GENERATION SHOPPING
-        </div>
+          <p>
+            Discover amazing products and see how they look in your real
+            environment before you buy.
+          </p>
 
-        <h1>
-          Experience Shopping
-          <span>in Augmented Reality</span>
-        </h1>
+          <div class="hero-buttons">
+            <button class="primary-btn" id="explore-products" type="button">
+              Explore Products →
+            </button>
 
-        <p>
-          Discover amazing products and see how they look
-          in your real environment before you buy.
-        </p>
-
-        <div class="hero-buttons">
-
-          <button
-            class="primary-btn"
-            id="explore-products"
-            type="button"
-          >
-            Explore Products →
-          </button>
-
-          <button
-            class="secondary-btn"
-            id="try-ar-btn"
-            type="button"
-          >
-            📱 Try AR Ecommerce
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <div class="hero-visual">
-
-        <div class="ar-circle">
-
-          <div class="phone">
-            📱
+            <button class="secondary-btn" id="try-ar-btn" type="button">
+              📱 Try AR Ecommerce
+            </button>
           </div>
-
         </div>
 
-      </div>
+        <div class="hero-visual">
+          <div class="ar-circle">
+            <div class="phone">📱</div>
+          </div>
+        </div>
+      </section>
 
-    </section>
-
-
-    
-
-    <!-- ==========================
+      <!-- ==========================
          PRODUCTS
     =========================== -->
 
-    <section
-      class="products"
-      id="products"
-    >
+      <section class="products" id="products">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">OUR COLLECTION</p>
 
-      <div class="section-heading">
-
-        <div>
-
-          <p class="section-label">
-            OUR COLLECTION
-          </p>
-
-          <h2>
-            All Products
-          </h2>
-
-        </div>
-
-        <button
-          class="view-all"
-          id="view-all"
-          type="button"
-        >
-          View All →
-        </button>
-
-      </div>
-
-
-      <div class="product-grid">
-
-        <!-- PRODUCT 1 -->
-
-        <div
-          class="product-card"
-          data-product="smartphone"
-        >
-
-          <div class="product-image">
-
-            <span class="product-emoji">
-              📱
-            </span>
-
-            <span class="ar-badge">
-              AR
-            </span>
-
+            <h2>All Products</h2>
           </div>
 
-          <div class="product-info">
+          <button class="view-all" id="view-all" type="button">
+            View All →
+          </button>
+        </div>
 
-            <p class="category">
-              Electronics
-            </p>
+        <div class="product-grid">
+          <!-- PRODUCT 1 -->
 
-            <h3>
-              Smartphone
-            </h3>
+          <div class="product-card" data-product="smartphone">
+            <div class="product-image">
+              <span class="product-emoji"> 📱 </span>
 
-            <div class="product-bottom">
-
-              <strong>
-                $499
-              </strong>
-
-              <button
-                class="add-btn"
-                data-product-action="cart"
-                type="button"
-              >
-                Add to Cart
-              </button>
-
+              <span class="ar-badge"> AR </span>
             </div>
 
+            <div class="product-info">
+              <p class="category">Electronics</p>
+
+              <h3>Smartphone</h3>
+
+              <div class="product-bottom">
+                <strong> $499 </strong>
+
+                <button
+                  class="add-btn"
+                  data-product-action="cart"
+                  type="button"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
           </div>
 
-        </div>
+          <!-- PRODUCT 2 -->
 
+          <div class="product-card" data-product="sneakers">
+            <div class="product-image">
+              <span class="product-emoji"> 👟 </span>
 
-        <!-- PRODUCT 2 -->
-
-        <div
-          class="product-card"
-          data-product="sneakers"
-        >
-
-          <div class="product-image">
-
-            <span class="product-emoji">
-              👟
-            </span>
-
-            <span class="ar-badge">
-              AR
-            </span>
-
-          </div>
-
-          <div class="product-info">
-
-            <p class="category">
-              Fashion
-            </p>
-
-            <h3>
-              Premium Sneakers
-            </h3>
-
-            <div class="product-bottom">
-
-              <strong>
-                $99
-              </strong>
-
-              <button
-                class="add-btn"
-                data-product-action="cart"
-                type="button"
-              >
-                Add to Cart
-              </button>
-
+              <span class="ar-badge"> AR </span>
             </div>
 
+            <div class="product-info">
+              <p class="category">Fashion</p>
+
+              <h3>Premium Sneakers</h3>
+
+              <div class="product-bottom">
+                <strong> $99 </strong>
+
+                <button
+                  class="add-btn"
+                  data-product-action="cart"
+                  type="button"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
           </div>
 
-        </div>
+          <!-- PRODUCT 3 -->
 
+          <div class="product-card" data-product="smartwatch">
+            <div class="product-image">
+              <span class="product-emoji"> ⌚ </span>
 
-        <!-- PRODUCT 3 -->
-
-        <div
-          class="product-card"
-          data-product="smartwatch"
-        >
-
-          <div class="product-image">
-
-            <span class="product-emoji">
-              ⌚
-            </span>
-
-            <span class="ar-badge">
-              AR
-            </span>
-
-          </div>
-
-          <div class="product-info">
-
-            <p class="category">
-              Accessories
-            </p>
-
-            <h3>
-              Smart Watch
-            </h3>
-
-            <div class="product-bottom">
-
-              <strong>
-                $149
-              </strong>
-
-              <button
-                class="add-btn"
-                data-product-action="cart"
-                type="button"
-              >
-                Add to Cart
-              </button>
-
+              <span class="ar-badge"> AR </span>
             </div>
 
+            <div class="product-info">
+              <p class="category">Accessories</p>
+
+              <h3>Smart Watch</h3>
+
+              <div class="product-bottom">
+                <strong> $149 </strong>
+
+                <button
+                  class="add-btn"
+                  data-product-action="cart"
+                  type="button"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
           </div>
-
         </div>
+      </section>
 
-      </div>
-
-    </section>
-
-
-    <!-- ==========================
+      <!-- ==========================
          ABOUT
     =========================== -->
 
-    <section
-      class="about"
-      id="about"
-    >
+      <section class="about" id="about">
+        <div>
+          <p class="section-label">ABOUT AR ECOMMERCE</p>
 
-      <div>
+          <h2>
+            Shopping is becoming
+            <span>more interactive.</span>
+          </h2>
 
-        <p class="section-label">
-          ABOUT AR ECOMMERCE
-        </p>
+          <p>
+            Our platform combines ecommerce with augmented reality technology,
+            allowing customers to experience products before making a purchase.
+          </p>
+        </div>
+      </section>
+    </main>
 
-        <h2>
-          Shopping is becoming
-          <span>more interactive.</span>
-        </h2>
-
-        <p>
-          Our platform combines ecommerce with augmented reality
-          technology, allowing customers to experience products
-          before making a purchase.
-        </p>
-
-      </div>
-
-    </section>
-
-  </main>
-
-
-  <!-- ==========================
+    <!-- ==========================
        PRODUCT MODAL
   =========================== -->
 
-  <div
-    class="product-modal"
-    id="product-modal"
-  >
+    <div class="product-modal" id="product-modal">
+      <div class="product-modal-content">
+        <button class="modal-close" id="modal-close" type="button">✕</button>
 
-    <div class="product-modal-content">
+        <div class="modal-product">
+          <!-- PRODUCT IMAGE -->
 
-      <button
-        class="modal-close"
-        id="modal-close"
-        type="button"
-      >
-        ✕
-      </button>
-
-
-      <div class="modal-product">
-
-        <!-- PRODUCT IMAGE -->
-
-        <div class="modal-product-image">
-
-          <div id="modal-product-image">
-            📱
+          <div class="modal-product-image">
+            <div id="modal-product-image">📱</div>
           </div>
 
-        </div>
+          <!-- PRODUCT DETAILS -->
 
+          <div class="modal-product-details">
+            <p class="category" id="modal-product-category">Electronics</p>
 
-        <!-- PRODUCT DETAILS -->
+            <h2 id="modal-product-name">Smartphone</h2>
 
-        <div class="modal-product-details">
+            <h3 id="modal-product-price">$499</h3>
 
-          <p
-            class="category"
-            id="modal-product-category"
-          >
-            Electronics
-          </p>
+            <button class="ar-try-btn" id="ar-try-btn" type="button">
+              📱 Try AR
+            </button>
 
-          <h2 id="modal-product-name">
-            Smartphone
-          </h2>
+            <!-- REVIEWS -->
 
-          <h3 id="modal-product-price">
-            $499
-          </h3>
+            <div class="reviews">
+              <h3>Customer Reviews</h3>
 
+              <div class="review-summary">
+                <div class="review-stars">⭐⭐⭐⭐⭐</div>
 
-          <button
-            class="ar-try-btn"
-            id="ar-try-btn"
-            type="button"
-          >
-            📱 Try AR
-          </button>
-
-
-          <!-- REVIEWS -->
-
-          <div class="reviews">
-
-            <h3>
-              Customer Reviews
-            </h3>
-
-            <div class="review-summary">
-
-              <div class="review-stars">
-                ⭐⭐⭐⭐⭐
+                <strong id="modal-rating"> 4.8 / 5 </strong>
               </div>
 
-              <strong id="modal-rating">
-                4.8 / 5
-              </strong>
+              <!-- REVIEW 1 -->
 
-            </div>
-
-
-            <!-- REVIEW 1 -->
-
-            <div class="review">
-
-              <div class="review-user">
-                👤
-              </div>
-
-              <div>
-
-                <strong>
-                  Alex
-                </strong>
+              <div class="review">
+                <div class="review-user">👤</div>
 
                 <div>
-                  ⭐⭐⭐⭐⭐
+                  <strong> Alex </strong>
+
+                  <div>⭐⭐⭐⭐⭐</div>
+
+                  <p>Great product and very good quality!</p>
                 </div>
-
-                <p>
-                  Great product and very good quality!
-                </p>
-
               </div>
 
-            </div>
+              <!-- REVIEW 2 -->
 
-
-            <!-- REVIEW 2 -->
-
-            <div class="review">
-
-              <div class="review-user">
-                👤
-              </div>
-
-              <div>
-
-                <strong>
-                  Sarah
-                </strong>
+              <div class="review">
+                <div class="review-user">👤</div>
 
                 <div>
-                  ⭐⭐⭐⭐⭐
+                  <strong> Sarah </strong>
+
+                  <div>⭐⭐⭐⭐⭐</div>
+
+                  <p>I really enjoyed the AR shopping experience.</p>
                 </div>
-
-                <p>
-                  I really enjoyed the AR shopping experience.
-                </p>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
 
-  </div>
-
-
-  <!-- ==========================
+    <!-- ==========================
        CART MODAL
   =========================== -->
 
-  <div
-    class="cart-modal"
-    id="cart-modal"
-  >
+    <div class="cart-modal" id="cart-modal">
+      <div class="cart-modal-content">
+        <button class="cart-close" id="cart-close" type="button">✕</button>
 
-    <div class="cart-modal-content">
+        <h2>🛒 Your Cart</h2>
 
-      <button
-        class="cart-close"
-        id="cart-close"
-        type="button"
-      >
-        ✕
-      </button>
+        <div id="cart-items">
+          <p class="empty-cart">Your cart is empty.</p>
+        </div>
 
-      <h2>
-        🛒 Your Cart
-      </h2>
+        <div class="cart-total">
+          <strong> Total: </strong>
 
-      <div id="cart-items">
-        <p class="empty-cart">
-          Your cart is empty.
-        </p>
+          <strong id="cart-total"> $0 </strong>
+        </div>
+
+        <button class="checkout-btn" id="checkout-btn" type="button">
+          Proceed to Checkout
+        </button>
       </div>
-
-      <div class="cart-total">
-
-        <strong>
-          Total:
-        </strong>
-
-        <strong id="cart-total">
-          $0
-        </strong>
-
-      </div>
-
-      <button
-        class="checkout-btn"
-        id="checkout-btn"
-        type="button"
-      >
-        Proceed to Checkout
-      </button>
-
     </div>
 
-  </div>
-
-
-  <!-- ==========================
+    <!-- ==========================
        FOOTER
   =========================== -->
 
-  <footer>
+    <footer>
+      <div class="footer-logo">AR Ecommerce</div>
 
-    <div class="footer-logo">
-      AR Ecommerce
-    </div>
+      <p>© 2026 AR Ecommerce. All rights reserved.</p>
+    </footer>
 
-    <p>
-      © 2026 AR Ecommerce. All rights reserved.
-    </p>
+    <!-- JAVASCRIPT -->
 
-  </footer>
-
-
-  <!-- JAVASCRIPT -->
-
-  <script src="/js/app.js"></script>
-
-</body>
-
+    <script src="/js/app.js"></script>
+  </body>
 </html>
 ```
-
-
