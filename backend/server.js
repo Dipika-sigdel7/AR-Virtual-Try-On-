@@ -1,14 +1,39 @@
+require("dotenv").config();
+
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
 
 const app = express();
 
+const PORT = process.env.PORT || 3000;
+
+
+/* =========================================
+   MIDDLEWARE
+========================================= */
+
+// Parse JSON requests
+app.use(express.json());
+
+// Parse form data
+app.use(
+    express.urlencoded({
+        extended: true
+    })
+);
+
+
+/* =========================================
+   SESSION
+========================================= */
+
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
+
         cookie: {
             httpOnly: true,
             secure: false,
@@ -16,9 +41,6 @@ app.use(
         }
     })
 );
-
-
-const PORT = process.env.PORT || 3000;
 
 
 /* =========================================
@@ -31,21 +53,17 @@ const adminProductRoutes =
 const productRoutes =
     require("./routes/productRoutes");
 
-const userRoutes = 
+const userRoutes =
     require("./routes/userRoutes");
 
-app.use("/api/users", userRoutes);
 
 /* =========================================
-   MIDDLEWARE
+   USER API
 ========================================= */
 
-app.use(express.json());
-
 app.use(
-    express.urlencoded({
-        extended: true
-    })
+    "/api/users",
+    userRoutes
 );
 
 
@@ -90,6 +108,7 @@ app.use(
     "/api/admin/products",
     adminProductRoutes
 );
+
 
 // Public product API
 app.use(
