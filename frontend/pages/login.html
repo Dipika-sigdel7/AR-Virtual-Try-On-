@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Login - AR E-Commerce</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/login.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="login-container">
+
+        <div class="login-card">
+
+            <h1>Welcome Back</h1>
+
+            <p class="login-subtitle">
+                Login to continue shopping
+            </p>
+
+
+            <form id="loginForm">
+
+                <div class="form-group">
+
+                    <label for="email">
+                        Email
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Enter your email"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <div class="password-wrapper">
+
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            id="togglePassword"
+                        >
+                            👁
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="login-button"
+                    id="loginButton"
+                >
+                    Login
+                </button>
+
+
+                <p
+                    id="loginMessage"
+                    class="login-message"
+                ></p>
+
+            </form>
+
+
+            <div class="register-link">
+
+                Don't have an account?
+
+                <a href="/register.html">
+                    Create Account
+                </a>
+
+            </div>
+
+
+            <a
+                href="/"
+                class="back-home"
+            >
+                ← Continue Shopping
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <script src="/js/login.js"></script>
+
+</body>
+
+</html>
