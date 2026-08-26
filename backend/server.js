@@ -31,6 +31,10 @@ const adminProductRoutes =
 const productRoutes =
     require("./routes/productRoutes");
 
+const userRoutes = 
+    require("./routes/userRoutes");
+
+app.use("/api/users", userRoutes);
 
 /* =========================================
    MIDDLEWARE
