@@ -1,5 +1,5 @@
 const express = require("express");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 
 const router = express.Router();
 
@@ -39,7 +39,27 @@ router.post("/register", async (req, res) => {
 
             return res.status(400).json({
                 success: false,
-                message: "Password must contain at least 6 characters."
+                message:
+                    "Password must contain at least 6 characters."
+            });
+
+        }
+
+
+        /* -------------------------
+           CLEAN INPUT
+        ------------------------- */
+
+        const cleanName = name.trim();
+        const cleanEmail = email.trim().toLowerCase();
+
+
+        if (!cleanName || !cleanEmail) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Name and email cannot be empty."
             });
 
         }
@@ -50,8 +70,12 @@ router.post("/register", async (req, res) => {
         ------------------------- */
 
         const [existingUsers] = await db.query(
-            "SELECT id FROM users WHERE email = ?",
-            [email]
+            `
+            SELECT id
+            FROM users
+            WHERE email = ?
+            `,
+            [cleanEmail]
         );
 
 
@@ -59,7 +83,8 @@ router.post("/register", async (req, res) => {
 
             return res.status(409).json({
                 success: false,
-                message: "Email is already registered."
+                message:
+                    "Email is already registered."
             });
 
         }
@@ -75,17 +100,21 @@ router.post("/register", async (req, res) => {
 
         /* -------------------------
            CREATE USER
+           
+           IMPORTANT:
+           Your database column is
+           "password", not "password_hash".
         ------------------------- */
 
         const [result] = await db.query(
             `
             INSERT INTO users
-            (name, email, password_hash)
+            (name, email, password)
             VALUES (?, ?, ?)
             `,
             [
-                name,
-                email,
+                cleanName,
+                cleanEmail,
                 passwordHash
             ]
         );
@@ -105,11 +134,16 @@ router.post("/register", async (req, res) => {
         );
 
 
-        res.status(201).json({
+        /* -------------------------
+           RESPONSE
+        ------------------------- */
+
+        return res.status(201).json({
 
             success: true,
 
-            message: "Registration successful."
+            message:
+                "Registration successful."
 
         });
 
@@ -121,11 +155,13 @@ router.post("/register", async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             success: false,
 
-            message: "Server error."
+            message:
+                "Server error."
 
         });
 
@@ -167,7 +203,19 @@ router.post("/login", async (req, res) => {
 
 
         /* -------------------------
+           CLEAN EMAIL
+        ------------------------- */
+
+        const cleanEmail =
+            email.trim().toLowerCase();
+
+
+        /* -------------------------
            FIND USER
+           
+           IMPORTANT:
+           Select "password", not
+           "password_hash".
         ------------------------- */
 
         const [users] = await db.query(
@@ -177,15 +225,20 @@ router.post("/login", async (req, res) => {
                 id,
                 name,
                 email,
-                password_hash
+                password,
+                role
             FROM users
             WHERE email = ?
             `,
 
-            [email]
+            [cleanEmail]
 
         );
 
+
+        /* -------------------------
+           USER NOT FOUND
+        ------------------------- */
 
         if (users.length === 0) {
 
@@ -211,7 +264,7 @@ router.post("/login", async (req, res) => {
         const passwordMatch =
             await bcrypt.compare(
                 password,
-                user.password_hash
+                user.password
             );
 
 
@@ -239,26 +292,62 @@ router.post("/login", async (req, res) => {
 
             name: user.name,
 
-            email: user.email
+            email: user.email,
+
+            role: user.role
 
         };
 
 
-        res.json({
+        /* -------------------------
+           SAVE SESSION
+        ------------------------- */
 
-            success: true,
+        req.session.save((error) => {
 
-            message: "Login successful.",
+            if (error) {
 
-            user: {
+                console.error(
+                    "Session save error:",
+                    error
+                );
 
-                id: user.id,
+                return res.status(500).json({
 
-                name: user.name,
+                    success: false,
 
-                email: user.email
+                    message:
+                        "Login failed."
+
+                });
 
             }
+
+
+            /* -------------------------
+               LOGIN RESPONSE
+            ------------------------- */
+
+            return res.json({
+
+                success: true,
+
+                message:
+                    "Login successful.",
+
+                user: {
+
+                    id: user.id,
+
+                    name: user.name,
+
+                    email: user.email,
+
+                    role: user.role
+
+                }
+
+            });
 
         });
 
@@ -270,11 +359,13 @@ router.post("/login", async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             success: false,
 
-            message: "Server error."
+            message:
+                "Server error."
 
         });
 
@@ -302,7 +393,7 @@ router.get("/me", (req, res) => {
     }
 
 
-    res.json({
+    return res.json({
 
         success: true,
 
@@ -334,7 +425,8 @@ router.post("/logout", (req, res) => {
 
                 success: false,
 
-                message: "Logout failed."
+                message:
+                    "Logout failed."
 
             });
 
@@ -344,11 +436,12 @@ router.post("/logout", (req, res) => {
         res.clearCookie("connect.sid");
 
 
-        res.json({
+        return res.json({
 
             success: true,
 
-            message: "Logout successful."
+            message:
+                "Logout successful."
 
         });
 
