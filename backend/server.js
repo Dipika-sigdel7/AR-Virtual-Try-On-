@@ -31,7 +31,9 @@ app.use(
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
+
         resave: false,
+
         saveUninitialized: false,
 
         cookie: {
@@ -141,6 +143,19 @@ app.get("/products", (req, res) => {
         path.join(
             pagesPath,
             "products.html"
+        )
+    );
+
+});
+
+
+// Login
+app.get("/login", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "login.html"
         )
     );
 
