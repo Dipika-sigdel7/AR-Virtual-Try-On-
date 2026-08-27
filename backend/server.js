@@ -199,6 +199,14 @@ app.get("/login", (req, res) => {
 });
 
 
+// register
+app.get("/register", (req, res) => {
+    res.sendFile(
+        path.join(pagesPath, "register.html")
+    );
+});
+
+
 /* -------------------------
    ADMIN
 ------------------------- */
