@@ -32,7 +32,13 @@
             </p>
 
 
+            <!-- ==========================
+                 LOGIN FORM
+            =========================== -->
+
             <form id="loginForm">
+
+                <!-- EMAIL -->
 
                 <div class="form-group">
 
@@ -43,12 +49,16 @@
                     <input
                         type="email"
                         id="email"
+                        name="email"
                         placeholder="Enter your email"
+                        autocomplete="email"
                         required
                     >
 
                 </div>
 
+
+                <!-- PASSWORD -->
 
                 <div class="form-group">
 
@@ -61,13 +71,16 @@
                         <input
                             type="password"
                             id="password"
+                            name="password"
                             placeholder="Enter your password"
+                            autocomplete="current-password"
                             required
                         >
 
                         <button
                             type="button"
                             id="togglePassword"
+                            aria-label="Show password"
                         >
                             👁
                         </button>
@@ -76,6 +89,8 @@
 
                 </div>
 
+
+                <!-- LOGIN BUTTON -->
 
                 <button
                     type="submit"
@@ -86,6 +101,8 @@
                 </button>
 
 
+                <!-- LOGIN MESSAGE -->
+
                 <p
                     id="loginMessage"
                     class="login-message"
@@ -93,6 +110,8 @@
 
             </form>
 
+
+            <!-- REGISTER -->
 
             <div class="register-link">
 
@@ -105,6 +124,8 @@
             </div>
 
 
+            <!-- HOME -->
+
             <a
                 href="/"
                 class="back-home"
@@ -116,6 +137,8 @@
 
     </div>
 
+
+    <!-- LOGIN JAVASCRIPT -->
 
     <script src="/js/login.js"></script>
 
