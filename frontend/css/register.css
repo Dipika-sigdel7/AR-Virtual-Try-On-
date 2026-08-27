@@ -1,0 +1,1001 @@
+
+/* =========================================================
+   AR E-COMMERCE
+   REGISTER PAGE
+========================================================= */
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+body {
+
+    min-height: 100vh;
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    overflow-x: hidden;
+
+    background:
+        radial-gradient(
+            circle at 10% 20%,
+            rgba(99, 102, 241, 0.18),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 90% 80%,
+            rgba(168, 85, 247, 0.18),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #080b18,
+            #11152b,
+            #090b16
+        );
+
+    color: #ffffff;
+
+    position: relative;
+
+    padding: 40px 20px;
+
+}
+
+
+/* =========================================================
+   ANIMATED BACKGROUND
+========================================================= */
+
+body::before {
+
+    content: "";
+
+    position: fixed;
+
+    width: 280px;
+    height: 280px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(99, 102, 241, 0.20),
+            transparent 70%
+        );
+
+    top: -100px;
+    left: -100px;
+
+    animation:
+        floatingCircle 8s ease-in-out infinite;
+
+    pointer-events: none;
+
+}
+
+
+body::after {
+
+    content: "";
+
+    position: fixed;
+
+    width: 350px;
+    height: 350px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(168, 85, 247, 0.16),
+            transparent 70%
+        );
+
+    right: -140px;
+    bottom: -140px;
+
+    animation:
+        floatingCircleReverse 10s ease-in-out infinite;
+
+    pointer-events: none;
+
+}
+
+
+/* =========================================================
+   REGISTER CONTAINER
+========================================================= */
+
+.register-container {
+
+    width: 100%;
+
+    max-width: 480px;
+
+    position: relative;
+
+    z-index: 2;
+
+    animation:
+        pageEnter 0.8s ease forwards;
+
+}
+
+
+/* =========================================================
+   REGISTER CARD
+========================================================= */
+
+.register-card {
+
+    width: 100%;
+
+    padding: 42px 40px;
+
+    border-radius: 24px;
+
+    background:
+        rgba(20, 24, 45, 0.78);
+
+    border:
+        1px solid rgba(255, 255, 255, 0.10);
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+    backdrop-filter: blur(18px);
+
+    -webkit-backdrop-filter: blur(18px);
+
+    animation:
+        cardEnter 0.9s cubic-bezier(
+            0.22,
+            1,
+            0.36,
+            1
+        );
+
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
+
+}
+
+
+.register-card:hover {
+
+    transform:
+        translateY(-4px);
+
+    box-shadow:
+        0 35px 90px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+}
+
+
+/* =========================================================
+   HEADING
+========================================================= */
+
+.register-card h1 {
+
+    text-align: center;
+
+    font-size: 34px;
+
+    font-weight: 700;
+
+    letter-spacing: -0.8px;
+
+    margin-bottom: 10px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ffffff,
+            #c4b5fd,
+            #ffffff
+        );
+
+    background-size: 200% auto;
+
+    -webkit-background-clip: text;
+
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+
+    animation:
+        titleShimmer 4s linear infinite;
+
+}
+
+
+/* =========================================================
+   SUBTITLE
+========================================================= */
+
+.register-subtitle {
+
+    text-align: center;
+
+    color: #a7adc4;
+
+    font-size: 14px;
+
+    margin-bottom: 32px;
+
+    line-height: 1.6;
+
+}
+
+
+/* =========================================================
+   FORM GROUP
+========================================================= */
+
+.form-group {
+
+    margin-bottom: 20px;
+
+    animation:
+        inputGroupEnter 0.6s ease both;
+
+}
+
+
+.form-group:nth-child(1) {
+
+    animation-delay: 0.15s;
+
+}
+
+
+.form-group:nth-child(2) {
+
+    animation-delay: 0.25s;
+
+}
+
+
+.form-group:nth-child(3) {
+
+    animation-delay: 0.35s;
+
+}
+
+
+.form-group:nth-child(4) {
+
+    animation-delay: 0.45s;
+
+}
+
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.form-group label {
+
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+    color: #d9dcef;
+
+    transition:
+        color 0.25s ease;
+
+}
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.form-group input {
+
+    width: 100%;
+
+    height: 50px;
+
+    padding:
+        0 15px;
+
+    border-radius: 12px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.10);
+
+    outline: none;
+
+    background:
+        rgba(255, 255, 255, 0.055);
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    transition:
+        border-color 0.25s ease,
+        background 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.25s ease;
+
+}
+
+
+.form-group input::placeholder {
+
+    color: #737a96;
+
+}
+
+
+/* =========================================================
+   INPUT FOCUS
+========================================================= */
+
+.form-group input:focus {
+
+    border-color:
+        rgba(129, 140, 248, 0.85);
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    box-shadow:
+        0 0 0 4px
+        rgba(99, 102, 241, 0.12),
+        0 8px 25px
+        rgba(0, 0, 0, 0.15);
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+.form-group:focus-within label {
+
+    color: #a5b4fc;
+
+}
+
+
+/* =========================================================
+   PASSWORD WRAPPER
+========================================================= */
+
+.password-wrapper {
+
+    position: relative;
+
+    width: 100%;
+
+}
+
+
+.password-wrapper input {
+
+    padding-right: 52px;
+
+}
+
+
+/* =========================================================
+   PASSWORD TOGGLE
+========================================================= */
+
+.password-wrapper button {
+
+    position: absolute;
+
+    right: 7px;
+
+    top: 50%;
+
+    transform:
+        translateY(-50%);
+
+    width: 38px;
+
+    height: 38px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background:
+        transparent;
+
+    color: #969db7;
+
+    cursor: pointer;
+
+    font-size: 17px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    transition:
+        color 0.25s ease,
+        background 0.25s ease,
+        transform 0.25s ease;
+
+}
+
+
+.password-wrapper button:hover {
+
+    color: #ffffff;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+}
+
+
+.password-wrapper button:active {
+
+    transform:
+        translateY(-50%)
+        scale(0.90);
+
+}
+
+
+/* =========================================================
+   REGISTER BUTTON
+========================================================= */
+
+.register-button {
+
+    width: 100%;
+
+    height: 52px;
+
+    margin-top: 8px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    color: #ffffff;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.2px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #8b5cf6
+        );
+
+    box-shadow:
+        0 10px 25px
+        rgba(99, 102, 241, 0.25);
+
+    position: relative;
+
+    overflow: hidden;
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+
+    animation:
+        buttonEnter 0.7s ease
+        0.55s both;
+
+}
+
+
+/* =========================================================
+   BUTTON SHINE
+========================================================= */
+
+.register-button::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+
+    left: -120%;
+
+    width: 80%;
+
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.25),
+            transparent
+        );
+
+    transform:
+        skewX(-20deg);
+
+    transition:
+        left 0.6s ease;
+
+}
+
+
+.register-button:hover::before {
+
+    left: 140%;
+
+}
+
+
+.register-button:hover {
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 15px 32px
+        rgba(99, 102, 241, 0.38);
+
+}
+
+
+.register-button:active {
+
+    transform:
+        translateY(0)
+        scale(0.98);
+
+}
+
+
+/* =========================================================
+   REGISTER MESSAGE
+========================================================= */
+
+.register-message {
+
+    min-height: 20px;
+
+    margin-top: 14px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    line-height: 1.5;
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+
+}
+
+
+/* =========================================================
+   LOGIN LINK
+========================================================= */
+
+.login-link {
+
+    text-align: center;
+
+    margin-top: 25px;
+
+    color: #9299b2;
+
+    font-size: 14px;
+
+}
+
+
+.login-link a {
+
+    color: #a5b4fc;
+
+    text-decoration: none;
+
+    font-weight: 600;
+
+    margin-left: 4px;
+
+    position: relative;
+
+    transition:
+        color 0.25s ease;
+
+}
+
+
+.login-link a::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+
+    bottom: -3px;
+
+    width: 0;
+
+    height: 1px;
+
+    background:
+        #a5b4fc;
+
+    transition:
+        width 0.25s ease;
+
+}
+
+
+.login-link a:hover {
+
+    color: #c4b5fd;
+
+}
+
+
+.login-link a:hover::after {
+
+    width: 100%;
+
+}
+
+
+/* =========================================================
+   BACK HOME
+========================================================= */
+
+.back-home {
+
+    display: block;
+
+    width: fit-content;
+
+    margin:
+        22px auto 0;
+
+    color: #777f9d;
+
+    text-decoration: none;
+
+    font-size: 13px;
+
+    transition:
+        color 0.25s ease,
+        transform 0.25s ease;
+
+}
+
+
+.back-home:hover {
+
+    color: #c4b5fd;
+
+    transform:
+        translateX(-3px);
+
+}
+
+
+/* =========================================================
+   DISABLED BUTTON
+========================================================= */
+
+.register-button:disabled {
+
+    cursor: not-allowed;
+
+    opacity: 0.65;
+
+    transform: none;
+
+    box-shadow: none;
+
+}
+
+
+/* =========================================================
+   KEYFRAME ANIMATIONS
+========================================================= */
+
+@keyframes pageEnter {
+
+    from {
+
+        opacity: 0;
+
+    }
+
+    to {
+
+        opacity: 1;
+
+    }
+
+}
+
+
+@keyframes cardEnter {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(45px)
+            scale(0.96);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+
+    }
+
+}
+
+
+@keyframes inputGroupEnter {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(15px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0);
+
+    }
+
+}
+
+
+@keyframes buttonEnter {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(15px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0);
+
+    }
+
+}
+
+
+@keyframes titleShimmer {
+
+    0% {
+
+        background-position:
+            200% center;
+
+    }
+
+    100% {
+
+        background-position:
+            -200% center;
+
+    }
+
+}
+
+
+@keyframes floatingCircle {
+
+    0%,
+    100% {
+
+        transform:
+            translate(0, 0);
+
+    }
+
+    50% {
+
+        transform:
+            translate(40px, 35px);
+
+    }
+
+}
+
+
+@keyframes floatingCircleReverse {
+
+    0%,
+    100% {
+
+        transform:
+            translate(0, 0);
+
+    }
+
+    50% {
+
+        transform:
+            translate(-45px, -30px);
+
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    body {
+
+        padding:
+            25px 15px;
+
+    }
+
+
+    .register-card {
+
+        padding:
+            32px 24px;
+
+        border-radius:
+            20px;
+
+    }
+
+
+    .register-card h1 {
+
+        font-size:
+            29px;
+
+    }
+
+
+    .register-subtitle {
+
+        margin-bottom:
+            26px;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .register-card {
+
+        padding:
+            28px 18px;
+
+    }
+
+
+    .register-card h1 {
+
+        font-size:
+            26px;
+
+    }
+
+
+    .form-group input {
+
+        height:
+            48px;
+
+    }
+
+
+    .register-button {
+
+        height:
+            50px;
+
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+
+        animation-duration:
+            0.01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        transition-duration:
+            0.01ms !important;
+
+    }
+
+}
+
