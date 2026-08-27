@@ -32,7 +32,10 @@
             </p>
 
 
-            <form id="registerForm">
+            <form
+                id="registerForm"
+                autocomplete="off"
+            >
 
                 <!-- NAME -->
 
@@ -45,7 +48,9 @@
                     <input
                         type="text"
                         id="name"
+                        name="name"
                         placeholder="Enter your name"
+                        autocomplete="off"
                         required
                     >
 
@@ -63,7 +68,9 @@
                     <input
                         type="email"
                         id="email"
+                        name="email"
                         placeholder="Enter your email"
+                        autocomplete="off"
                         required
                     >
 
@@ -83,13 +90,17 @@
                         <input
                             type="password"
                             id="password"
+                            name="password"
                             placeholder="Create a password"
+                            autocomplete="new-password"
                             required
                         >
 
                         <button
                             type="button"
                             id="togglePassword"
+                            tabindex="-1"
+                            aria-label="Show password"
                         >
                             👁
                         </button>
@@ -112,13 +123,17 @@
                         <input
                             type="password"
                             id="confirmPassword"
+                            name="confirmPassword"
                             placeholder="Confirm your password"
+                            autocomplete="new-password"
                             required
                         >
 
                         <button
                             type="button"
                             id="toggleConfirmPassword"
+                            tabindex="-1"
+                            aria-label="Show confirm password"
                         >
                             👁
                         </button>
