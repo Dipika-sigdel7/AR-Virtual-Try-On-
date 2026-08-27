@@ -3,6 +3,11 @@
 // DYNAMIC ADMIN PRODUCTS
 // =========================================================
 
+
+// =========================================================
+// ELEMENTS
+// =========================================================
+
 const categoriesContainer =
     document.getElementById(
         "categories-container"
@@ -68,6 +73,10 @@ async function loadProducts() {
         }
 
 
+        // =================================================
+        // PRODUCTS LIST
+        // =================================================
+
         const productsList =
             Array.isArray(data.products)
                 ? data.products
@@ -112,6 +121,15 @@ async function loadProducts() {
         // SAVE PRODUCTS GLOBALLY
         // =================================================
 
+        if (
+            !window.productsById
+        ) {
+
+            window.productsById = {};
+
+        }
+
+
         productsList.forEach(
             product => {
 
@@ -124,7 +142,7 @@ async function loadProducts() {
 
 
         // =================================================
-        // GROUP BY CATEGORY
+        // GROUP PRODUCTS BY CATEGORY
         // =================================================
 
         const categories = {};
@@ -161,7 +179,7 @@ async function loadProducts() {
 
 
         // =================================================
-        // CLEAR
+        // CLEAR CONTAINER
         // =================================================
 
         categoriesContainer.innerHTML =
@@ -182,6 +200,10 @@ async function loadProducts() {
                         categoryName
                     ];
 
+
+                // =================================================
+                // CATEGORY SECTION
+                // =================================================
 
                 const section =
                     document.createElement(
@@ -216,6 +238,10 @@ async function loadProducts() {
                 `;
 
 
+                // =================================================
+                // PRODUCT GRID
+                // =================================================
+
                 const grid =
                     document.createElement(
                         "div"
@@ -225,6 +251,10 @@ async function loadProducts() {
                 grid.className =
                     "product-grid";
 
+
+                // =================================================
+                // CREATE CARDS
+                // =================================================
 
                 products.forEach(
                     product => {
@@ -253,7 +283,7 @@ async function loadProducts() {
 
 
         // =================================================
-        // CONNECT BUTTONS
+        // CONNECT CART BUTTONS
         // =================================================
 
         connectCartButtons();
@@ -350,7 +380,7 @@ function createProductCard(
 
 
     // =====================================================
-    // CARD
+    // PRODUCT CARD
     // =====================================================
 
     card.innerHTML = `
@@ -461,6 +491,59 @@ function createProductCard(
 
 
 // =========================================================
+// CHECK LOGIN STATUS
+// =========================================================
+
+async function checkUserLoggedIn() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/auth/me",
+                {
+                    method: "GET",
+
+                    credentials: "include"
+                }
+            );
+
+
+        if (
+            !response.ok
+        ) {
+
+            return false;
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        return (
+            data.success === true &&
+            data.user
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "LOGIN CHECK ERROR:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+// =========================================================
 // CONNECT CART BUTTONS
 // =========================================================
 
@@ -477,12 +560,72 @@ function connectCartButtons() {
 
             button.addEventListener(
                 "click",
-                event => {
+                async event => {
 
                     event.preventDefault();
 
                     event.stopPropagation();
 
+
+                    // =================================================
+                    // PREVENT DOUBLE CLICK
+                    // =================================================
+
+                    if (
+                        button.disabled
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    // =================================================
+                    // CHECK USER LOGIN
+                    // =================================================
+
+                    const loggedIn =
+                        await checkUserLoggedIn();
+
+
+                    // =================================================
+                    // NOT LOGGED IN
+                    // =================================================
+
+                    if (
+                        !loggedIn
+                    ) {
+
+                        alert(
+                            "Please login to add products to your cart."
+                        );
+
+
+                        /*
+                         * Remember the current page.
+                         * After successful login, the user
+                         * can be returned here.
+                         */
+
+                        sessionStorage.setItem(
+                            "loginRedirect",
+                            window.location.pathname +
+                            window.location.search
+                        );
+
+
+                        window.location.href =
+                            "/login";
+
+
+                        return;
+
+                    }
+
+
+                    // =================================================
+                    // FIND PRODUCT CARD
+                    // =================================================
 
                     const card =
                         button.closest(
@@ -490,12 +633,18 @@ function connectCartButtons() {
                         );
 
 
-                    if (!card) {
+                    if (
+                        !card
+                    ) {
 
                         return;
 
                     }
 
+
+                    // =================================================
+                    // GET PRODUCT ID
+                    // =================================================
 
                     const productId =
                         card.getAttribute(
@@ -503,13 +652,19 @@ function connectCartButtons() {
                         );
 
 
+                    // =================================================
+                    // GET PRODUCT
+                    // =================================================
+
                     const product =
                         window.productsById[
                             String(productId)
                         ];
 
 
-                    if (!product) {
+                    if (
+                        !product
+                    ) {
 
                         console.error(
                             "Product not found:",
@@ -522,66 +677,140 @@ function connectCartButtons() {
 
 
                     // =================================================
-                    // USE SAME CART AS HOME
+                    // CHECK CART FUNCTION
                     // =================================================
 
                     if (
-                        typeof window.addToCart ===
+                        typeof window.addToCart !==
                         "function"
                     ) {
 
-                        window.addToCart(
-                            product
+                        console.error(
+                            "window.addToCart() is not available."
                         );
+
+                        alert(
+                            "Cart is currently unavailable."
+                        );
+
+                        return;
 
                     }
 
 
                     // =================================================
-                    // BUTTON FEEDBACK
+                    // DISABLE BUTTON WHILE ADDING
                     // =================================================
 
+                    button.disabled = true;
+
                     const originalText =
-                        button.textContent;
+                        button.textContent.trim();
 
 
                     button.textContent =
-                        "Added ✓";
+                        "Adding...";
 
 
-                    button.classList.add(
-                        "added"
-                    );
+                    // =================================================
+                    // ADD TO CART
+                    // =================================================
+
+                    try {
+
+                        const result =
+                            await window.addToCart(
+                                product
+                            );
 
 
-                    button.style.transform =
-                        "scale(0.95)";
+                        // =================================================
+                        // CART ADD FAILED
+                        // =================================================
 
+                        if (
+                            result === false
+                        ) {
 
-                    setTimeout(
-                        () => {
-
-                            button.style.transform =
-                                "";
-
-                        },
-                        150
-                    );
-
-
-                    setTimeout(
-                        () => {
+                            button.disabled =
+                                false;
 
                             button.textContent =
                                 originalText;
 
-                            button.classList.remove(
-                                "added"
-                            );
+                            return;
 
-                        },
-                        1000
-                    );
+                        }
+
+
+                        // =================================================
+                        // SUCCESS
+                        // =================================================
+
+                        button.textContent =
+                            "Added ✓";
+
+
+                        button.classList.add(
+                            "added"
+                        );
+
+
+                        button.style.transform =
+                            "scale(0.95)";
+
+
+                        setTimeout(
+                            () => {
+
+                                button.style.transform =
+                                    "";
+
+                            },
+                            150
+                        );
+
+
+                        setTimeout(
+                            () => {
+
+                                button.textContent =
+                                    originalText;
+
+                                button.classList.remove(
+                                    "added"
+                                );
+
+                                button.disabled =
+                                    false;
+
+                            },
+                            1000
+                        );
+
+
+                    }
+
+                    catch (error) {
+
+                        console.error(
+                            "ADD TO CART ERROR:",
+                            error
+                        );
+
+
+                        button.disabled =
+                            false;
+
+                        button.textContent =
+                            originalText;
+
+
+                        alert(
+                            "Unable to add product to cart."
+                        );
+
+                    }
 
                 }
             );
@@ -647,7 +876,7 @@ function escapeAttribute(
 
 
 // =========================================================
-// LOAD
+// LOAD PRODUCTS
 // =========================================================
 
 loadProducts();
