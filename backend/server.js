@@ -24,11 +24,8 @@ const pagesPath =
    MIDDLEWARE
 ========================================================= */
 
-// Parse JSON requests
-app.use(
-    express.json()
-);
-
+// Parse JSON
+app.use(express.json());
 
 // Parse form data
 app.use(
@@ -42,86 +39,39 @@ app.use(
    SESSION
 ========================================================= */
 
-if (!process.env.SESSION_SECRET) {
-
-    console.error(
-        "ERROR: SESSION_SECRET is missing from .env"
-    );
-
-    process.exit(1);
-}
-
-
 app.use(
     session({
-
-        secret: process.env.SESSION_SECRET,
+        secret:
+            process.env.SESSION_SECRET ||
+            "ar-ecommerce-secret-key",
 
         resave: false,
 
         saveUninitialized: false,
 
         cookie: {
-
             httpOnly: true,
-
             secure: false,
-
-            maxAge:
-                24 * 60 * 60 * 1000
-
+            maxAge: 24 * 60 * 60 * 1000
         }
-
     })
 );
 
 
 /* =========================================================
-   ROUTES
+   STATIC FILES
 ========================================================= */
 
-const adminProductRoutes =
-    require("./routes/adminProductRoutes");
-
-
-const productRoutes =
-    require("./routes/productRoutes");
-
-
-const userRoutes =
-    require("./routes/userRoutes");
-
-
-/* =========================================================
-   USER API
-========================================================= */
-
-app.use(
-    "/api/users",
-    userRoutes
-);
-
-
-/* =========================================================
-   STATIC FRONTEND FILES
-========================================================= */
-
+// Frontend static files
 app.use(
     express.static(frontendPath)
 );
 
-
-/* =========================================================
-   PRODUCT IMAGE UPLOADS
-========================================================= */
-
+// Uploaded product images
 app.use(
     "/uploads",
     express.static(
-        path.join(
-            __dirname,
-            "uploads"
-        )
+        path.join(__dirname, "uploads")
     )
 );
 
@@ -130,19 +80,29 @@ app.use(
    API ROUTES
 ========================================================= */
 
-// Admin product management
+const productRoutes =
+    require("./routes/productRoutes");
+
+const adminProductRoutes =
+    require("./routes/adminProductRoutes");
+
+const userRoutes =
+    require("./routes/userRoutes");
+
+
+app.use(
+    "/api/products",
+    productRoutes
+);
 
 app.use(
     "/api/admin/products",
     adminProductRoutes
 );
 
-
-// Public product API
-
 app.use(
-    "/api/products",
-    productRoutes
+    "/api/users",
+    userRoutes
 );
 
 
@@ -150,56 +110,23 @@ app.use(
    PAGE ROUTES
 ========================================================= */
 
-
-/* -------------------------
-   HOME
-------------------------- */
-
+// Home
 app.get("/", (req, res) => {
-
     res.sendFile(
-        path.join(
-            pagesPath,
-            "index.html"
-        )
+        path.join(pagesPath, "index.html")
     );
-
 });
 
 
-/* -------------------------
-   PRODUCTS
-------------------------- */
-
-app.get("/products", (req, res) => {
-
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "products.html"
-        )
-    );
-
-});
-
-
-/* -------------------------
-   LOGIN
-------------------------- */
-
+// Login
 app.get("/login", (req, res) => {
-
     res.sendFile(
-        path.join(
-            pagesPath,
-            "login.html"
-        )
+        path.join(pagesPath, "login.html")
     );
-
 });
 
 
-// register
+// Register
 app.get("/register", (req, res) => {
     res.sendFile(
         path.join(pagesPath, "register.html")
@@ -207,56 +134,106 @@ app.get("/register", (req, res) => {
 });
 
 
-/* -------------------------
-   ADMIN
-------------------------- */
-
-app.get("/admin", (req, res) => {
-
+// Products
+app.get("/products", (req, res) => {
     res.sendFile(
-        path.join(
-            pagesPath,
-            "admin.html"
-        )
+        path.join(pagesPath, "products.html")
     );
-
 });
 
 
-/* -------------------------
-   SERVICES
-------------------------- */
-
+// Services
 app.get("/services", (req, res) => {
-
     res.sendFile(
-        path.join(
-            pagesPath,
-            "services.html"
-        )
+        path.join(pagesPath, "services.html")
     );
-
 });
 
 
-/* -------------------------
-   ABOUT
-------------------------- */
-
+// About
 app.get("/about", (req, res) => {
-
     res.sendFile(
-        path.join(
-            pagesPath,
-            "about.html"
-        )
+        path.join(pagesPath, "about.html")
     );
+});
 
+
+// Admin
+app.get("/admin", (req, res) => {
+    res.sendFile(
+        path.join(pagesPath, "admin.html")
+    );
 });
 
 
 /* =========================================================
-   404 HANDLER
+   PROFILE PAGE
+========================================================= */
+
+app.get("/profile", (req, res) => {
+
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
+
+    res.sendFile(
+        path.join(pagesPath, "profile.html")
+    );
+});
+
+
+/* =========================================================
+   LOGGED-IN USER CHECK
+========================================================= */
+
+app.get("/api/auth/me", (req, res) => {
+
+    if (!req.session.user) {
+        return res.status(401).json({
+            success: false,
+            message: "User is not logged in"
+        });
+    }
+
+    res.json({
+        success: true,
+        user: req.session.user
+    });
+});
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+app.post("/api/auth/logout", (req, res) => {
+
+    req.session.destroy((error) => {
+
+        if (error) {
+            console.error(
+                "Logout error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Logout failed"
+            });
+        }
+
+        res.clearCookie("connect.sid");
+
+        res.json({
+            success: true,
+            message: "Logged out successfully"
+        });
+    });
+});
+
+
+/* =========================================================
+   404
 ========================================================= */
 
 app.use((req, res) => {
@@ -264,7 +241,6 @@ app.use((req, res) => {
     res.status(404).send(
         "Page not found"
     );
-
 });
 
 
@@ -275,11 +251,7 @@ app.use((req, res) => {
 app.listen(PORT, () => {
 
     console.log(
-        `Server running at http://localhost:${PORT}`
-    );
-
-    console.log(
-        `Login page: http://localhost:${PORT}/login`
+        `Server running on http://localhost:${PORT}`
     );
 
 });
