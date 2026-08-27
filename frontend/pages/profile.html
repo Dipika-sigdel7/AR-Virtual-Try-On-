@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>My Profile</title>
+
+</head>
+
+<body>
+
+    <h1>My Profile</h1>
+
+    <div id="profile">
+
+        Loading profile...
+
+    </div>
+
+    <button id="logoutButton">
+        Logout
+    </button>
+
+
+    <script>
+
+        async function loadProfile() {
+
+            try {
+
+                const response =
+                    await fetch("/api/auth/me");
+
+                if (!response.ok) {
+
+                    window.location.href =
+                        "/login";
+
+                    return;
+                }
+
+                const data =
+                    await response.json();
+
+                if (!data.success) {
+
+                    window.location.href =
+                        "/login";
+
+                    return;
+                }
+
+                const user =
+                    data.user;
+
+                document.getElementById(
+                    "profile"
+                ).innerHTML = `
+
+                    <p>
+                        <strong>Name:</strong>
+                        ${user.name || ""}
+                    </p>
+
+                    <p>
+                        <strong>Email:</strong>
+                        ${user.email || ""}
+                    </p>
+
+                `;
+
+            } catch (error) {
+
+                console.error(
+                    "Profile error:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        document
+            .getElementById("logoutButton")
+            .addEventListener(
+                "click",
+                async () => {
+
+                    await fetch(
+                        "/api/auth/logout",
+                        {
+                            method: "POST"
+                        }
+                    );
+
+                    window.location.href =
+                        "/login";
+
+                }
+            );
+
+
+        loadProfile();
+
+    </script>
+
+</body>
+
+</html>

@@ -21,148 +21,205 @@ const togglePassword =
    SHOW / HIDE PASSWORD
 ========================================================= */
 
-togglePassword.addEventListener(
-    "click",
-    () => {
+if (
+    togglePassword &&
+    passwordInput
+) {
 
-        if (
-            passwordInput.type === "password"
-        ) {
+    togglePassword.addEventListener(
+        "click",
+        () => {
 
-            passwordInput.type = "text";
+            if (
+                passwordInput.type === "password"
+            ) {
 
-            togglePassword.textContent = "🙈";
+                passwordInput.type = "text";
 
-        } else {
+                togglePassword.textContent = "🙈";
 
-            passwordInput.type = "password";
+                togglePassword.setAttribute(
+                    "aria-label",
+                    "Hide password"
+                );
 
-            togglePassword.textContent = "👁";
+            } else {
+
+                passwordInput.type = "password";
+
+                togglePassword.textContent = "👁";
+
+                togglePassword.setAttribute(
+                    "aria-label",
+                    "Show password"
+                );
+
+            }
 
         }
+    );
 
-    }
-);
+}
 
 
 /* =========================================================
    LOGIN
 ========================================================= */
 
-loginForm.addEventListener(
-    "submit",
-    async (event) => {
+if (loginForm) {
 
-        event.preventDefault();
+    loginForm.addEventListener(
+        "submit",
+        async (event) => {
 
-
-        const email =
-            emailInput.value.trim();
-
-        const password =
-            passwordInput.value;
+            event.preventDefault();
 
 
-        loginMessage.textContent = "";
+            const email =
+                emailInput.value.trim();
 
-        loginButton.disabled = true;
-
-        loginButton.textContent =
-            "Logging in...";
-
-
-        try {
-
-            const response =
-                await fetch(
-                    "/api/users/login",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        credentials: "include",
-
-                        body: JSON.stringify({
-                            email,
-                            password
-                        })
-                    }
-                );
+            const password =
+                passwordInput.value;
 
 
-            const data =
-                await response.json();
+            /* -------------------------
+               BASIC VALIDATION
+            ------------------------- */
 
-
-            if (!data.success) {
+            if (!email || !password) {
 
                 loginMessage.textContent =
-                    data.message;
-
-                loginButton.disabled = false;
-
-                loginButton.textContent =
-                    "Login";
+                    "Please enter your email and password.";
 
                 return;
 
             }
 
 
-            /* -------------------------
-               SUCCESS
-            ------------------------- */
+            loginMessage.textContent = "";
 
-            loginMessage.textContent =
-                "Login successful!";
+            loginButton.disabled = true;
+
+            loginButton.textContent =
+                "Logging in...";
 
 
-            /*
-             * Return to the page the user
-             * originally wanted to use.
-             */
+            try {
 
-            const redirect =
-                sessionStorage.getItem(
+                const response =
+                    await fetch(
+                        "/api/users/login",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            credentials: "include",
+
+                            body: JSON.stringify({
+                                email,
+                                password
+                            })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                /* -------------------------
+                   LOGIN FAILED
+                ------------------------- */
+
+                if (!response.ok || !data.success) {
+
+                    loginMessage.textContent =
+                        data.message ||
+                        "Invalid email or password.";
+
+                    loginButton.disabled = false;
+
+                    loginButton.textContent =
+                        "Login";
+
+                    return;
+
+                }
+
+
+                /* -------------------------
+                   LOGIN SUCCESS
+                ------------------------- */
+
+                loginMessage.textContent =
+                    "Login successful!";
+
+
+                /*
+                 * Save the logged-in user's
+                 * information locally only
+                 * for frontend display.
+                 *
+                 * The real authentication
+                 * remains in the server session.
+                 */
+
+                if (data.user) {
+
+                    sessionStorage.setItem(
+                        "loggedInUser",
+                        JSON.stringify(data.user)
+                    );
+
+                }
+
+
+                /* -------------------------
+                   REDIRECT
+                ------------------------- */
+
+                const redirect =
+                    sessionStorage.getItem(
+                        "loginRedirect"
+                    );
+
+
+                sessionStorage.removeItem(
                     "loginRedirect"
                 );
 
 
-            sessionStorage.removeItem(
-                "loginRedirect"
-            );
+                setTimeout(() => {
+
+                    window.location.href =
+                        redirect || "/";
+
+                }, 500);
+
+            } catch (error) {
+
+                console.error(
+                    "Login error:",
+                    error
+                );
 
 
-            setTimeout(() => {
-
-                window.location.href =
-                    redirect || "/";
-
-            }, 500);
+                loginMessage.textContent =
+                    "Unable to connect to server.";
 
 
-        } catch (error) {
+                loginButton.disabled = false;
 
-            console.error(
-                "Login error:",
-                error
-            );
+                loginButton.textContent =
+                    "Login";
 
-
-            loginMessage.textContent =
-                "Unable to connect to server.";
-
-
-            loginButton.disabled = false;
-
-            loginButton.textContent =
-                "Login";
+            }
 
         }
+    );
 
-    }
-);
+}
