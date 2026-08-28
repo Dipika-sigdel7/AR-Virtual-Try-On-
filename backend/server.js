@@ -10,11 +10,14 @@ const PORT = process.env.PORT || 3000;
 
 
 /* =========================================================
-   FRONTEND PATHS
+   PATHS
 ========================================================= */
 
-const frontendPath = path.join(__dirname, "../frontend");
-const pagesPath = path.join(frontendPath, "pages");
+const frontendPath =
+    path.join(__dirname, "../frontend");
+
+const pagesPath =
+    path.join(frontendPath, "pages");
 
 
 /* =========================================================
@@ -36,6 +39,7 @@ app.use(
 
 app.use(
     session({
+
         secret:
             process.env.SESSION_SECRET ||
             "ar-ecommerce-secret-key",
@@ -45,12 +49,15 @@ app.use(
         saveUninitialized: false,
 
         cookie: {
+
             httpOnly: true,
+
             secure: false,
 
-            // Keep login for 24 hours
             maxAge: 24 * 60 * 60 * 1000
+
         }
+
     })
 );
 
@@ -117,25 +124,7 @@ app.get("/", (req, res) => {
 });
 
 
-/* =========================================================
-   LOGIN PAGE
-========================================================= */
-
 app.get("/login", (req, res) => {
-
-    /*
-     * If user is already logged in,
-     * do NOT show the login form.
-     *
-     * Send them to their profile.
-     */
-
-    if (req.session.user) {
-
-        return res.redirect("/profile");
-
-    }
-
 
     res.sendFile(
         path.join(
@@ -146,10 +135,6 @@ app.get("/login", (req, res) => {
 
 });
 
-
-/* =========================================================
-   REGISTER PAGE
-========================================================= */
 
 app.get("/register", (req, res) => {
 
@@ -163,37 +148,6 @@ app.get("/register", (req, res) => {
 });
 
 
-/* =========================================================
-   PROFILE PAGE
-========================================================= */
-
-app.get("/profile", (req, res) => {
-
-    /*
-     * User must be logged in.
-     */
-
-    if (!req.session.user) {
-
-        return res.redirect("/login");
-
-    }
-
-
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "profile.html"
-        )
-    );
-
-});
-
-
-/* =========================================================
-   PRODUCTS PAGE
-========================================================= */
-
 app.get("/products", (req, res) => {
 
     res.sendFile(
@@ -206,10 +160,6 @@ app.get("/products", (req, res) => {
 });
 
 
-/* =========================================================
-   SERVICES PAGE
-========================================================= */
-
 app.get("/services", (req, res) => {
 
     res.sendFile(
@@ -221,10 +171,6 @@ app.get("/services", (req, res) => {
 
 });
 
-
-/* =========================================================
-   ABOUT PAGE
-========================================================= */
 
 app.get("/about", (req, res) => {
 
@@ -239,7 +185,23 @@ app.get("/about", (req, res) => {
 
 
 /* =========================================================
-   ADMIN PAGE
+   PROFILE PAGE
+========================================================= */
+
+app.get("/profile", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "profile.html"
+        )
+    );
+
+});
+
+
+/* =========================================================
+   ADMIN
 ========================================================= */
 
 app.get("/admin", (req, res) => {
@@ -258,15 +220,13 @@ app.get("/admin", (req, res) => {
    404
 ========================================================= */
 
-app.use(
-    (req, res) => {
+app.use((req, res) => {
 
-        res.status(404).send(
-            "Page not found"
-        );
+    res.status(404).send(
+        "Page not found"
+    );
 
-    }
-);
+});
 
 
 /* =========================================================
