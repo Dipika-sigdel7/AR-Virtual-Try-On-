@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,9 +23,10 @@
 
     <div class="admin-container">
 
-        <!-- =========================
+
+        <!-- =====================================================
              HEADER
-        ========================== -->
+        ====================================================== -->
 
         <header class="admin-header">
 
@@ -42,6 +42,7 @@
 
             </div>
 
+
             <button
                 id="logoutBtn"
                 class="logout-btn"
@@ -53,9 +54,10 @@
         </header>
 
 
-        <!-- =========================
-             ADMIN LOGIN
-        ========================== -->
+
+        <!-- =====================================================
+             LOGIN SECTION
+        ====================================================== -->
 
         <section
             id="loginSection"
@@ -70,6 +72,7 @@
                 Enter your admin token to continue.
             </p>
 
+
             <form id="loginForm">
 
                 <div class="form-group">
@@ -77,6 +80,7 @@
                     <label for="adminToken">
                         Admin Token
                     </label>
+
 
                     <div class="token-input-wrapper">
 
@@ -89,11 +93,13 @@
                             required
                         >
 
+
                         <button
                             type="button"
                             id="toggleToken"
                             class="token-toggle"
                             aria-label="Show or hide token"
+                            title="Show or hide token"
                         >
                             👁
                         </button>
@@ -101,6 +107,7 @@
                     </div>
 
                 </div>
+
 
                 <button
                     type="submit"
@@ -111,6 +118,7 @@
 
             </form>
 
+
             <p
                 id="loginMessage"
                 class="message"
@@ -119,18 +127,20 @@
         </section>
 
 
-        <!-- =========================
+
+        <!-- =====================================================
              ADMIN DASHBOARD
-        ========================== -->
+        ====================================================== -->
 
         <section
             id="dashboardSection"
             class="hidden"
         >
 
-            <!-- =========================
-                 ADD / EDIT PRODUCT
-            ========================== -->
+
+            <!-- =================================================
+                 PRODUCT MANAGEMENT
+            ================================================== -->
 
             <div class="card product-form-card">
 
@@ -142,16 +152,21 @@
                     Add a new product to your store.
                 </p>
 
+
                 <form
                     id="productForm"
                     enctype="multipart/form-data"
                 >
+
+
+                    <!-- PRODUCT ID -->
 
                     <input
                         type="hidden"
                         id="productId"
                         name="productId"
                     >
+
 
 
                     <!-- PRODUCT NAME -->
@@ -175,7 +190,8 @@
                     </div>
 
 
-                    <!-- DESCRIPTION -->
+
+                    <!-- PRODUCT DESCRIPTION -->
 
                     <div class="form-group">
 
@@ -194,13 +210,17 @@
                     </div>
 
 
-                    <!-- CATEGORY -->
 
-                    <div class="form-group">
+                    <!-- =================================================
+                         PRODUCT CATEGORY
+                    ================================================== -->
+
+                    <div class="form-group category-product-group">
 
                         <label for="category">
                             Category
                         </label>
+
 
                         <select
                             id="category"
@@ -212,19 +232,34 @@
                                 Select Category
                             </option>
 
+                            <!--
+                                Categories will be loaded
+                                automatically by JavaScript.
+                            -->
+
                         </select>
+
 
                         <small>
                             Select a category for this product.
                         </small>
 
 
-                        <!-- ADD CATEGORY -->
+
+                        <!-- =================================================
+                             INLINE ADD CATEGORY FORM
+
+                             This appears directly below
+                             the category dropdown.
+                        ================================================== -->
 
                         <div
                             id="inlineCategoryForm"
                             class="inline-category-form hidden"
                         >
+
+
+                            <!-- INLINE CATEGORY HEADER -->
 
                             <div class="inline-category-header">
 
@@ -240,17 +275,22 @@
 
                                 </div>
 
+
                                 <button
                                     type="button"
                                     id="closeInlineCategoryBtn"
                                     class="inline-close-btn"
                                     aria-label="Close"
+                                    title="Close"
                                 >
                                     ×
                                 </button>
 
                             </div>
 
+
+
+                            <!-- CATEGORY NAME -->
 
                             <div class="form-group">
 
@@ -269,6 +309,9 @@
                             </div>
 
 
+
+                            <!-- CATEGORY DESCRIPTION -->
+
                             <div class="form-group">
 
                                 <label for="inlineCategoryDescription">
@@ -285,6 +328,9 @@
                             </div>
 
 
+
+                            <!-- CATEGORY BUTTONS -->
+
                             <div class="form-buttons">
 
                                 <button
@@ -294,6 +340,7 @@
                                 >
                                     + Add Category
                                 </button>
+
 
                                 <button
                                     type="button"
@@ -306,6 +353,9 @@
                             </div>
 
 
+
+                            <!-- CATEGORY MESSAGE -->
+
                             <p
                                 id="inlineCategoryMessage"
                                 class="message"
@@ -316,7 +366,10 @@
                     </div>
 
 
-                    <!-- PRICE -->
+
+                    <!-- =================================================
+                         PRODUCT PRICE
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -337,7 +390,10 @@
                     </div>
 
 
-                    <!-- STOCK -->
+
+                    <!-- =================================================
+                         PRODUCT STOCK
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -364,7 +420,10 @@
                     </div>
 
 
-                    <!-- IMAGE -->
+
+                    <!-- =================================================
+                         PRODUCT IMAGE
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -386,6 +445,7 @@
                     </div>
 
 
+
                     <!-- IMAGE PREVIEW -->
 
                     <div
@@ -394,7 +454,10 @@
                     ></div>
 
 
-                    <!-- BUTTONS -->
+
+                    <!-- =================================================
+                         FORM BUTTONS
+                    ================================================== -->
 
                     <div class="form-buttons">
 
@@ -404,6 +467,7 @@
                         >
                             Save Product
                         </button>
+
 
                         <button
                             type="button"
@@ -426,9 +490,10 @@
             </div>
 
 
-            <!-- =========================
+
+            <!-- =====================================================
                  EXISTING PRODUCTS
-            ========================== -->
+            ====================================================== -->
 
             <div class="card">
 
@@ -446,6 +511,7 @@
 
                     </div>
 
+
                     <button
                         type="button"
                         id="refreshBtn"
@@ -462,9 +528,9 @@
                     class="products-container"
                 >
 
-                    <p>
+                    <div class="loading-message">
                         Loading products...
-                    </p>
+                    </div>
 
                 </div>
 
@@ -475,13 +541,13 @@
     </div>
 
 
-    <!-- =========================
-         JAVASCRIPT
-    ========================== -->
+
+    <!-- =====================================================
+         ADMIN JAVASCRIPT
+    ====================================================== -->
 
     <script src="/js/admin.js"></script>
 
 </body>
 
 </html>
-```
