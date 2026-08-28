@@ -21,15 +21,29 @@ router.post("/register", async (req, res) => {
         } = req.body;
 
 
-        /* -------------------------
-           VALIDATION
-        ------------------------- */
-
         if (!name || !email || !password) {
 
             return res.status(400).json({
                 success: false,
                 message: "All fields are required."
+            });
+
+        }
+
+
+        const cleanName =
+            name.trim();
+
+        const cleanEmail =
+            email.trim().toLowerCase();
+
+
+        if (!cleanName || !cleanEmail) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Name and email cannot be empty."
             });
 
         }
@@ -46,37 +60,17 @@ router.post("/register", async (req, res) => {
         }
 
 
-        /* -------------------------
-           CLEAN INPUT
-        ------------------------- */
+        /* CHECK EXISTING USER */
 
-        const cleanName = name.trim();
-        const cleanEmail = email.trim().toLowerCase();
-
-
-        if (!cleanName || !cleanEmail) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Name and email cannot be empty."
-            });
-
-        }
-
-
-        /* -------------------------
-           CHECK EXISTING USER
-        ------------------------- */
-
-        const [existingUsers] = await db.query(
-            `
-            SELECT id
-            FROM users
-            WHERE email = ?
-            `,
-            [cleanEmail]
-        );
+        const [existingUsers] =
+            await db.query(
+                `
+                SELECT id
+                FROM users
+                WHERE email = ?
+                `,
+                [cleanEmail]
+            );
 
 
         if (existingUsers.length > 0) {
@@ -90,39 +84,33 @@ router.post("/register", async (req, res) => {
         }
 
 
-        /* -------------------------
-           HASH PASSWORD
-        ------------------------- */
+        /* HASH PASSWORD */
 
         const passwordHash =
-            await bcrypt.hash(password, 12);
+            await bcrypt.hash(
+                password,
+                12
+            );
 
 
-        /* -------------------------
-           CREATE USER
-           
-           IMPORTANT:
-           Your database column is
-           "password", not "password_hash".
-        ------------------------- */
+        /* CREATE USER */
 
-        const [result] = await db.query(
-            `
-            INSERT INTO users
-            (name, email, password)
-            VALUES (?, ?, ?)
-            `,
-            [
-                cleanName,
-                cleanEmail,
-                passwordHash
-            ]
-        );
+        const [result] =
+            await db.query(
+                `
+                INSERT INTO users
+                (name, email, password)
+                VALUES (?, ?, ?)
+                `,
+                [
+                    cleanName,
+                    cleanEmail,
+                    passwordHash
+                ]
+            );
 
 
-        /* -------------------------
-           CREATE CART
-        ------------------------- */
+        /* CREATE CART */
 
         await db.query(
             `
@@ -134,10 +122,6 @@ router.post("/register", async (req, res) => {
         );
 
 
-        /* -------------------------
-           RESPONSE
-        ------------------------- */
-
         return res.status(201).json({
 
             success: true,
@@ -147,14 +131,14 @@ router.post("/register", async (req, res) => {
 
         });
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.error(
             "Registration error:",
             error
         );
-
 
         return res.status(500).json({
 
@@ -184,10 +168,6 @@ router.post("/login", async (req, res) => {
         } = req.body;
 
 
-        /* -------------------------
-           VALIDATION
-        ------------------------- */
-
         if (!email || !password) {
 
             return res.status(400).json({
@@ -202,43 +182,27 @@ router.post("/login", async (req, res) => {
         }
 
 
-        /* -------------------------
-           CLEAN EMAIL
-        ------------------------- */
-
         const cleanEmail =
             email.trim().toLowerCase();
 
 
-        /* -------------------------
-           FIND USER
-           
-           IMPORTANT:
-           Select "password", not
-           "password_hash".
-        ------------------------- */
+        /* FIND USER */
 
-        const [users] = await db.query(
+        const [users] =
+            await db.query(
+                `
+                SELECT
+                    id,
+                    name,
+                    email,
+                    password,
+                    role
+                FROM users
+                WHERE email = ?
+                `,
+                [cleanEmail]
+            );
 
-            `
-            SELECT
-                id,
-                name,
-                email,
-                password,
-                role
-            FROM users
-            WHERE email = ?
-            `,
-
-            [cleanEmail]
-
-        );
-
-
-        /* -------------------------
-           USER NOT FOUND
-        ------------------------- */
 
         if (users.length === 0) {
 
@@ -254,12 +218,11 @@ router.post("/login", async (req, res) => {
         }
 
 
-        const user = users[0];
+        const user =
+            users[0];
 
 
-        /* -------------------------
-           CHECK PASSWORD
-        ------------------------- */
+        /* CHECK PASSWORD */
 
         const passwordMatch =
             await bcrypt.compare(
@@ -282,9 +245,9 @@ router.post("/login", async (req, res) => {
         }
 
 
-        /* -------------------------
-           CREATE SESSION
-        ------------------------- */
+        /* =================================================
+           CREATE USER SESSION
+        ================================================= */
 
         req.session.user = {
 
@@ -299,66 +262,55 @@ router.post("/login", async (req, res) => {
         };
 
 
-        /* -------------------------
-           SAVE SESSION
-        ------------------------- */
+        /* =================================================
+           SAVE SESSION BEFORE RESPONSE
+        ================================================= */
 
-        req.session.save((error) => {
+        req.session.save(
+            (error) => {
 
-            if (error) {
+                if (error) {
 
-                console.error(
-                    "Session save error:",
-                    error
-                );
+                    console.error(
+                        "Session save error:",
+                        error
+                    );
 
-                return res.status(500).json({
+                    return res.status(500).json({
 
-                    success: false,
+                        success: false,
+
+                        message:
+                            "Login failed."
+
+                    });
+
+                }
+
+
+                return res.json({
+
+                    success: true,
 
                     message:
-                        "Login failed."
+                        "Login successful.",
+
+                    user:
+                        req.session.user
 
                 });
 
             }
+        );
 
+    }
 
-            /* -------------------------
-               LOGIN RESPONSE
-            ------------------------- */
-
-            return res.json({
-
-                success: true,
-
-                message:
-                    "Login successful.",
-
-                user: {
-
-                    id: user.id,
-
-                    name: user.name,
-
-                    email: user.email,
-
-                    role: user.role
-
-                }
-
-            });
-
-        });
-
-
-    } catch (error) {
+    catch (error) {
 
         console.error(
             "Login error:",
             error
         );
-
 
         return res.status(500).json({
 
@@ -375,7 +327,7 @@ router.post("/login", async (req, res) => {
 
 
 /* =========================================================
-   CHECK LOGIN STATUS
+   GET CURRENT USER
 ========================================================= */
 
 router.get("/me", (req, res) => {
@@ -386,7 +338,9 @@ router.get("/me", (req, res) => {
 
             success: true,
 
-            loggedIn: false
+            loggedIn: false,
+
+            user: null
 
         });
 
@@ -412,40 +366,44 @@ router.get("/me", (req, res) => {
 
 router.post("/logout", (req, res) => {
 
-    req.session.destroy((error) => {
+    req.session.destroy(
+        (error) => {
 
-        if (error) {
+            if (error) {
 
-            console.error(
-                "Logout error:",
-                error
+                console.error(
+                    "Logout error:",
+                    error
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Logout failed."
+
+                });
+
+            }
+
+
+            res.clearCookie(
+                "connect.sid"
             );
 
-            return res.status(500).json({
 
-                success: false,
+            return res.json({
+
+                success: true,
 
                 message:
-                    "Logout failed."
+                    "Logout successful."
 
             });
 
         }
-
-
-        res.clearCookie("connect.sid");
-
-
-        return res.json({
-
-            success: true,
-
-            message:
-                "Logout successful."
-
-        });
-
-    });
+    );
 
 });
 

@@ -13,11 +13,15 @@ const PORT = process.env.PORT || 3000;
    PATHS
 ========================================================= */
 
-const frontendPath =
-    path.join(__dirname, "../frontend");
+const frontendPath = path.join(
+    __dirname,
+    "../frontend"
+);
 
-const pagesPath =
-    path.join(frontendPath, "pages");
+const pagesPath = path.join(
+    frontendPath,
+    "pages"
+);
 
 
 /* =========================================================
@@ -39,7 +43,6 @@ app.use(
 
 app.use(
     session({
-
         secret:
             process.env.SESSION_SECRET ||
             "ar-ecommerce-secret-key",
@@ -49,15 +52,10 @@ app.use(
         saveUninitialized: false,
 
         cookie: {
-
             httpOnly: true,
-
             secure: false,
-
             maxAge: 24 * 60 * 60 * 1000
-
         }
-
     })
 );
 
@@ -184,26 +182,6 @@ app.get("/about", (req, res) => {
 });
 
 
-/* =========================================================
-   PROFILE PAGE
-========================================================= */
-
-app.get("/profile", (req, res) => {
-
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "profile.html"
-        )
-    );
-
-});
-
-
-/* =========================================================
-   ADMIN
-========================================================= */
-
 app.get("/admin", (req, res) => {
 
     res.sendFile(
@@ -214,6 +192,18 @@ app.get("/admin", (req, res) => {
     );
 
 });
+
+
+/*
+ * IMPORTANT:
+ * There is NO /api/auth/me here.
+ * There is NO /api/auth/logout here.
+ *
+ * They are already handled by userRoutes.js:
+ *
+ * GET  /api/users/me
+ * POST /api/users/logout
+ */
 
 
 /* =========================================================
