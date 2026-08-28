@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
+const cartRoutes = require("./routes/cartRoutes");
 
 const app = express();
 
@@ -21,6 +22,13 @@ const frontendPath = path.join(
 const pagesPath = path.join(
     frontendPath,
     "pages"
+);
+
+
+// cart 
+app.use(
+    "/api/cart",
+    cartRoutes
 );
 
 
@@ -192,6 +200,8 @@ app.get("/admin", (req, res) => {
     );
 
 });
+
+
 
 
 /*

@@ -1,3 +1,4 @@
+
 const express = require("express");
 const bcrypt = require("bcrypt");
 
@@ -31,11 +32,19 @@ router.post("/register", async (req, res) => {
         }
 
 
-        const cleanName =
-            name.trim();
+        if (password.length < 6) {
 
-        const cleanEmail =
-            email.trim().toLowerCase();
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password must contain at least 6 characters."
+            });
+
+        }
+
+
+        const cleanName = name.trim();
+        const cleanEmail = email.trim().toLowerCase();
 
 
         if (!cleanName || !cleanEmail) {
@@ -49,28 +58,14 @@ router.post("/register", async (req, res) => {
         }
 
 
-        if (password.length < 6) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Password must contain at least 6 characters."
-            });
-
-        }
-
-
-        /* CHECK EXISTING USER */
-
-        const [existingUsers] =
-            await db.query(
-                `
-                SELECT id
-                FROM users
-                WHERE email = ?
-                `,
-                [cleanEmail]
-            );
+        const [existingUsers] = await db.query(
+            `
+            SELECT id
+            FROM users
+            WHERE email = ?
+            `,
+            [cleanEmail]
+        );
 
 
         if (existingUsers.length > 0) {
@@ -84,33 +79,27 @@ router.post("/register", async (req, res) => {
         }
 
 
-        /* HASH PASSWORD */
-
         const passwordHash =
-            await bcrypt.hash(
-                password,
-                12
-            );
+            await bcrypt.hash(password, 12);
 
 
-        /* CREATE USER */
-
-        const [result] =
-            await db.query(
-                `
-                INSERT INTO users
-                (name, email, password)
-                VALUES (?, ?, ?)
-                `,
-                [
-                    cleanName,
-                    cleanEmail,
-                    passwordHash
-                ]
-            );
+        const [result] = await db.query(
+            `
+            INSERT INTO users
+            (name, email, password)
+            VALUES (?, ?, ?)
+            `,
+            [
+                cleanName,
+                cleanEmail,
+                passwordHash
+            ]
+        );
 
 
-        /* CREATE CART */
+        /*
+         * Create an empty cart for this user.
+         */
 
         await db.query(
             `
@@ -131,14 +120,14 @@ router.post("/register", async (req, res) => {
 
         });
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Registration error:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -186,22 +175,19 @@ router.post("/login", async (req, res) => {
             email.trim().toLowerCase();
 
 
-        /* FIND USER */
-
-        const [users] =
-            await db.query(
-                `
-                SELECT
-                    id,
-                    name,
-                    email,
-                    password,
-                    role
-                FROM users
-                WHERE email = ?
-                `,
-                [cleanEmail]
-            );
+        const [users] = await db.query(
+            `
+            SELECT
+                id,
+                name,
+                email,
+                password,
+                role
+            FROM users
+            WHERE email = ?
+            `,
+            [cleanEmail]
+        );
 
 
         if (users.length === 0) {
@@ -218,11 +204,8 @@ router.post("/login", async (req, res) => {
         }
 
 
-        const user =
-            users[0];
+        const user = users[0];
 
-
-        /* CHECK PASSWORD */
 
         const passwordMatch =
             await bcrypt.compare(
@@ -245,9 +228,10 @@ router.post("/login", async (req, res) => {
         }
 
 
-        /* =================================================
-           CREATE USER SESSION
-        ================================================= */
+        /*
+         * Store ONLY the logged-in user's
+         * information in the session.
+         */
 
         req.session.user = {
 
@@ -262,55 +246,48 @@ router.post("/login", async (req, res) => {
         };
 
 
-        /* =================================================
-           SAVE SESSION BEFORE RESPONSE
-        ================================================= */
+        req.session.save((error) => {
 
-        req.session.save(
-            (error) => {
+            if (error) {
 
-                if (error) {
+                console.error(
+                    "Session save error:",
+                    error
+                );
 
-                    console.error(
-                        "Session save error:",
-                        error
-                    );
+                return res.status(500).json({
 
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Login failed."
-
-                    });
-
-                }
-
-
-                return res.json({
-
-                    success: true,
+                    success: false,
 
                     message:
-                        "Login successful.",
-
-                    user:
-                        req.session.user
+                        "Login failed."
 
                 });
 
             }
-        );
 
-    }
 
-    catch (error) {
+            return res.json({
+
+                success: true,
+
+                message:
+                    "Login successful.",
+
+                user: req.session.user
+
+            });
+
+        });
+
+
+    } catch (error) {
 
         console.error(
             "Login error:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -327,7 +304,7 @@ router.post("/login", async (req, res) => {
 
 
 /* =========================================================
-   GET CURRENT USER
+   CURRENT USER
 ========================================================= */
 
 router.get("/me", (req, res) => {
@@ -366,44 +343,40 @@ router.get("/me", (req, res) => {
 
 router.post("/logout", (req, res) => {
 
-    req.session.destroy(
-        (error) => {
+    req.session.destroy((error) => {
 
-            if (error) {
+        if (error) {
 
-                console.error(
-                    "Logout error:",
-                    error
-                );
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    message:
-                        "Logout failed."
-
-                });
-
-            }
-
-
-            res.clearCookie(
-                "connect.sid"
+            console.error(
+                "Logout error:",
+                error
             );
 
+            return res.status(500).json({
 
-            return res.json({
-
-                success: true,
+                success: false,
 
                 message:
-                    "Logout successful."
+                    "Logout failed."
 
             });
 
         }
-    );
+
+
+        res.clearCookie("connect.sid");
+
+
+        return res.json({
+
+            success: true,
+
+            message:
+                "Logout successful."
+
+        });
+
+    });
 
 });
 
