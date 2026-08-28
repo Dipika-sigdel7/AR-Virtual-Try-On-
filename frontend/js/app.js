@@ -25,34 +25,20 @@ let userLoggedIn = false;
 const navActions =
     document.getElementById("nav-actions");
 
-
-const cartButton =
-    document.getElementById("cart-btn");
-
-
-const cartCount =
-    document.getElementById("cart-count");
-
-
 const cartModal =
     document.getElementById("cart-modal");
-
 
 const cartClose =
     document.getElementById("cart-close");
 
-
 const cartItems =
     document.getElementById("cart-items");
-
 
 const cartTotal =
     document.getElementById("cart-total");
 
-
 const checkoutButton =
     document.getElementById("checkout-btn");
-
 
 const homeProductsContainer =
     document.getElementById(
@@ -73,9 +59,7 @@ async function checkUserLogin() {
                 "/api/users/me",
                 {
                     method: "GET",
-
                     credentials: "include",
-
                     cache: "no-store"
                 }
             );
@@ -98,10 +82,14 @@ async function checkUserLogin() {
                 data.user;
 
 
-            showLoggedInUser(
-                data.user
-            );
+            // IMPORTANT:
+            // Login button remains visible
+            // even after the user logs in.
 
+            showLoggedInUser();
+
+
+            // Load user's database cart.
 
             await loadCart();
 
@@ -149,8 +137,16 @@ async function checkUserLogin() {
 // =========================================================
 // SHOW LOGGED IN USER
 // =========================================================
+// IMPORTANT:
+//
+// We DO NOT show Profile or Logout here.
+//
+// The Login button remains visible even
+// when the user is already logged in.
+//
+// =========================================================
 
-function showLoggedInUser(user) {
+function showLoggedInUser() {
 
     if (!navActions) {
 
@@ -161,29 +157,12 @@ function showLoggedInUser(user) {
 
     navActions.innerHTML = `
 
-        <button
-            type="button"
-            class="profile-btn"
-            id="profile-btn"
+        <a
+            href="/login"
+            class="login-btn"
         >
-
-            👤
-            ${escapeHTML(
-                user.name || "Profile"
-            )}
-
-        </button>
-
-
-        <button
-            type="button"
-            class="logout-btn"
-            id="logout-btn"
-        >
-
-            Logout
-
-        </button>
+            Login
+        </a>
 
 
         <button
@@ -207,55 +186,19 @@ function showLoggedInUser(user) {
     `;
 
 
-    // Re-get cart elements because
-    // navActions was replaced.
+    // Get the new cart button after
+    // replacing navActions.
 
     window.cartButton =
         document.getElementById(
             "cart-btn"
         );
 
+
     window.cartCount =
         document.getElementById(
             "cart-count"
         );
-
-
-    const profileButton =
-        document.getElementById(
-            "profile-btn"
-        );
-
-
-    const logoutButton =
-        document.getElementById(
-            "logout-btn"
-        );
-
-
-    if (profileButton) {
-
-        profileButton.addEventListener(
-            "click",
-            () => {
-
-                window.location.href =
-                    "/profile";
-
-            }
-        );
-
-    }
-
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            logoutUser
-        );
-
-    }
 
 
     connectCartButton();
@@ -323,6 +266,8 @@ function showLoggedOutUser() {
 
     connectCartButton();
 
+    updateCart();
+
 }
 
 
@@ -384,7 +329,6 @@ async function loadHomeProducts() {
                 "/api/products",
                 {
                     method: "GET",
-
                     cache: "no-store"
                 }
             );
@@ -905,8 +849,10 @@ async function addToCart(product) {
             "Please login first."
         );
 
+
         window.location.href =
             "/login";
+
 
         return false;
 
@@ -1512,6 +1458,11 @@ window.closeCart =
 // =========================================================
 // LOGOUT
 // =========================================================
+// This function is kept because you can use it
+// from the Profile page.
+//
+// It is NOT displayed in the navbar.
+// =========================================================
 
 async function logoutUser() {
 
@@ -1542,10 +1493,8 @@ async function logoutUser() {
             window.currentUser =
                 null;
 
-            /*
-             * Do NOT delete the cart
-             * from the database.
-             */
+
+            // Do NOT delete cart from database.
 
             window.cart = [];
 
@@ -1584,6 +1533,10 @@ async function logoutUser() {
     }
 
 }
+
+
+window.logoutUser =
+    logoutUser;
 
 
 // =========================================================

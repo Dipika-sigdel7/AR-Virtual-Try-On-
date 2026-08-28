@@ -716,6 +716,344 @@ width: 100%;
 
 }
 
+
+
+/* =========================================================
+   PROFILE MODE INSIDE LOGIN PAGE
+========================================================= */
+
+.profile-section {
+    width: 100%;
+    text-align: center;
+}
+
+
+/* =========================================================
+   PROFILE ICON
+========================================================= */
+
+.profile-icon {
+    width: 88px;
+    height: 88px;
+
+    margin: 0 auto 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #8b5cf6
+        );
+
+    font-size: 40px;
+
+    box-shadow:
+        0 15px 35px
+        rgba(99, 102, 241, 0.30);
+}
+
+
+/* =========================================================
+   PROFILE TITLE
+========================================================= */
+
+.profile-section h1 {
+    margin-bottom: 8px;
+
+    font-size: 32px;
+    font-weight: 700;
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   PROFILE SUBTITLE
+========================================================= */
+
+.profile-section .login-subtitle {
+    margin-bottom: 28px;
+
+    color: #a7adc4;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   PROFILE DETAILS
+========================================================= */
+
+.profile-details {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 14px;
+
+    text-align: left;
+}
+
+
+/* =========================================================
+   INDIVIDUAL PROFILE DETAIL
+========================================================= */
+
+.profile-detail {
+    width: 100%;
+
+    padding: 16px 18px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+
+    border-radius: 13px;
+
+    background:
+        rgba(255, 255, 255, 0.055);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.10);
+
+    transition:
+        background 0.25s ease,
+        border-color 0.25s ease,
+        transform 0.25s ease;
+}
+
+
+.profile-detail:hover {
+    background:
+        rgba(255, 255, 255, 0.075);
+
+    border-color:
+        rgba(129, 140, 248, 0.35);
+
+    transform:
+        translateY(-2px);
+}
+
+
+/* =========================================================
+   PROFILE LABEL
+========================================================= */
+
+.profile-label {
+    display: block;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.7px;
+
+    color: #858ca5;
+}
+
+
+/* =========================================================
+   PROFILE VALUE
+========================================================= */
+
+.profile-value {
+    display: block;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: #ffffff;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   LOGOUT BUTTON
+========================================================= */
+
+.logout-profile-button {
+
+    width: 100%;
+
+    height: 52px;
+
+    margin-top: 24px;
+
+    border: 1px solid
+        rgba(248, 113, 113, 0.30);
+
+    border-radius: 12px;
+
+    background:
+        rgba(239, 68, 68, 0.10);
+
+    color: #fca5a5;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        border-color 0.25s ease,
+        color 0.25s ease,
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+.logout-profile-button:hover {
+
+    background:
+        rgba(239, 68, 68, 0.18);
+
+    border-color:
+        rgba(248, 113, 113, 0.55);
+
+    color: #ffffff;
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 10px 25px
+        rgba(239, 68, 68, 0.15);
+}
+
+
+.logout-profile-button:active {
+
+    transform:
+        translateY(0)
+        scale(0.98);
+}
+
+
+/* =========================================================
+   CONTINUE SHOPPING
+========================================================= */
+
+.profile-section .back-home {
+
+    display: block;
+
+    width: fit-content;
+
+    margin: 22px auto 0;
+
+    color: #777f9d;
+
+    text-decoration: none;
+
+    font-size: 13px;
+
+    transition:
+        color 0.25s ease,
+        transform 0.25s ease;
+}
+
+
+.profile-section .back-home:hover {
+
+    color: #c4b5fd;
+
+    transform:
+        translateX(-3px);
+}
+
+
+/* =========================================================
+   PROFILE CARD
+========================================================= */
+
+.login-card:has(.profile-section) {
+
+    padding:
+        42px 40px 38px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .login-card:has(.profile-section) {
+
+        padding:
+            32px 24px 28px;
+    }
+
+
+    .profile-icon {
+
+        width: 76px;
+        height: 76px;
+
+        font-size: 34px;
+
+        margin-bottom: 18px;
+    }
+
+
+    .profile-section h1 {
+
+        font-size: 28px;
+    }
+
+
+    .profile-detail {
+
+        padding:
+            14px 15px;
+    }
+
+
+    .profile-value {
+
+        font-size: 14px;
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .login-card:has(.profile-section) {
+
+        padding:
+            28px 18px 24px;
+    }
+
+
+    .profile-section h1 {
+
+        font-size: 25px;
+    }
+
+}
+
+
 /* =========================================================
 BACK HOME
 ========================================================= */

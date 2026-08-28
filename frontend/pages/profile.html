@@ -19,71 +19,133 @@
 
 </head>
 
+
 <body>
 
-    <div class="profile-container">
 
-        <div class="profile-card">
+<div class="profile-container">
 
-            <!-- CLOSE ONLY -->
-            <!-- This does NOT logout -->
-
-            <button
-                type="button"
-                id="close-profile"
-                class="close-btn"
-            >
-                ×
-            </button>
+    <div class="profile-card">
 
 
-            <h1>
-                My Profile
-            </h1>
+        <!-- CLOSE -->
+
+        <button
+            type="button"
+            id="close-profile"
+            class="close-btn"
+            aria-label="Close profile"
+        >
+            ×
+        </button>
 
 
-            <div class="profile-info">
+        <!-- AVATAR -->
 
-                <p>
-                    <strong>Name:</strong>
+        <div class="profile-avatar">
+            👤
+        </div>
 
-                    <span id="profile-name">
+
+        <!-- TITLE -->
+
+        <h1>
+            My Profile
+        </h1>
+
+
+        <p class="profile-subtitle">
+            Manage your account information
+        </p>
+
+
+        <!-- PROFILE INFORMATION -->
+
+        <div class="profile-info">
+
+
+            <!-- NAME -->
+
+            <div class="profile-field">
+
+                <div class="field-icon">
+                    👤
+                </div>
+
+
+                <div class="field-content">
+
+                    <span class="field-label">
+                        Name
+                    </span>
+
+
+                    <span
+                        id="profile-name"
+                        class="field-value"
+                    >
                         Loading...
                     </span>
-                </p>
 
-
-                <p>
-                    <strong>Email:</strong>
-
-                    <span id="profile-email">
-                        Loading...
-                    </span>
-                </p>
+                </div>
 
             </div>
 
 
-            <!-- LOGOUT -->
+            <!-- EMAIL -->
 
-            <button
-                type="button"
-                id="logout-button"
-                class="logout-button"
-            >
-                Logout
-            </button>
+            <div class="profile-field">
+
+                <div class="field-icon">
+                    ✉️
+                </div>
+
+
+                <div class="field-content">
+
+                    <span class="field-label">
+                        Email Address
+                    </span>
+
+
+                    <span
+                        id="profile-email"
+                        class="field-value"
+                    >
+                        Loading...
+                    </span>
+
+                </div>
+
+            </div>
+
 
         </div>
 
+
+        <!-- LOGOUT -->
+
+        <button
+            type="button"
+            id="logout-button"
+            class="logout-button"
+        >
+
+            <span class="logout-icon">
+                ↪
+            </span>
+
+            Logout
+
+        </button>
+
+
     </div>
 
+</div>
 
-    <!-- SEPARATE JAVASCRIPT FILE -->
 
-    <script
-        src="/js/profile.js"
-    ></script>
+<script src="/js/profile.js"></script>
 
 </body>
 

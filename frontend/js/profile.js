@@ -1,31 +1,7 @@
+
 // =========================================================
 // PROFILE PAGE
 // =========================================================
-
-
-// =========================================================
-// ELEMENTS
-// =========================================================
-
-const profileName =
-    document.getElementById(
-        "profile-name"
-    );
-
-const profileEmail =
-    document.getElementById(
-        "profile-email"
-    );
-
-const closeProfile =
-    document.getElementById(
-        "close-profile"
-    );
-
-const logoutButton =
-    document.getElementById(
-        "logout-button"
-    );
 
 
 // =========================================================
@@ -41,12 +17,8 @@ async function loadProfile() {
                 "/api/users/me",
                 {
                     method: "GET",
-
-                    credentials:
-                        "include",
-
-                    cache:
-                        "no-store"
+                    credentials: "include",
+                    cache: "no-store"
                 }
             );
 
@@ -55,20 +27,10 @@ async function loadProfile() {
             await response.json();
 
 
-        console.log(
-            "PROFILE USER:",
-            data
-        );
-
-
-        /*
-         * User is not logged in.
-         */
-
         if (
             !response.ok ||
-            !data.success ||
-            !data.loggedIn ||
+            data.success !== true ||
+            data.loggedIn !== true ||
             !data.user
         ) {
 
@@ -80,22 +42,32 @@ async function loadProfile() {
         }
 
 
-        /*
-         * Display user information.
-         */
+        const nameElement =
+            document.getElementById(
+                "profile-name"
+            );
 
-        if (profileName) {
 
-            profileName.textContent =
-                data.user.name || "";
+        const emailElement =
+            document.getElementById(
+                "profile-email"
+            );
+
+
+        if (nameElement) {
+
+            nameElement.textContent =
+                data.user.name ||
+                "Not available";
 
         }
 
 
-        if (profileEmail) {
+        if (emailElement) {
 
-            profileEmail.textContent =
-                data.user.email || "";
+            emailElement.textContent =
+                data.user.email ||
+                "Not available";
 
         }
 
@@ -104,7 +76,7 @@ async function loadProfile() {
     catch (error) {
 
         console.error(
-            "Unable to load profile:",
+            "Profile loading error:",
             error
         );
 
@@ -120,21 +92,22 @@ async function loadProfile() {
 // =========================================================
 // CLOSE PROFILE
 // =========================================================
+// IMPORTANT:
+// This ONLY goes back to Home.
+// It does NOT logout.
+// =========================================================
+
+const closeProfile =
+    document.getElementById(
+        "close-profile"
+    );
+
 
 if (closeProfile) {
 
     closeProfile.addEventListener(
         "click",
         () => {
-
-            /*
-             * IMPORTANT:
-             *
-             * This only closes/leaves
-             * the profile page.
-             *
-             * It DOES NOT logout.
-             */
 
             window.location.href =
                 "/";
@@ -149,11 +122,31 @@ if (closeProfile) {
 // LOGOUT
 // =========================================================
 
+const logoutButton =
+    document.getElementById(
+        "logout-button"
+    );
+
+
 if (logoutButton) {
 
     logoutButton.addEventListener(
         "click",
         async () => {
+
+            logoutButton.disabled =
+                true;
+
+
+            logoutButton.innerHTML =
+                `
+                    <span class="logout-icon">
+                        ↪
+                    </span>
+
+                    Logging out...
+                `;
+
 
             try {
 
@@ -162,9 +155,7 @@ if (logoutButton) {
                         "/api/users/logout",
                         {
                             method: "POST",
-
-                            credentials:
-                                "include"
+                            credentials: "include"
                         }
                     );
 
@@ -175,15 +166,11 @@ if (logoutButton) {
 
                 if (
                     response.ok &&
-                    data.success
+                    data.success === true
                 ) {
 
-                    /*
-                     * Session is now destroyed.
-                     */
-
                     window.location.href =
-                        "/login";
+                        "/";
 
                     return;
 
@@ -194,6 +181,20 @@ if (logoutButton) {
                     data.message ||
                     "Logout failed."
                 );
+
+
+                logoutButton.disabled =
+                    false;
+
+
+                logoutButton.innerHTML =
+                    `
+                        <span class="logout-icon">
+                            ↪
+                        </span>
+
+                        Logout
+                    `;
 
             }
 
@@ -206,8 +207,22 @@ if (logoutButton) {
 
 
                 alert(
-                    "Unable to logout."
+                    "Unable to logout. Please try again."
                 );
+
+
+                logoutButton.disabled =
+                    false;
+
+
+                logoutButton.innerHTML =
+                    `
+                        <span class="logout-icon">
+                            ↪
+                        </span>
+
+                        Logout
+                    `;
 
             }
 
