@@ -1,266 +1,320 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>AR Ecommerce</title>
 
-    <!-- Main CSS -->
-    <link
-        rel="stylesheet"
-        href="/css/style.css"
-    >
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
 
-</head>
-
-<body>
-
-
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
+  <body>
+    <!-- ==========================
+       HEADER
+  =========================== -->
 
     <header class="navbar">
+      <div class="logo">AR <span>Ecommerce</span></div>
 
+      <nav>
+        <a href="/" class="active">Home</a>
+        <a href="/products">Products</a>
+        <a href="/services">Services</a>
+        <a href="/about">About</a>
+      </nav>
 
-        <!-- LOGO -->
+      <div class="nav-actions" id="nav-actions">
+        <!-- USER AUTH BUTTONS WILL BE LOADED HERE -->
 
-        <div class="logo">
+        <a href="/login" class="login-btn" id="login-link"> Login </a>
 
-            AR <span>Ecommerce</span>
-
-        </div>
-
-
-        <!-- NAVIGATION -->
-
-        <nav>
-
-            <a
-                href="/"
-                class="active"
-            >
-                Home
-            </a>
-
-            <a href="/products">
-                Products
-            </a>
-
-            <a href="/services">
-                Services
-            </a>
-
-            <a href="/about">
-                About
-            </a>
-
-        </nav>
-
-
-        <!-- NAVIGATION ACTIONS -->
-
-        <div class="nav-actions">
-
-
-            <!-- =================================================
-                 LOGIN / PROFILE
-            ================================================== -->
-
-            <div id="auth-actions">
-
-                <a
-                    href="/login"
-                    id="auth-btn"
-                    class="profile-btn"
-                >
-                    Login
-                </a>
-
-            </div>
-
-
-            <!-- =================================================
-                 CART
-            ================================================== -->
-
-            <button
-                class="cart-btn"
-                id="cart-btn"
-                type="button"
-            >
-
-                🛒
-
-                <span>
-                    Cart
-                </span>
-
-                <b id="cart-count">
-                    0
-                </b>
-
-            </button>
-
-        </div>
-
+        <!-- CART -->
+        <button class="cart-btn" id="cart-btn" type="button">
+          🛒
+          <span>Cart</span>
+          <b id="cart-count">0</b>
+        </button>
+      </div>
     </header>
 
-
-
-    <!-- =====================================================
-         MAIN HOME PAGE
-         
-         Put your existing home page content here.
-    ====================================================== -->
+    <!-- ==========================
+       MAIN
+  =========================== -->
 
     <main>
+      <!-- ==========================
+         HERO
+    =========================== -->
 
-        <section class="hero">
+      <section class="hero" id="home">
+        <div class="hero-content">
+          <div class="hero-badge">✨ NEXT GENERATION SHOPPING</div>
 
-            <h1>
-                Welcome to AR Ecommerce
-            </h1>
+          <h1>
+            Experience Shopping
+            <span>in Augmented Reality</span>
+          </h1>
 
-            <p>
-                Explore our products and services.
-            </p>
+          <p>
+            Discover amazing products and see how they look in your real
+            environment before you buy.
+          </p>
 
-        </section>
-
-    </main>
-
-
-
-    <!-- =====================================================
-         PROFILE POPUP
-         
-         This is NOT a separate page.
-    ====================================================== -->
-
-    <div
-        class="profile-overlay"
-        id="profile-overlay"
-    >
-
-
-        <div class="profile-card">
-
-
-            <!-- CLOSE -->
-
-            <button
-                class="profile-close"
-                id="profile-close"
-                type="button"
-                aria-label="Close profile"
-            >
-                ✕
+          <div class="hero-buttons">
+            <button class="primary-btn" id="explore-products" type="button">
+              Explore Products →
             </button>
 
-
-            <!-- AVATAR -->
-
-            <div class="profile-avatar">
-
-                👤
-
-            </div>
-
-
-            <!-- TITLE -->
-
-            <h2>
-                My Profile
-            </h2>
-
-
-            <!-- USER INFORMATION -->
-
-            <div class="profile-info">
-
-
-                <!-- NAME -->
-
-                <p>
-
-                    <strong>
-                        Name:
-                    </strong>
-
-                    <span id="profile-name">
-                        Loading...
-                    </span>
-
-                </p>
-
-
-                <!-- EMAIL -->
-
-                <p>
-
-                    <strong>
-                        Email:
-                    </strong>
-
-                    <span id="profile-email">
-                        Loading...
-                    </span>
-
-                </p>
-
-
-                <!-- ROLE -->
-
-                <p>
-
-                    <strong>
-                        Role:
-                    </strong>
-
-                    <span id="profile-role">
-                        User
-                    </span>
-
-                </p>
-
-            </div>
-
-
-            <!-- LOGOUT -->
-
-            <button
-                class="logout-btn"
-                id="logout-btn"
-                type="button"
-            >
-                Logout
+            <button class="secondary-btn" id="try-ar-btn" type="button">
+              📱 Try AR Ecommerce
             </button>
-
+          </div>
         </div>
 
+        <div class="hero-visual">
+          <div class="ar-circle">
+            <div class="phone">📱</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================
+         PRODUCTS
+    =========================== -->
+
+      <section class="products" id="products">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">OUR COLLECTION</p>
+
+            <h2>All Products</h2>
+          </div>
+
+          <button class="view-all" id="view-all" type="button">
+            View All →
+          </button>
+        </div>
+
+        <div class="product-grid">
+          <!-- PRODUCT 1 -->
+
+          <div class="product-card" data-product="smartphone">
+            <div class="product-image">
+              <span class="product-emoji"> 📱 </span>
+
+              <span class="ar-badge"> AR </span>
+            </div>
+
+            <div class="product-info">
+              <p class="category">Electronics</p>
+
+              <h3>Smartphone</h3>
+
+              <div class="product-bottom">
+                <strong> $499 </strong>
+
+                <button
+                  class="add-btn"
+                  data-product-action="cart"
+                  type="button"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PRODUCT 2 -->
+
+          <div class="product-card" data-product="sneakers">
+            <div class="product-image">
+              <span class="product-emoji"> 👟 </span>
+
+              <span class="ar-badge"> AR </span>
+            </div>
+
+            <div class="product-info">
+              <p class="category">Fashion</p>
+
+              <h3>Premium Sneakers</h3>
+
+              <div class="product-bottom">
+                <strong> $99 </strong>
+
+                <button
+                  class="add-btn"
+                  data-product-action="cart"
+                  type="button"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PRODUCT 3 -->
+
+          <div class="product-card" data-product="smartwatch">
+            <div class="product-image">
+              <span class="product-emoji"> ⌚ </span>
+
+              <span class="ar-badge"> AR </span>
+            </div>
+
+            <div class="product-info">
+              <p class="category">Accessories</p>
+
+              <h3>Smart Watch</h3>
+
+              <div class="product-bottom">
+                <strong> $149 </strong>
+
+                <button
+                  class="add-btn"
+                  data-product-action="cart"
+                  type="button"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================
+         ABOUT
+    =========================== -->
+
+      <section class="about" id="about">
+        <div>
+          <p class="section-label">ABOUT AR ECOMMERCE</p>
+
+          <h2>
+            Shopping is becoming
+            <span>more interactive.</span>
+          </h2>
+
+          <p>
+            Our platform combines ecommerce with augmented reality technology,
+            allowing customers to experience products before making a purchase.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==========================
+       PRODUCT MODAL
+  =========================== -->
+
+    <div class="product-modal" id="product-modal">
+      <div class="product-modal-content">
+        <button class="modal-close" id="modal-close" type="button">✕</button>
+
+        <div class="modal-product">
+          <!-- PRODUCT IMAGE -->
+
+          <div class="modal-product-image">
+            <div id="modal-product-image">📱</div>
+          </div>
+
+          <!-- PRODUCT DETAILS -->
+
+          <div class="modal-product-details">
+            <p class="category" id="modal-product-category">Electronics</p>
+
+            <h2 id="modal-product-name">Smartphone</h2>
+
+            <h3 id="modal-product-price">$499</h3>
+
+            <button class="ar-try-btn" id="ar-try-btn" type="button">
+              📱 Try AR
+            </button>
+
+            <!-- REVIEWS -->
+
+            <div class="reviews">
+              <h3>Customer Reviews</h3>
+
+              <div class="review-summary">
+                <div class="review-stars">⭐⭐⭐⭐⭐</div>
+
+                <strong id="modal-rating"> 4.8 / 5 </strong>
+              </div>
+
+              <!-- REVIEW 1 -->
+
+              <div class="review">
+                <div class="review-user">👤</div>
+
+                <div>
+                  <strong> Alex </strong>
+
+                  <div>⭐⭐⭐⭐⭐</div>
+
+                  <p>Great product and very good quality!</p>
+                </div>
+              </div>
+
+              <!-- REVIEW 2 -->
+
+              <div class="review">
+                <div class="review-user">👤</div>
+
+                <div>
+                  <strong> Sarah </strong>
+
+                  <div>⭐⭐⭐⭐⭐</div>
+
+                  <p>I really enjoyed the AR shopping experience.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
+    <!-- ==========================
+       CART MODAL
+  =========================== -->
 
+    <div class="cart-modal" id="cart-modal">
+      <div class="cart-modal-content">
+        <button class="cart-close" id="cart-close" type="button">✕</button>
 
-    <!-- =====================================================
-         JAVASCRIPT
-    ====================================================== -->
+        <h2>🛒 Your Cart</h2>
 
-    <script
-        src="/js/script.js"
-        defer
-    ></script>
+        <div id="cart-items">
+          <p class="empty-cart">Your cart is empty.</p>
+        </div>
 
+        <div class="cart-total">
+          <strong> Total: </strong>
 
-</body>
+          <strong id="cart-total"> $0 </strong>
+        </div>
 
+        <button class="checkout-btn" id="checkout-btn" type="button">
+          Proceed to Checkout
+        </button>
+      </div>
+    </div>
+
+    <!-- ==========================
+       FOOTER
+  =========================== -->
+
+    <footer>
+      <div class="footer-logo">AR Ecommerce</div>
+
+      <p>© 2026 AR Ecommerce. All rights reserved.</p>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+
+    <script src="/js/app.js"></script>
+  </body>
 </html>
