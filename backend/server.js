@@ -3,40 +3,37 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
-const cartRoutes = require("./routes/cartRoutes");
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+    process.env.PORT || 3000;
 
 
 /* =========================================================
    PATHS
 ========================================================= */
 
-const frontendPath = path.join(
-    __dirname,
-    "../frontend"
-);
+const frontendPath =
+    path.join(
+        __dirname,
+        "../frontend"
+    );
 
-const pagesPath = path.join(
-    frontendPath,
-    "pages"
-);
-
-
-// cart 
-app.use(
-    "/api/cart",
-    cartRoutes
-);
+const pagesPath =
+    path.join(
+        frontendPath,
+        "pages"
+    );
 
 
 /* =========================================================
    MIDDLEWARE
 ========================================================= */
 
-app.use(express.json());
+app.use(
+    express.json()
+);
 
 app.use(
     express.urlencoded({
@@ -47,10 +44,13 @@ app.use(
 
 /* =========================================================
    SESSION
+   IMPORTANT:
+   SESSION MUST COME BEFORE API ROUTES
 ========================================================= */
 
 app.use(
     session({
+
         secret:
             process.env.SESSION_SECRET ||
             "ar-ecommerce-secret-key",
@@ -60,10 +60,16 @@ app.use(
         saveUninitialized: false,
 
         cookie: {
+
             httpOnly: true,
+
             secure: false,
-            maxAge: 24 * 60 * 60 * 1000
+
+            maxAge:
+                24 * 60 * 60 * 1000
+
         }
+
     })
 );
 
@@ -73,13 +79,18 @@ app.use(
 ========================================================= */
 
 app.use(
-    express.static(frontendPath)
+    express.static(
+        frontendPath
+    )
 );
 
 app.use(
     "/uploads",
     express.static(
-        path.join(__dirname, "uploads")
+        path.join(
+            __dirname,
+            "uploads"
+        )
     )
 );
 
@@ -97,16 +108,13 @@ const adminProductRoutes =
 const userRoutes =
     require("./routes/userRoutes");
 
+const cartRoutes =
+    require("./routes/cartRoutes");
 
-app.use(
-    "/api/products",
-    productRoutes
-);
 
-app.use(
-    "/api/admin/products",
-    adminProductRoutes
-);
+/* =========================================================
+   USER ROUTES
+========================================================= */
 
 app.use(
     "/api/users",
@@ -115,118 +123,173 @@ app.use(
 
 
 /* =========================================================
+   PRODUCT ROUTES
+========================================================= */
+
+app.use(
+    "/api/products",
+    productRoutes
+);
+
+
+/* =========================================================
+   ADMIN PRODUCT ROUTES
+========================================================= */
+
+app.use(
+    "/api/admin/products",
+    adminProductRoutes
+);
+
+
+/* =========================================================
+   CART ROUTES
+   SESSION IS ALREADY ACTIVE HERE
+========================================================= */
+
+app.use(
+    "/api/cart",
+    cartRoutes
+);
+
+
+/* =========================================================
    PAGE ROUTES
 ========================================================= */
 
-app.get("/", (req, res) => {
+app.get(
+    "/",
+    (req, res) => {
 
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "index.html"
-        )
-    );
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "index.html"
+            )
+        );
 
-});
-
-
-app.get("/login", (req, res) => {
-
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "login.html"
-        )
-    );
-
-});
+    }
+);
 
 
-app.get("/register", (req, res) => {
+app.get(
+    "/login",
+    (req, res) => {
 
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "register.html"
-        )
-    );
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "login.html"
+            )
+        );
 
-});
-
-
-app.get("/products", (req, res) => {
-
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "products.html"
-        )
-    );
-
-});
+    }
+);
 
 
-app.get("/services", (req, res) => {
+app.get(
+    "/register",
+    (req, res) => {
 
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "services.html"
-        )
-    );
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "register.html"
+            )
+        );
 
-});
-
-
-app.get("/about", (req, res) => {
-
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "about.html"
-        )
-    );
-
-});
+    }
+);
 
 
-app.get("/admin", (req, res) => {
+app.get(
+    "/products",
+    (req, res) => {
 
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "admin.html"
-        )
-    );
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "products.html"
+            )
+        );
 
-});
+    }
+);
 
 
+app.get(
+    "/services",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "services.html"
+            )
+        );
+
+    }
+);
 
 
-/*
- * IMPORTANT:
- * There is NO /api/auth/me here.
- * There is NO /api/auth/logout here.
- *
- * They are already handled by userRoutes.js:
- *
- * GET  /api/users/me
- * POST /api/users/logout
- */
+app.get(
+    "/about",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "about.html"
+            )
+        );
+
+    }
+);
+
+
+app.get(
+    "/profile",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "profile.html"
+            )
+        );
+
+    }
+);
+
+
+app.get(
+    "/admin",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "admin.html"
+            )
+        );
+
+    }
+);
 
 
 /* =========================================================
    404
 ========================================================= */
 
-app.use((req, res) => {
+app.use(
+    (req, res) => {
 
-    res.status(404).send(
-        "Page not found"
-    );
+        res.status(404).send(
+            "Page not found"
+        );
 
-});
+    }
+);
 
 
 /* =========================================================

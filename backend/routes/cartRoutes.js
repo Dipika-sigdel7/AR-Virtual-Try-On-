@@ -1,18 +1,26 @@
-
 const express = require("express");
 
-const router = express.Router();
+const router =
+    express.Router();
 
-const db = require("../config/db");
+const db =
+    require("../config/db");
 
 
 /* =========================================================
-   AUTHENTICATION MIDDLEWARE
+   AUTHENTICATION
 ========================================================= */
 
-function requireLogin(req, res, next) {
+function requireLogin(
+    req,
+    res,
+    next
+) {
 
-    if (!req.session.user) {
+    if (
+        !req.session ||
+        !req.session.user
+    ) {
 
         return res.status(401).json({
 
@@ -45,38 +53,48 @@ router.get(
                 req.session.user.id;
 
 
-            const [rows] = await db.query(
-                `
-                SELECT
-                    ci.id AS cart_item_id,
-                    ci.product_id,
-                    ci.quantity,
+            const [rows] =
+                await db.query(
+                    `
+                    SELECT
 
-                    p.name,
-                    p.description,
-                    p.price,
-                    p.stock,
-                    p.rating,
+                        ci.id AS cart_item_id,
 
-                    c.name AS category_name
+                        ci.product_id,
 
-                FROM carts ct
+                        ci.quantity,
 
-                INNER JOIN cart_items ci
-                    ON ct.id = ci.cart_id
+                        p.name,
 
-                INNER JOIN products p
-                    ON ci.product_id = p.id
+                        p.description,
 
-                LEFT JOIN categories c
-                    ON p.category_id = c.id
+                        p.price,
 
-                WHERE ct.user_id = ?
+                        p.stock,
 
-                ORDER BY ci.id DESC
-                `,
-                [userId]
-            );
+                        p.rating,
+
+                        p.is_available,
+
+                        c.name AS category_name
+
+                    FROM carts ct
+
+                    INNER JOIN cart_items ci
+                        ON ct.id = ci.cart_id
+
+                    INNER JOIN products p
+                        ON ci.product_id = p.id
+
+                    LEFT JOIN categories c
+                        ON p.category_id = c.id
+
+                    WHERE ct.user_id = ?
+
+                    ORDER BY ci.id DESC
+                    `,
+                    [userId]
+                );
 
 
             return res.json({
@@ -113,7 +131,7 @@ router.get(
 
 
 /* =========================================================
-   ADD PRODUCT TO CART
+   ADD PRODUCT
 ========================================================= */
 
 router.post(
@@ -126,47 +144,131 @@ router.post(
             const userId =
                 req.session.user.id;
 
-            const {
-                product_id,
-                quantity = 1
-            } = req.body;
+
+            const productId =
+                Number(
+                    req.body.product_id
+                );
 
 
-            if (!product_id) {
+            const quantity =
+                Number(
+                    req.body.quantity || 1
+                );
+
+
+            if (
+                !Number.isInteger(productId) ||
+                productId <= 0
+            ) {
 
                 return res.status(400).json({
 
                     success: false,
 
                     message:
-                        "Product ID is required."
+                        "Invalid product ID."
 
                 });
 
             }
 
 
-            /*
-             * Find the user's cart.
-             */
+            if (
+                !Number.isInteger(quantity) ||
+                quantity <= 0
+            ) {
 
-            let [carts] = await db.query(
-                `
-                SELECT id
-                FROM carts
-                WHERE user_id = ?
-                LIMIT 1
-                `,
-                [userId]
-            );
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid quantity."
+
+                });
+
+            }
 
 
-            /*
-             * If the cart doesn't exist,
-             * create it.
-             */
+            /* -----------------------------------------
+               CHECK PRODUCT
+            ----------------------------------------- */
 
-            if (carts.length === 0) {
+            const [products] =
+                await db.query(
+                    `
+                    SELECT
+                        id,
+                        stock,
+                        is_available
+                    FROM products
+                    WHERE id = ?
+                    LIMIT 1
+                    `,
+                    [productId]
+                );
+
+
+            if (
+                products.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Product not found."
+
+                });
+
+            }
+
+
+            const product =
+                products[0];
+
+
+            if (
+                !product.is_available
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Product is not available."
+
+                });
+
+            }
+
+
+            /* -----------------------------------------
+               FIND USER CART
+            ----------------------------------------- */
+
+            let [carts] =
+                await db.query(
+                    `
+                    SELECT id
+                    FROM carts
+                    WHERE user_id = ?
+                    LIMIT 1
+                    `,
+                    [userId]
+                );
+
+
+            /* -----------------------------------------
+               CREATE CART IF NEEDED
+            ----------------------------------------- */
+
+            if (
+                carts.length === 0
+            ) {
 
                 const [cartResult] =
                     await db.query(
@@ -180,10 +282,12 @@ router.post(
 
 
                 carts = [
+
                     {
                         id:
                             cartResult.insertId
                     }
+
                 ];
 
             }
@@ -193,15 +297,16 @@ router.post(
                 carts[0].id;
 
 
-            /*
-             * Check whether this product
-             * is already in this user's cart.
-             */
+            /* -----------------------------------------
+               CHECK EXISTING ITEM
+            ----------------------------------------- */
 
             const [existingItems] =
                 await db.query(
                     `
-                    SELECT id, quantity
+                    SELECT
+                        id,
+                        quantity
                     FROM cart_items
                     WHERE cart_id = ?
                     AND product_id = ?
@@ -209,39 +314,98 @@ router.post(
                     `,
                     [
                         cartId,
-                        product_id
+                        productId
                     ]
                 );
 
 
-            if (existingItems.length > 0) {
+            /* -----------------------------------------
+               UPDATE EXISTING ITEM
+            ----------------------------------------- */
+
+            if (
+                existingItems.length > 0
+            ) {
+
+                const newQuantity =
+                    Number(
+                        existingItems[0].quantity
+                    ) + quantity;
+
+
+                if (
+                    product.stock !== null &&
+                    newQuantity >
+                    Number(product.stock)
+                ) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Not enough stock available."
+
+                    });
+
+                }
+
 
                 await db.query(
                     `
                     UPDATE cart_items
-                    SET quantity = quantity + ?
+
+                    SET quantity = ?
+
                     WHERE id = ?
                     `,
                     [
-                        Number(quantity),
+                        newQuantity,
                         existingItems[0].id
                     ]
                 );
 
             }
 
+            /* -----------------------------------------
+               ADD NEW ITEM
+            ----------------------------------------- */
+
             else {
+
+                if (
+                    product.stock !== null &&
+                    quantity >
+                    Number(product.stock)
+                ) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Not enough stock available."
+
+                    });
+
+                }
+
 
                 await db.query(
                     `
                     INSERT INTO cart_items
-                    (cart_id, product_id, quantity)
+                    (
+                        cart_id,
+                        product_id,
+                        quantity
+                    )
+
                     VALUES (?, ?, ?)
                     `,
                     [
                         cartId,
-                        product_id,
-                        Number(quantity)
+                        productId,
+                        quantity
                     ]
                 );
 
@@ -283,7 +447,7 @@ router.post(
 
 
 /* =========================================================
-   REMOVE PRODUCT
+   REMOVE CART ITEM
 ========================================================= */
 
 router.delete(
@@ -296,31 +460,57 @@ router.delete(
             const userId =
                 req.session.user.id;
 
+
             const cartItemId =
-                req.params.cartItemId;
+                Number(
+                    req.params.cartItemId
+                );
 
 
-            await db.query(
-                `
-                DELETE ci
-                FROM cart_items ci
+            if (
+                !Number.isInteger(cartItemId) ||
+                cartItemId <= 0
+            ) {
 
-                INNER JOIN carts ct
-                    ON ci.cart_id = ct.id
+                return res.status(400).json({
 
-                WHERE ci.id = ?
-                AND ct.user_id = ?
-                `,
-                [
-                    cartItemId,
-                    userId
-                ]
-            );
+                    success: false,
+
+                    message:
+                        "Invalid cart item."
+
+                });
+
+            }
+
+
+            const [result] =
+                await db.query(
+                    `
+                    DELETE ci
+
+                    FROM cart_items ci
+
+                    INNER JOIN carts ct
+                        ON ci.cart_id = ct.id
+
+                    WHERE ci.id = ?
+
+                    AND ct.user_id = ?
+                    `,
+                    [
+                        cartItemId,
+                        userId
+                    ]
+                );
 
 
             return res.json({
 
                 success: true,
+
+                removed:
+                    result.affectedRows > 0,
 
                 message:
                     "Product removed."
@@ -353,7 +543,7 @@ router.delete(
 
 
 /* =========================================================
-   CLEAR CART
+   CLEAR CURRENT USER CART
 ========================================================= */
 
 router.delete(
@@ -370,6 +560,7 @@ router.delete(
             await db.query(
                 `
                 DELETE ci
+
                 FROM cart_items ci
 
                 INNER JOIN carts ct
