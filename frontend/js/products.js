@@ -578,10 +578,7 @@ async function loadProducts() {
 
                         <div>
 
-                            <p class="section-label">
-                                CATEGORY
-                            </p>
-
+                            
                             <h2>
                                 ${escapeHTML(
                                     categoryName

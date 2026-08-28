@@ -1,7 +1,7 @@
 // =========================================================
 // AR E-COMMERCE
 // LOGIN PAGE
-// LOGIN + PROFILE + SESSION
+// USER LOGIN + SESSION
 // =========================================================
 
 
@@ -58,14 +58,7 @@ if (togglePassword) {
         "click",
         () => {
 
-            if (!passwordInput) {
-                return;
-            }
-
-            if (
-                passwordInput.type ===
-                "password"
-            ) {
+            if (passwordInput.type === "password") {
 
                 passwordInput.type =
                     "text";
@@ -78,9 +71,7 @@ if (togglePassword) {
                     "Hide password"
                 );
 
-            }
-
-            else {
+            } else {
 
                 passwordInput.type =
                     "password";
@@ -114,23 +105,26 @@ async function checkExistingLogin() {
                 "/api/users/me",
                 {
                     method: "GET",
-
                     credentials: "include",
-
                     cache: "no-store"
                 }
             );
 
-
         const data =
             await response.json();
 
-
         console.log(
-            "Current user:",
+            "Current session:",
             data
         );
 
+
+        /*
+         * If user is already logged in,
+         * don't show the login form again.
+         *
+         * Go directly to profile.
+         */
 
         if (
             response.ok &&
@@ -139,17 +133,8 @@ async function checkExistingLogin() {
             data.user
         ) {
 
-            /*
-             * User is already logged in.
-             *
-             * Show profile directly.
-             *
-             * DO NOT redirect to home.
-             */
-
-            showProfile(
-                data.user
-            );
+            window.location.href =
+                "/profile";
 
         }
 
@@ -158,141 +143,8 @@ async function checkExistingLogin() {
     catch (error) {
 
         console.error(
-            "Could not check login:",
+            "Session check error:",
             error
-        );
-
-    }
-
-}
-
-
-// =========================================================
-// SHOW PROFILE
-// =========================================================
-
-function showProfile(user) {
-
-    const loginCard =
-        document.querySelector(
-            ".login-card"
-        );
-
-
-    if (!loginCard) {
-        return;
-    }
-
-
-    const safeName =
-        escapeHTML(
-            user.name || "User"
-        );
-
-
-    const safeEmail =
-        escapeHTML(
-            user.email || ""
-        );
-
-
-    loginCard.innerHTML = `
-
-        <div class="profile-section">
-
-            <!-- PROFILE ICON -->
-
-            <div class="profile-icon">
-
-                👤
-
-            </div>
-
-
-            <!-- TITLE -->
-
-            <h1>
-                My Profile
-            </h1>
-
-
-            <p class="login-subtitle">
-                You are currently logged in
-            </p>
-
-
-            <!-- PROFILE DETAILS -->
-
-            <div class="profile-details">
-
-                <div class="profile-detail">
-
-                    <span class="profile-label">
-                        Name
-                    </span>
-
-                    <span class="profile-value">
-                        ${safeName}
-                    </span>
-
-                </div>
-
-
-                <div class="profile-detail">
-
-                    <span class="profile-label">
-                        Email
-                    </span>
-
-                    <span class="profile-value">
-                        ${safeEmail}
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- LOGOUT -->
-
-            <button
-                type="button"
-                id="logoutButton"
-                class="logout-profile-button"
-            >
-
-                Logout
-
-            </button>
-
-
-            <!-- CONTINUE SHOPPING -->
-
-            <a
-                href="/"
-                class="back-home"
-            >
-
-                ← Continue Shopping
-
-            </a>
-
-        </div>
-
-    `;
-
-
-    const logoutButton =
-        document.getElementById(
-            "logoutButton"
-        );
-
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            logoutUser
         );
 
     }
@@ -316,15 +168,11 @@ if (loginForm) {
             const email =
                 emailInput.value.trim();
 
-
             const password =
                 passwordInput.value;
 
 
-            if (
-                !email ||
-                !password
-            ) {
+            if (!email || !password) {
 
                 showMessage(
                     "Please enter your email and password."
@@ -337,7 +185,6 @@ if (loginForm) {
 
             loginButton.disabled =
                 true;
-
 
             loginButton.textContent =
                 "Logging in...";
@@ -388,14 +235,11 @@ if (loginForm) {
                         "Login failed."
                     );
 
-
                     loginButton.disabled =
                         false;
 
-
                     loginButton.textContent =
                         "Login";
-
 
                     return;
 
@@ -403,25 +247,39 @@ if (loginForm) {
 
 
                 // =================================================
-                // LOGIN SUCCESS
+                // LOGIN SUCCESSFUL
                 // =================================================
 
+                showMessage(
+                    "Login successful. Opening your profile...",
+                    true
+                );
+
+
                 /*
-                 * IMPORTANT:
+                 * Save optional return page.
                  *
-                 * DO NOT DO:
-                 *
-                 * window.location.href = "/";
-                 *
-                 * Instead, show the profile here.
-                 *
-                 * The session is already stored
-                 * by Express.
+                 * We still want the profile
+                 * to appear first.
                  */
 
-                showProfile(
-                    data.user
+                const redirectPage =
+                    sessionStorage.getItem(
+                        "loginRedirect"
+                    );
+
+
+                sessionStorage.removeItem(
+                    "loginRedirect"
                 );
+
+
+                /*
+                 * ALWAYS SHOW PROFILE FIRST
+                 */
+
+                window.location.href =
+                    "/profile";
 
             }
 
@@ -441,7 +299,6 @@ if (loginForm) {
                 loginButton.disabled =
                     false;
 
-
                 loginButton.textContent =
                     "Login";
 
@@ -449,93 +306,6 @@ if (loginForm) {
 
         }
     );
-
-}
-
-
-// =========================================================
-// LOGOUT
-// =========================================================
-
-async function logoutUser() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/users/logout",
-                {
-                    method: "POST",
-
-                    credentials: "include"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            response.ok &&
-            data.success === true
-        ) {
-
-            /*
-             * Logout ONLY happens here.
-             *
-             * Session is destroyed by server.
-             */
-
-            window.location.href =
-                "/login";
-
-            return;
-
-        }
-
-
-        alert(
-            data.message ||
-            "Logout failed."
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Logout error:",
-            error
-        );
-
-
-        alert(
-            "Unable to logout."
-        );
-
-    }
-
-}
-
-
-// =========================================================
-// HTML ESCAPE
-// =========================================================
-
-function escapeHTML(value) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        value ?? "";
-
-
-    return div.innerHTML;
 
 }
 
