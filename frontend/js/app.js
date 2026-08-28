@@ -1,7 +1,7 @@
 // =========================================================
 // AR ECOMMERCE
 // HOME PAGE / APP.JS
-// PRODUCT MODAL + SHARED CART + CHECKOUT
+// PRODUCT MODAL + SHARED CART + CHECKOUT + USER AUTH
 // =========================================================
 
 
@@ -9,7 +9,8 @@
 // SHARED CART STORAGE
 // =========================================================
 
-const CART_STORAGE_KEY = "ar_ecommerce_cart";
+const CART_STORAGE_KEY =
+    "ar_ecommerce_cart";
 
 
 // =========================================================
@@ -190,9 +191,19 @@ const checkoutButton =
 
 
 // =========================================================
+// USER AUTH ELEMENT
+// =========================================================
+
+const authActions =
+    document.querySelector(
+        "#auth-actions"
+    );
+
+
+// =========================================================
 // PRODUCT DATA
 // IMPORTANT:
-// This is ONLY used for old/static Home cards.
+// Used for old/static Home cards.
 // Admin products can also be added dynamically.
 // =========================================================
 
@@ -322,9 +333,7 @@ productCards.forEach(
                     ];
 
 
-                // ------------------------------------------------
                 // If product is static
-                // ------------------------------------------------
 
                 if (!product) {
 
@@ -1078,28 +1087,31 @@ window.updateCart =
 // OPEN CART
 // =========================================================
 
+function openCart() {
+
+    updateCart();
+
+
+    if (cartModal) {
+
+        cartModal.classList.add(
+            "active"
+        );
+
+    }
+
+
+    document.body.style.overflow =
+        "hidden";
+
+}
+
+
 if (cartButton) {
 
     cartButton.addEventListener(
         "click",
-        () => {
-
-            updateCart();
-
-
-            if (cartModal) {
-
-                cartModal.classList.add(
-                    "active"
-                );
-
-            }
-
-
-            document.body.style.overflow =
-                "hidden";
-
-        }
+        openCart
     );
 
 }
@@ -1193,20 +1205,65 @@ if (checkoutButton) {
 
 
             // ------------------------------------------------
-            // USER ID
+            // CHECK CURRENT USER SESSION
             // ------------------------------------------------
 
-            const userId =
-                localStorage.getItem(
-                    "user_id"
+            let user;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/users/me",
+                        {
+                            method: "GET",
+                            credentials: "include"
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success ||
+                    !data.loggedIn ||
+                    !data.user
+                ) {
+
+                    alert(
+                        "Please login before checkout."
+                    );
+
+                    window.location.href =
+                        "/login";
+
+                    return;
+
+                }
+
+
+                user =
+                    data.user;
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "User session check failed:",
+                    error
                 );
-
-
-            if (!userId) {
 
                 alert(
                     "Please login before checkout."
                 );
+
+                window.location.href =
+                    "/login";
 
                 return;
 
@@ -1270,22 +1327,22 @@ if (checkoutButton) {
                     await fetch(
                         "/api/products/checkout",
                         {
-
                             method: "POST",
 
                             headers: {
-
                                 "Content-Type":
                                     "application/json"
-
                             },
+
+                            credentials:
+                                "include",
 
                             body:
                                 JSON.stringify({
 
                                     user_id:
                                         Number(
-                                            userId
+                                            user.id
                                         ),
 
                                     shipping_address:
@@ -1393,6 +1450,217 @@ if (checkoutButton) {
 
 
 // =========================================================
+// USER AUTHENTICATION
+// =========================================================
+
+async function checkUserLogin() {
+
+    if (!authActions) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/users/me",
+                {
+                    method: "GET",
+                    credentials: "include"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.ok &&
+            data.success &&
+            data.loggedIn &&
+            data.user
+        ) {
+
+            showLoggedInUser(
+                data.user
+            );
+
+        }
+
+        else {
+
+            showLoggedOutUser();
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Login status check failed:",
+            error
+        );
+
+        showLoggedOutUser();
+
+    }
+
+}
+
+
+// =========================================================
+// SHOW LOGGED-IN USER
+// =========================================================
+
+function showLoggedInUser(user) {
+
+    if (!authActions) {
+
+        return;
+
+    }
+
+
+    authActions.innerHTML = `
+
+        <a
+            href="/profile"
+            class="profile-btn"
+            id="profile-link"
+        >
+            👤 Profile
+        </a>
+
+        <button
+            class="logout-btn"
+            id="logout-btn"
+            type="button"
+        >
+            Logout
+        </button>
+
+    `;
+
+
+    const logoutButton =
+        document.getElementById(
+            "logout-btn"
+        );
+
+
+    if (logoutButton) {
+
+        logoutButton.addEventListener(
+            "click",
+            logoutUser
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// SHOW LOGGED-OUT USER
+// =========================================================
+
+function showLoggedOutUser() {
+
+    if (!authActions) {
+
+        return;
+
+    }
+
+
+    authActions.innerHTML = `
+
+        <a
+            href="/login"
+            class="login-btn"
+            id="login-link"
+        >
+            Login
+        </a>
+
+    `;
+
+}
+
+
+// =========================================================
+// LOGOUT USER
+// =========================================================
+
+async function logoutUser() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/users/logout",
+                {
+                    method: "POST",
+                    credentials: "include"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.ok &&
+            data.success
+        ) {
+
+            showLoggedOutUser();
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
+
+
+        alert(
+            data.message ||
+            "Logout failed."
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Logout error:",
+            error
+        );
+
+        alert(
+            "Unable to logout."
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// INITIALIZE USER AUTH
+// =========================================================
+
+checkUserLogin();
+
+
+// =========================================================
 // NAVIGATION ACTIVE LINK
 // =========================================================
 
@@ -1432,6 +1700,56 @@ navLinks.forEach(
 
 
 // =========================================================
+// HERO NAVIGATION
+// =========================================================
+
+const exploreProducts =
+    document.getElementById(
+        "explore-products"
+    );
+
+
+if (exploreProducts) {
+
+    exploreProducts.addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "/products";
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// VIEW ALL PRODUCTS
+// =========================================================
+
+const viewAll =
+    document.getElementById(
+        "view-all"
+    );
+
+
+if (viewAll) {
+
+    viewAll.addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "/products";
+
+        }
+    );
+
+}
+
+
+// =========================================================
 // HTML ESCAPE
 // =========================================================
 
@@ -1461,22 +1779,22 @@ function escapeAttribute(value) {
     return String(
         value ?? ""
     )
-    .replace(
-        /&/g,
-        "&amp;"
-    )
-    .replace(
-        /"/g,
-        "&quot;"
-    )
-    .replace(
-        /</g,
-        "&lt;"
-    )
-    .replace(
-        />/g,
-        "&gt;"
-    );
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        );
 
 }
 
