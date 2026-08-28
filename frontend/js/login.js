@@ -17,6 +17,7 @@ const togglePassword =
     document.getElementById("togglePassword");
 
 
+
 /* =========================================================
    SHOW / HIDE PASSWORD
 ========================================================= */
@@ -36,18 +37,23 @@ if (
 
                 passwordInput.type = "text";
 
-                togglePassword.textContent = "🙈";
+                togglePassword.textContent =
+                    "🙈";
 
                 togglePassword.setAttribute(
                     "aria-label",
                     "Hide password"
                 );
 
-            } else {
+            }
 
-                passwordInput.type = "password";
+            else {
 
-                togglePassword.textContent = "👁";
+                passwordInput.type =
+                    "password";
+
+                togglePassword.textContent =
+                    "👁";
 
                 togglePassword.setAttribute(
                     "aria-label",
@@ -60,6 +66,7 @@ if (
     );
 
 }
+
 
 
 /* =========================================================
@@ -82,11 +89,14 @@ if (loginForm) {
                 passwordInput.value;
 
 
-            /* -------------------------
-               BASIC VALIDATION
-            ------------------------- */
+            /* =================================================
+               VALIDATION
+            ================================================= */
 
-            if (!email || !password) {
+            if (
+                !email ||
+                !password
+            ) {
 
                 loginMessage.textContent =
                     "Please enter your email and password.";
@@ -96,15 +106,21 @@ if (loginForm) {
             }
 
 
-            loginMessage.textContent = "";
+            loginMessage.textContent =
+                "";
 
-            loginButton.disabled = true;
+            loginButton.disabled =
+                true;
 
             loginButton.textContent =
                 "Logging in...";
 
 
             try {
+
+                /* =============================================
+                   LOGIN REQUEST
+                ============================================= */
 
                 const response =
                     await fetch(
@@ -117,12 +133,26 @@ if (loginForm) {
                                     "application/json"
                             },
 
-                            credentials: "include",
+                            /*
+                             * VERY IMPORTANT
+                             * This allows the browser
+                             * to store the session cookie.
+                             */
 
-                            body: JSON.stringify({
-                                email,
-                                password
-                            })
+                            credentials:
+                                "include",
+
+                            body:
+                                JSON.stringify({
+
+                                    email:
+                                        email,
+
+                                    password:
+                                        password
+
+                                })
+
                         }
                     );
 
@@ -131,17 +161,27 @@ if (loginForm) {
                     await response.json();
 
 
-                /* -------------------------
-                   LOGIN FAILED
-                ------------------------- */
+                console.log(
+                    "LOGIN RESPONSE:",
+                    data
+                );
 
-                if (!response.ok || !data.success) {
+
+                /* =============================================
+                   LOGIN FAILED
+                ============================================= */
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
 
                     loginMessage.textContent =
                         data.message ||
                         "Invalid email or password.";
 
-                    loginButton.disabled = false;
+                    loginButton.disabled =
+                        false;
 
                     loginButton.textContent =
                         "Login";
@@ -151,56 +191,127 @@ if (loginForm) {
                 }
 
 
-                /* -------------------------
+                /* =============================================
                    LOGIN SUCCESS
-                ------------------------- */
+                ============================================= */
 
                 loginMessage.textContent =
                     "Login successful!";
 
 
                 /*
-                 * Save the logged-in user's
-                 * information locally only
-                 * for frontend display.
+                 * Save user information for
+                 * frontend use only.
                  *
-                 * The real authentication
-                 * remains in the server session.
+                 * Authentication itself is
+                 * handled by the Express session.
                  */
 
                 if (data.user) {
 
                     sessionStorage.setItem(
                         "loggedInUser",
-                        JSON.stringify(data.user)
+                        JSON.stringify(
+                            data.user
+                        )
                     );
 
                 }
 
 
-                /* -------------------------
-                   REDIRECT
-                ------------------------- */
+                /* =============================================
+                   VERIFY SESSION
+                   
+                   Make sure the Express session
+                   was actually created before
+                   opening the profile.
+                ============================================= */
 
-                const redirect =
-                    sessionStorage.getItem(
-                        "loginRedirect"
+                const sessionResponse =
+                    await fetch(
+                        "/api/users/me",
+                        {
+                            method: "GET",
+
+                            credentials:
+                                "include",
+
+                            cache:
+                                "no-store"
+                        }
                     );
 
 
-                sessionStorage.removeItem(
-                    "loginRedirect"
+                const sessionData =
+                    await sessionResponse.json();
+
+
+                console.log(
+                    "SESSION AFTER LOGIN:",
+                    sessionData
                 );
 
 
-                setTimeout(() => {
+                /* =============================================
+                   SESSION VERIFIED
+                ============================================= */
+
+                if (
+                    sessionResponse.ok &&
+                    sessionData.success &&
+                    sessionData.loggedIn &&
+                    sessionData.user
+                ) {
+
+                    /*
+                     * Update stored user information
+                     * with the actual server session.
+                     */
+
+                    sessionStorage.setItem(
+                        "loggedInUser",
+                        JSON.stringify(
+                            sessionData.user
+                        )
+                    );
+
+
+                    /*
+                     * IMPORTANT:
+                     * Open the profile page.
+                     */
 
                     window.location.href =
-                        redirect || "/";
+                        "/profile";
 
-                }, 500);
+                    return;
 
-            } catch (error) {
+                }
+
+
+                /* =============================================
+                   SESSION WAS NOT CREATED
+                ============================================= */
+
+                console.error(
+                    "Login succeeded but session was not found.",
+                    sessionData
+                );
+
+
+                loginMessage.textContent =
+                    "Login succeeded, but the user session could not be created.";
+
+                loginButton.disabled =
+                    false;
+
+                loginButton.textContent =
+                    "Login";
+
+
+            }
+
+            catch (error) {
 
                 console.error(
                     "Login error:",
@@ -212,7 +323,8 @@ if (loginForm) {
                     "Unable to connect to server.";
 
 
-                loginButton.disabled = false;
+                loginButton.disabled =
+                    false;
 
                 loginButton.textContent =
                     "Login";
