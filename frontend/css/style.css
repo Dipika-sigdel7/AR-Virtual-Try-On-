@@ -819,6 +819,308 @@ button {
 }
 
 
+
+/* =========================================================
+   PROFILE OVERLAY
+========================================================= */
+
+.profile-overlay {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    background:
+        rgba(0, 0, 0, 0.55);
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+
+}
+
+
+/* =========================================================
+   SHOW PROFILE
+========================================================= */
+
+.profile-overlay.show {
+
+    display: flex;
+
+}
+
+
+/* =========================================================
+   PROFILE CARD
+========================================================= */
+
+.profile-card {
+
+    position: relative;
+
+    width: 100%;
+
+    max-width: 500px;
+
+    padding: 40px;
+
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 15px 50px
+        rgba(0, 0, 0, 0.25);
+
+    text-align: center;
+
+    animation:
+        profileOpen 0.2s ease;
+
+}
+
+
+/* =========================================================
+   PROFILE OPEN ANIMATION
+========================================================= */
+
+@keyframes profileOpen {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            scale(0.95);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            scale(1);
+
+    }
+
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
+.profile-close {
+
+    position: absolute;
+
+    top: 15px;
+
+    right: 15px;
+
+    width: 38px;
+
+    height: 38px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    color: #333;
+
+    font-size: 20px;
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.profile-close:hover {
+
+    background: #e5e5e5;
+
+    transform:
+        scale(1.05);
+
+}
+
+
+/* =========================================================
+   PROFILE AVATAR
+========================================================= */
+
+.profile-avatar {
+
+    width: 90px;
+
+    height: 90px;
+
+    margin:
+        0 auto 20px;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 45px;
+
+}
+
+
+/* =========================================================
+   PROFILE TITLE
+========================================================= */
+
+.profile-card h2 {
+
+    margin: 0 0 30px;
+
+}
+
+
+/* =========================================================
+   PROFILE INFORMATION
+========================================================= */
+
+.profile-info {
+
+    text-align: left;
+
+    margin-bottom: 25px;
+
+}
+
+
+.profile-info p {
+
+    margin: 15px 0;
+
+    font-size: 16px;
+
+    line-height: 1.5;
+
+}
+
+
+.profile-info strong {
+
+    display: inline-block;
+
+    min-width: 80px;
+
+}
+
+
+/* =========================================================
+   LOGOUT BUTTON
+========================================================= */
+
+.logout-btn {
+
+    width: 100%;
+
+    padding: 12px 20px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #222;
+
+    color: white;
+
+    font-size: 16px;
+
+    cursor: pointer;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.logout-btn:hover {
+
+    opacity: 0.9;
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+/* =========================================================
+   PROFILE BUTTON
+========================================================= */
+
+.profile-btn {
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+}
+
+
+/* =========================================================
+   MOBILE PROFILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .profile-card {
+
+        padding: 30px 20px;
+
+    }
+
+
+    .profile-avatar {
+
+        width: 75px;
+
+        height: 75px;
+
+        font-size: 38px;
+
+    }
+
+
+    .profile-info p {
+
+        font-size: 15px;
+
+    }
+
+}
+
 /* =========================================================
    CART ANIMATION
 ========================================================= */
