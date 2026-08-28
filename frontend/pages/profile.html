@@ -10,107 +10,196 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>My Profile</title>
+    <title>My Profile - AR Ecommerce</title>
+
+    <!-- Main website CSS -->
+    <link
+        rel="stylesheet"
+        href="/css/style.css"
+    >
+
+    <!-- Profile page CSS -->
+    <link
+        rel="stylesheet"
+        href="/css/profile.css"
+    >
 
 </head>
 
 <body>
 
-    <h1>My Profile</h1>
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
 
-    <div id="profile">
+    <header class="navbar">
 
-        Loading profile...
+        <div class="logo">
 
-    </div>
+            AR <span>Ecommerce</span>
 
-    <button id="logoutButton">
-        Logout
-    </button>
-
-
-    <script>
-
-        async function loadProfile() {
-
-            try {
-
-                const response =
-                    await fetch("/api/auth/me");
-
-                if (!response.ok) {
-
-                    window.location.href =
-                        "/login";
-
-                    return;
-                }
-
-                const data =
-                    await response.json();
-
-                if (!data.success) {
-
-                    window.location.href =
-                        "/login";
-
-                    return;
-                }
-
-                const user =
-                    data.user;
-
-                document.getElementById(
-                    "profile"
-                ).innerHTML = `
-
-                    <p>
-                        <strong>Name:</strong>
-                        ${user.name || ""}
-                    </p>
-
-                    <p>
-                        <strong>Email:</strong>
-                        ${user.email || ""}
-                    </p>
-
-                `;
-
-            } catch (error) {
-
-                console.error(
-                    "Profile error:",
-                    error
-                );
-
-            }
-
-        }
+        </div>
 
 
-        document
-            .getElementById("logoutButton")
-            .addEventListener(
-                "click",
-                async () => {
+        <nav>
 
-                    await fetch(
-                        "/api/auth/logout",
-                        {
-                            method: "POST"
-                        }
-                    );
+            <a href="/" class="active">
+                Home
+            </a>
 
-                    window.location.href =
-                        "/login";
+            <a href="/products">
+                Products
+            </a>
 
-                }
-            );
+            <a href="/services">
+                Services
+            </a>
+
+            <a href="/about">
+                About
+            </a>
+
+        </nav>
 
 
-        loadProfile();
+        <div class="nav-actions">
 
-    </script>
+            <div id="auth-actions">
+
+                <a
+                    href="/profile"
+                    class="profile-btn"
+                >
+                    👤 Profile
+                </a>
+
+            </div>
+
+
+            <button
+                class="cart-btn"
+                id="cart-btn"
+                type="button"
+            >
+
+                🛒
+
+                <span>
+                    Cart
+                </span>
+
+                <b id="cart-count">
+                    0
+                </b>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         PROFILE
+    ====================================================== -->
+
+    <main class="profile-page">
+
+        <div class="profile-card">
+
+
+            <!-- CLOSE PROFILE -->
+
+            <button
+                class="profile-close"
+                id="profile-close"
+                type="button"
+                aria-label="Close profile"
+            >
+                ✕
+            </button>
+
+
+            <!-- AVATAR -->
+
+            <div class="profile-avatar">
+                👤
+            </div>
+
+
+            <h1>
+                My Profile
+            </h1>
+
+
+            <!-- USER INFORMATION -->
+
+            <div class="profile-info">
+
+                <p>
+
+                    <strong>
+                        Name:
+                    </strong>
+
+                    <span id="profile-name">
+                        Loading...
+                    </span>
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Email:
+                    </strong>
+
+                    <span id="profile-email">
+                        Loading...
+                    </span>
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Role:
+                    </strong>
+
+                    <span id="profile-role">
+                        Loading...
+                    </span>
+
+                </p>
+
+            </div>
+
+
+            <!-- LOGOUT -->
+
+            <button
+                class="logout-btn"
+                id="logout-btn"
+                type="button"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script
+        src="/js/profile.js"
+        defer
+    ></script>
 
 </body>
 

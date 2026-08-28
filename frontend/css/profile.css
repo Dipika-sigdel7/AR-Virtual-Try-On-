@@ -1,0 +1,188 @@
+/* =========================================================
+   PROFILE PAGE
+========================================================= */
+
+.profile-page {
+
+    min-height: 80vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 50px 20px;
+
+}
+
+
+/* =========================================================
+   PROFILE CARD
+========================================================= */
+
+.profile-card {
+
+    position: relative;
+
+    width: 100%;
+
+    max-width: 500px;
+
+    padding: 40px;
+
+    border-radius: 20px;
+
+    background: white;
+
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.10);
+
+    text-align: center;
+
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
+.profile-close {
+
+    position: absolute;
+
+    top: 18px;
+
+    right: 18px;
+
+    width: 38px;
+
+    height: 38px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    font-size: 20px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.profile-close:hover {
+
+    background: #e5e5e5;
+
+    transform: scale(1.05);
+
+}
+
+
+/* =========================================================
+   PROFILE AVATAR
+========================================================= */
+
+.profile-avatar {
+
+    width: 90px;
+
+    height: 90px;
+
+    margin: 0 auto 20px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #f1f1f1;
+
+    font-size: 45px;
+
+}
+
+
+/* =========================================================
+   PROFILE TITLE
+========================================================= */
+
+.profile-card h1 {
+
+    margin-bottom: 30px;
+
+}
+
+
+/* =========================================================
+   PROFILE INFORMATION
+========================================================= */
+
+.profile-info {
+
+    text-align: left;
+
+    margin-bottom: 25px;
+
+}
+
+
+.profile-info p {
+
+    margin: 15px 0;
+
+    font-size: 16px;
+
+}
+
+
+.profile-info strong {
+
+    display: inline-block;
+
+    min-width: 80px;
+
+}
+
+
+/* =========================================================
+   LOGOUT BUTTON
+========================================================= */
+
+.logout-btn {
+
+    width: 100%;
+
+    padding: 12px 20px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-size: 16px;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.logout-btn:hover {
+
+    opacity: 0.9;
+
+    transform: translateY(-1px);
+
+}
