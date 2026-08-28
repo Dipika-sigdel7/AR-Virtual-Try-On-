@@ -1,1391 +1,464 @@
-
 // =========================================================
-// AR ECOMMERCE
-// HOME PAGE APP.JS
-// DATABASE CART + USER SESSION + PRODUCT MODAL
+// AR E-COMMERCE
+// EXPRESS SERVER
+// SESSION + USER + PRODUCT + CART
 // =========================================================
 
+require("dotenv").config();
 
-/* =========================================================
-   USER SESSION
-========================================================= */
+const express = require("express");
+const path = require("path");
+const session = require("express-session");
 
-window.currentUser = null;
+const app = express();
 
-let userLoggedIn = false;
-
-
-/* =========================================================
-   DATABASE CART
-========================================================= */
-
-window.cart = [];
+const PORT =
+    process.env.PORT || 3000;
 
 
 /* =========================================================
-   AUTH ELEMENT
+   FRONTEND PATHS
 ========================================================= */
 
-const authActions =
-    document.getElementById(
-        "auth-actions"
+const frontendPath =
+    path.join(
+        __dirname,
+        "../frontend"
     );
 
-
-/* =========================================================
-   CART ELEMENTS
-========================================================= */
-
-const cartButton =
-    document.getElementById(
-        "cart-btn"
-    );
-
-const cartCount =
-    document.getElementById(
-        "cart-count"
-    );
-
-const cartModal =
-    document.getElementById(
-        "cart-modal"
-    );
-
-const cartClose =
-    document.getElementById(
-        "cart-close"
-    );
-
-const cartItems =
-    document.getElementById(
-        "cart-items"
-    );
-
-const cartTotal =
-    document.getElementById(
-        "cart-total"
-    );
-
-const checkoutButton =
-    document.getElementById(
-        "checkout-btn"
+const pagesPath =
+    path.join(
+        frontendPath,
+        "pages"
     );
 
 
 /* =========================================================
-   CHECK CURRENT LOGIN
+   BASIC MIDDLEWARE
 ========================================================= */
 
-async function checkUserLogin() {
+/*
+ * Parse JSON requests.
+ *
+ * Example:
+ * POST /api/cart/add
+ * Content-Type: application/json
+ */
 
-    try {
-
-        const response =
-            await fetch(
-                "/api/users/me",
-                {
-                    method: "GET",
-
-                    credentials: "include",
-
-                    cache: "no-store"
-                }
-            );
+app.use(
+    express.json()
+);
 
 
-        const data =
-            await response.json();
+/*
+ * Parse normal form data.
+ */
+
+app.use(
+    express.urlencoded({
+        extended: true
+    })
+);
 
 
-        console.log(
-            "CURRENT USER:",
-            data
-        );
+/* =========================================================
+   SESSION
+========================================================= */
 
+/*
+ * IMPORTANT:
+ *
+ * Session MUST be created before
+ * userRoutes and cartRoutes.
+ *
+ * This allows:
+ *
+ * req.session.user
+ *
+ * to be available inside:
+ *
+ * /api/users
+ * /api/cart
+ */
 
-        /* -----------------------------------------
-           USER IS LOGGED IN
-        ----------------------------------------- */
+app.use(
+    session({
 
-        if (
-            response.ok &&
-            data.success === true &&
-            data.loggedIn === true &&
-            data.user
-        ) {
+        secret:
+            process.env.SESSION_SECRET ||
+            "ar-ecommerce-secret-key",
 
-            userLoggedIn = true;
+        resave: false,
 
-            window.currentUser =
-                data.user;
+        saveUninitialized: false,
 
-
-            showLoggedInUser(
-                data.user
-            );
-
+        cookie: {
 
             /*
-             * IMPORTANT:
-             * Load this user's cart
-             * from the database.
+             * Prevent JavaScript from
+             * reading the session cookie.
              */
 
-            await loadCartFromDatabase();
-
-        }
-
-
-        /* -----------------------------------------
-           USER IS NOT LOGGED IN
-        ----------------------------------------- */
-
-        else {
-
-            userLoggedIn = false;
-
-            window.currentUser = null;
-
-            /*
-             * Never keep another user's
-             * cart in browser memory.
-             */
-
-            window.cart = [];
-
-            showLoggedOutUser();
-
-            updateCart();
-
-        }
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Session check failed:",
-            error
-        );
-
-
-        userLoggedIn = false;
-
-        window.currentUser = null;
-
-        window.cart = [];
-
-        showLoggedOutUser();
-
-        updateCart();
-
-    }
-
-}
-
-
-/* =========================================================
-   SHOW LOGGED-IN USER
-========================================================= */
-
-function showLoggedInUser(user) {
-
-    if (!authActions) {
-
-        return;
-
-    }
-
-
-    authActions.innerHTML = `
-
-        <button
-            type="button"
-            class="profile-btn"
-            id="profile-btn"
-        >
-            👤 ${escapeHTML(
-                user.name || "Profile"
-            )}
-        </button>
-
-        <button
-            type="button"
-            class="logout-btn"
-            id="logout-btn"
-        >
-            Logout
-        </button>
-
-    `;
-
-
-    const profileButton =
-        document.getElementById(
-            "profile-btn"
-        );
-
-
-    const logoutButton =
-        document.getElementById(
-            "logout-btn"
-        );
-
-
-    /* -----------------------------------------
-       PROFILE
-    ----------------------------------------- */
-
-    if (profileButton) {
-
-        profileButton.addEventListener(
-            "click",
-            openProfile
-        );
-
-    }
-
-
-    /* -----------------------------------------
-       LOGOUT
-    ----------------------------------------- */
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            logoutUser
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   SHOW LOGGED-OUT USER
-========================================================= */
-
-function showLoggedOutUser() {
-
-    if (!authActions) {
-
-        return;
-
-    }
-
-
-    authActions.innerHTML = `
-
-        <a
-            href="/login"
-            class="login-btn"
-            id="login-link"
-        >
-            Login
-        </a>
-
-    `;
-
-}
-
-
-/* =========================================================
-   LOAD CART FROM DATABASE
-========================================================= */
-
-async function loadCartFromDatabase() {
-
-    /*
-     * Never request a user's cart
-     * when there is no logged-in user.
-     */
-
-    if (
-        !userLoggedIn ||
-        !window.currentUser
-    ) {
-
-        window.cart = [];
-
-        updateCart();
-
-        return;
-
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/cart",
-                {
-                    method: "GET",
-
-                    credentials: "include",
-
-                    cache: "no-store"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        console.log(
-            "DATABASE CART:",
-            data
-        );
-
-
-        if (
-            response.ok &&
-            data.success === true &&
-            Array.isArray(data.items)
-        ) {
-
-            /*
-             * Convert database cart items
-             * into the format used by the UI.
-             */
-
-            window.cart =
-                data.items.map(
-                    item => {
-
-                        return {
-
-                            id:
-                                item.product_id,
-
-                            cart_item_id:
-                                item.cart_item_id,
-
-                            name:
-                                item.name,
-
-                            description:
-                                item.description,
-
-                            price:
-                                Number(
-                                    item.price || 0
-                                ),
-
-                            stock:
-                                item.stock,
-
-                            rating:
-                                item.rating,
-
-                            category_name:
-                                item.category_name,
-
-                            quantity:
-                                Number(
-                                    item.quantity || 1
-                                ),
-
-                            /*
-                             * If your product API
-                             * returns image later,
-                             * this field can be used.
-                             */
-
-                            image:
-                                item.image || ""
-
-                        };
-
-                    }
-                );
-
-        }
-
-        else {
-
-            window.cart = [];
-
-        }
-
-
-        updateCart();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Load database cart error:",
-            error
-        );
-
-
-        window.cart = [];
-
-        updateCart();
-
-    }
-
-}
-
-
-window.loadCartFromDatabase =
-    loadCartFromDatabase;
-
-
-/* =========================================================
-   ADD PRODUCT TO CART
-========================================================= */
-
-async function addToCart(product) {
-
-    /*
-     * User must be logged in.
-     */
-
-    if (
-        !userLoggedIn ||
-        !window.currentUser
-    ) {
-
-        alert(
-            "Please login before adding products to the cart."
-        );
-
-
-        window.location.href =
-            "/login";
-
-
-        return false;
-
-    }
-
-
-    if (!product) {
-
-        console.error(
-            "No product supplied."
-        );
-
-        return false;
-
-    }
-
-
-    if (!product.id) {
-
-        console.error(
-            "Product ID is missing:",
-            product
-        );
-
-        alert(
-            "Unable to add this product."
-        );
-
-        return false;
-
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/cart/add",
-                {
-                    method: "POST",
-
-                    credentials: "include",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json"
-
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            product_id:
-                                product.id,
-
-                            quantity: 1
-
-                        })
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        console.log(
-            "ADD CART RESPONSE:",
-            data
-        );
-
-
-        /*
-         * Session may have expired.
-         */
-
-        if (
-            response.status === 401
-        ) {
-
-            userLoggedIn = false;
-
-            window.currentUser = null;
-
-            window.cart = [];
-
-            updateCart();
-
-            alert(
-                "Your session has expired. Please login again."
-            );
-
-
-            window.location.href =
-                "/login";
-
-
-            return false;
-
-        }
-
-
-        if (
-            !response.ok ||
-            !data.success
-        ) {
-
-            alert(
-                data.message ||
-                "Failed to add product."
-            );
-
-            return false;
-
-        }
-
-
-        /*
-         * Reload from DATABASE.
-         *
-         * This guarantees that the frontend
-         * always matches MariaDB.
-         */
-
-        await loadCartFromDatabase();
-
-
-        return true;
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Add to cart error:",
-            error
-        );
-
-
-        alert(
-            "Unable to add product to cart."
-        );
-
-
-        return false;
-
-    }
-
-}
-
-
-window.addToCart =
-    addToCart;
-
-
-/* =========================================================
-   UPDATE CART UI
-========================================================= */
-
-function updateCart() {
-
-    /*
-     * Calculate total quantity.
-     */
-
-    const totalQuantity =
-        window.cart.reduce(
-            (
-                total,
-                item
-            ) => {
-
-                return (
-                    total +
-                    Number(
-                        item.quantity || 0
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    /* -----------------------------------------
-       CART COUNT
-    ----------------------------------------- */
-
-    if (cartCount) {
-
-        cartCount.textContent =
-            totalQuantity;
-
-    }
-
-
-    /* -----------------------------------------
-       EMPTY CART
-    ----------------------------------------- */
-
-    if (
-        window.cart.length === 0
-    ) {
-
-        if (cartItems) {
-
-            cartItems.innerHTML = `
-
-                <p class="empty-cart">
-                    Your cart is empty.
-                </p>
-
-            `;
-
-        }
-
-
-        if (cartTotal) {
-
-            cartTotal.textContent =
-                "$0.00";
-
-        }
-
-
-        return;
-
-    }
-
-
-    /* -----------------------------------------
-       TOTAL PRICE
-    ----------------------------------------- */
-
-    const total =
-        window.cart.reduce(
-            (
-                sum,
-                item
-            ) => {
-
-                return (
-                    sum +
-                    (
-                        Number(
-                            item.price || 0
-                        ) *
-                        Number(
-                            item.quantity || 0
-                        )
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    if (cartTotal) {
-
-        cartTotal.textContent =
-            `$${total.toFixed(2)}`;
-
-    }
-
-
-    if (!cartItems) {
-
-        return;
-
-    }
-
-
-    /* -----------------------------------------
-       CLEAR OLD CART UI
-    ----------------------------------------- */
-
-    cartItems.innerHTML = "";
-
-
-    /* -----------------------------------------
-       DISPLAY PRODUCTS
-    ----------------------------------------- */
-
-    window.cart.forEach(
-        product => {
-
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-
-            item.className =
-                "cart-item";
-
-
-            item.innerHTML = `
-
-                <div class="cart-item-info">
-
-                    <div class="cart-item-image">
-
-                        ${
-                            typeof product.image ===
-                            "string" &&
-                            (
-                                product.image.startsWith("/") ||
-                                product.image.startsWith("http")
-                            )
-
-                            ? `
-
-                                <img
-                                    src="${escapeAttribute(
-                                        product.image
-                                    )}"
-                                    alt="${escapeAttribute(
-                                        product.name
-                                    )}"
-                                    class="cart-product-real-image"
-                                >
-
-                            `
-
-                            : escapeHTML(
-                                product.image ||
-                                "🛍️"
-                            )
-                        }
-
-                    </div>
-
-
-                    <div class="cart-item-details">
-
-                        <div class="cart-item-name">
-
-                            ${escapeHTML(
-                                product.name
-                            )}
-
-                        </div>
-
-
-                        <div class="cart-item-category">
-
-                            ${escapeHTML(
-                                product.category_name ||
-                                product.category ||
-                                "Uncategorized"
-                            )}
-
-                        </div>
-
-
-                        <div class="cart-item-price">
-
-                            $${Number(
-                                product.price || 0
-                            ).toFixed(2)}
-
-                            ×
-
-                            ${Number(
-                                product.quantity || 0
-                            )}
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <button
-                    type="button"
-                    class="remove-cart-item"
-                    data-cart-item-id="${escapeAttribute(
-                        product.cart_item_id
-                    )}"
-                >
-                    Remove
-                </button>
-
-            `;
-
-
-            cartItems.appendChild(
-                item
-            );
-
-        }
-    );
-
-}
-
-
-window.updateCart =
-    updateCart;
-
-
-/* =========================================================
-   REMOVE PRODUCT FROM CART
-========================================================= */
-
-if (cartItems) {
-
-    cartItems.addEventListener(
-        "click",
-        async event => {
-
-            const button =
-                event.target.closest(
-                    ".remove-cart-item"
-                );
-
-
-            if (!button) {
-
-                return;
-
-            }
-
-
-            const cartItemId =
-                button.dataset.cartItemId;
-
-
-            if (!cartItemId) {
-
-                console.error(
-                    "Cart item ID missing."
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `/api/cart/${encodeURIComponent(
-                            cartItemId
-                        )}`,
-                        {
-                            method: "DELETE",
-
-                            credentials:
-                                "include"
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                /*
-                 * Session expired.
-                 */
-
-                if (
-                    response.status === 401
-                ) {
-
-                    userLoggedIn = false;
-
-                    window.currentUser = null;
-
-                    window.cart = [];
-
-                    updateCart();
-
-                    alert(
-                        "Please login again."
-                    );
-
-
-                    window.location.href =
-                        "/login";
-
-
-                    return;
-
-                }
-
-
-                if (
-                    !response.ok ||
-                    !data.success
-                ) {
-
-                    alert(
-                        data.message ||
-                        "Failed to remove product."
-                    );
-
-                    return;
-
-                }
-
-
-                /*
-                 * Reload from database.
-                 */
-
-                await loadCartFromDatabase();
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "Remove cart error:",
-                    error
-                );
-
-
-                alert(
-                    "Unable to remove product."
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   OPEN CART
-========================================================= */
-
-if (cartButton) {
-
-    cartButton.addEventListener(
-        "click",
-        async () => {
-
-            /*
-             * Cart requires login.
-             */
-
-            if (
-                !userLoggedIn ||
-                !window.currentUser
-            ) {
-
-                alert(
-                    "Please login to view your cart."
-                );
-
-
-                window.location.href =
-                    "/login";
-
-
-                return;
-
-            }
+            httpOnly: true,
 
 
             /*
-             * Always refresh cart
-             * from database before opening.
-             */
-
-            await loadCartFromDatabase();
-
-
-            if (cartModal) {
-
-                cartModal.classList.add(
-                    "active"
-                );
-
-            }
-
-
-            document.body.style.overflow =
-                "hidden";
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CLOSE CART
-========================================================= */
-
-function closeCartModal() {
-
-    if (cartModal) {
-
-        cartModal.classList.remove(
-            "active"
-        );
-
-    }
-
-
-    document.body.style.overflow =
-        "";
-
-}
-
-
-window.closeCartModal =
-    closeCartModal;
-
-
-if (cartClose) {
-
-    cartClose.addEventListener(
-        "click",
-        closeCartModal
-    );
-
-}
-
-
-/* =========================================================
-   PROFILE
-========================================================= */
-
-function openProfile() {
-
-    if (
-        !userLoggedIn ||
-        !window.currentUser
-    ) {
-
-        window.location.href =
-            "/login";
-
-        return;
-
-    }
-
-
-    window.location.href =
-        "/profile";
-
-}
-
-
-window.openProfile =
-    openProfile;
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-async function logoutUser() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/users/logout",
-                {
-                    method: "POST",
-
-                    credentials:
-                        "include"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            response.ok &&
-            data.success
-        ) {
-
-            /*
-             * IMPORTANT
+             * You are running locally
+             * with HTTP.
              *
-             * We clear ONLY the frontend
-             * cart variable.
-             *
-             * We DO NOT call:
-             *
-             * DELETE /api/cart
-             *
-             * because the database cart must
-             * remain for the next login.
+             * Therefore secure must
+             * remain false.
              */
 
-            window.cart = [];
-
-
-            userLoggedIn = false;
-
-            window.currentUser = null;
-
-
-            updateCart();
-
-            showLoggedOutUser();
+            secure: false,
 
 
             /*
-             * Close cart if it is open.
+             * Keep login session for
+             * 24 hours.
              */
 
-            closeCartModal();
-
-
-            /*
-             * Return to home page.
-             */
-
-            window.location.href =
-                "/";
-
-
-            return;
+            maxAge:
+                24 * 60 * 60 * 1000
 
         }
 
-
-        alert(
-            data.message ||
-            "Logout failed."
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Logout error:",
-            error
-        );
-
-
-        alert(
-            "Unable to logout."
-        );
-
-    }
-
-}
+    })
+);
 
 
 /* =========================================================
-   ESCAPE HTML
+   STATIC FRONTEND FILES
 ========================================================= */
 
-function escapeHTML(value) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        value ?? "";
-
-
-    return div.innerHTML;
-
-}
-
-
-/* =========================================================
-   ESCAPE ATTRIBUTE
-========================================================= */
-
-function escapeAttribute(value) {
-
-    return String(
-        value ?? ""
+app.use(
+    express.static(
+        frontendPath
     )
-        .replace(
-            /&/g,
-            "&amp;"
+);
+
+
+/* =========================================================
+   UPLOADED PRODUCT IMAGES
+========================================================= */
+
+app.use(
+    "/uploads",
+    express.static(
+        path.join(
+            __dirname,
+            "uploads"
         )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
+    )
+);
+
+
+/* =========================================================
+   IMPORT API ROUTES
+========================================================= */
+
+const userRoutes =
+    require("./routes/userRoutes");
+
+
+const productRoutes =
+    require("./routes/productRoutes");
+
+
+const adminProductRoutes =
+    require("./routes/adminProductRoutes");
+
+
+const cartRoutes =
+    require("./routes/cartRoutes");
+
+
+/* =========================================================
+   USER API
+========================================================= */
+
+/*
+ * Login:
+ *
+ * POST /api/users/login
+ *
+ * Register:
+ *
+ * POST /api/users/register
+ *
+ * Check login:
+ *
+ * GET /api/users/me
+ *
+ * Logout:
+ *
+ * POST /api/users/logout
+ */
+
+app.use(
+    "/api/users",
+    userRoutes
+);
+
+
+/* =========================================================
+   PRODUCT API
+========================================================= */
+
+/*
+ * GET:
+ *
+ * /api/products
+ */
+
+app.use(
+    "/api/products",
+    productRoutes
+);
+
+
+/* =========================================================
+   ADMIN PRODUCT API
+========================================================= */
+
+/*
+ * Admin product routes:
+ *
+ * /api/admin/products
+ */
+
+app.use(
+    "/api/admin/products",
+    adminProductRoutes
+);
+
+
+/* =========================================================
+   CART API
+========================================================= */
+
+/*
+ * IMPORTANT:
+ *
+ * These routes use req.session.user.
+ *
+ * GET:
+ * /api/cart
+ *
+ * POST:
+ * /api/cart/add
+ *
+ * DELETE:
+ * /api/cart/:cartItemId
+ *
+ * DELETE:
+ * /api/cart
+ *
+ * Because session middleware is above,
+ * req.session.user will be available.
+ */
+
+app.use(
+    "/api/cart",
+    cartRoutes
+);
+
+
+/* =========================================================
+   PAGE ROUTES
+========================================================= */
+
+
+/* -------------------------
+   HOME
+------------------------- */
+
+app.get(
+    "/",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "index.html"
+            )
         );
 
-}
+    }
+);
 
 
-/* =========================================================
-   PRODUCT MODAL
-========================================================= */
+/* -------------------------
+   LOGIN
+------------------------- */
 
-const productModal =
-    document.getElementById(
-        "product-modal"
-    );
+app.get(
+    "/login",
+    (req, res) => {
 
-const modalClose =
-    document.getElementById(
-        "modal-close"
-    );
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "login.html"
+            )
+        );
 
-
-if (modalClose) {
-
-    modalClose.addEventListener(
-        "click",
-        () => {
-
-            if (productModal) {
-
-                productModal.classList.remove(
-                    "active"
-                );
-
-            }
-
-            document.body.style.overflow =
-                "";
-
-        }
-    );
-
-}
+    }
+);
 
 
-/* =========================================================
-   NAVIGATION
-========================================================= */
+/* -------------------------
+   REGISTER
+------------------------- */
 
-const exploreProducts =
-    document.getElementById(
-        "explore-products"
-    );
+app.get(
+    "/register",
+    (req, res) => {
 
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "register.html"
+            )
+        );
 
-if (exploreProducts) {
-
-    exploreProducts.addEventListener(
-        "click",
-        () => {
-
-            window.location.href =
-                "/products";
-
-        }
-    );
-
-}
+    }
+);
 
 
-const viewAll =
-    document.getElementById(
-        "view-all"
-    );
+/* -------------------------
+   PRODUCTS
+------------------------- */
+
+app.get(
+    "/products",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "products.html"
+            )
+        );
+
+    }
+);
 
 
-if (viewAll) {
+/* -------------------------
+   SERVICES
+------------------------- */
 
-    viewAll.addEventListener(
-        "click",
-        () => {
+app.get(
+    "/services",
+    (req, res) => {
 
-            window.location.href =
-                "/products";
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "services.html"
+            )
+        );
 
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ESCAPE KEY
-========================================================= */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key === "Escape"
-        ) {
-
-            if (productModal) {
-
-                productModal.classList.remove(
-                    "active"
-                );
-
-            }
+    }
+);
 
 
-            closeCartModal();
+/* -------------------------
+   ABOUT
+------------------------- */
 
-        }
+app.get(
+    "/about",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "about.html"
+            )
+        );
+
+    }
+);
+
+
+/* -------------------------
+   PROFILE
+------------------------- */
+
+app.get(
+    "/profile",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "profile.html"
+            )
+        );
+
+    }
+);
+
+
+/* -------------------------
+   ADMIN
+------------------------- */
+
+app.get(
+    "/admin",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "admin.html"
+            )
+        );
 
     }
 );
 
 
 /* =========================================================
-   INITIALIZE APPLICATION
+   404
 ========================================================= */
 
-checkUserLogin();
+app.use(
+    (req, res) => {
+
+        res.status(404).send(
+            "Page not found"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   START SERVER
+========================================================= */
+
+app.listen(
+    PORT,
+    () => {
+
+        console.log(
+            "========================================"
+        );
+
+        console.log(
+            "AR E-Commerce Server Started"
+        );
+
+        console.log(
+            `http://localhost:${PORT}`
+        );
+
+        console.log(
+            "========================================"
+        );
+
+    }
+);

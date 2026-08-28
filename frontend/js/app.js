@@ -1,169 +1,68 @@
-
 // =========================================================
-// AR E-COMMERCE
+// AR ECOMMERCE
 // HOME PAGE APP.JS
-// USER SESSION + USER-SPECIFIC CART + PROFILE + MODAL
+// DATABASE PRODUCTS + DATABASE CART + USER SESSION
 // =========================================================
 
 
 // =========================================================
-// USER CART STORAGE
+// GLOBAL VARIABLES
 // =========================================================
-
-const CART_STORAGE_PREFIX =
-    "ar_ecommerce_cart_user_";
-
-
-/* =========================================================
-   CURRENT USER
-========================================================= */
 
 window.currentUser = null;
+
+window.cart = [];
+
+window.productsById = {};
 
 let userLoggedIn = false;
 
 
-/* =========================================================
-   GET USER CART STORAGE KEY
-========================================================= */
+// =========================================================
+// ELEMENTS
+// =========================================================
 
-function getCartStorageKey(userId) {
-
-    return (
-        CART_STORAGE_PREFIX +
-        String(userId)
-    );
-
-}
+const navActions =
+    document.getElementById("nav-actions");
 
 
-/* =========================================================
-   LOAD CART FOR CURRENT USER
-========================================================= */
-
-function loadUserCart(userId) {
-
-    if (!userId) {
-
-        return [];
-
-    }
+const cartButton =
+    document.getElementById("cart-btn");
 
 
-    try {
-
-        const key =
-            getCartStorageKey(userId);
+const cartCount =
+    document.getElementById("cart-count");
 
 
-        const savedCart =
-            localStorage.getItem(key);
+const cartModal =
+    document.getElementById("cart-modal");
 
 
-        if (!savedCart) {
-
-            return [];
-
-        }
+const cartClose =
+    document.getElementById("cart-close");
 
 
-        const cart =
-            JSON.parse(savedCart);
+const cartItems =
+    document.getElementById("cart-items");
 
 
-        if (!Array.isArray(cart)) {
-
-            return [];
-
-        }
+const cartTotal =
+    document.getElementById("cart-total");
 
 
-        return cart;
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Failed to load user cart:",
-            error
-        );
-
-        return [];
-
-    }
-
-}
+const checkoutButton =
+    document.getElementById("checkout-btn");
 
 
-/* =========================================================
-   SAVE CURRENT USER CART
-========================================================= */
-
-function saveCart() {
-
-    /*
-     * Never save a cart when nobody is logged in.
-     */
-
-    if (
-        !userLoggedIn ||
-        !window.currentUser ||
-        !window.currentUser.id
-    ) {
-
-        return;
-
-    }
-
-
-    try {
-
-        const key =
-            getCartStorageKey(
-                window.currentUser.id
-            );
-
-
-        localStorage.setItem(
-            key,
-            JSON.stringify(window.cart)
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Failed to save cart:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   ACTIVE CART
-========================================================= */
-
-window.cart = [];
-
-
-/* =========================================================
-   AUTH ELEMENT
-========================================================= */
-
-const authActions =
+const homeProductsContainer =
     document.getElementById(
-        "auth-actions"
+        "home-products-container"
     );
 
 
-/* =========================================================
-   CHECK CURRENT USER
-========================================================= */
+// =========================================================
+// CHECK USER LOGIN
+// =========================================================
 
 async function checkUserLogin() {
 
@@ -174,7 +73,9 @@ async function checkUserLogin() {
                 "/api/users/me",
                 {
                     method: "GET",
+
                     credentials: "include",
+
                     cache: "no-store"
                 }
             );
@@ -184,22 +85,11 @@ async function checkUserLogin() {
             await response.json();
 
 
-        console.log(
-            "CURRENT USER:",
-            data
-        );
-
-
-        /*
-         * USER IS LOGGED IN
-         */
-
         if (
             response.ok &&
             data.success === true &&
             data.loggedIn === true &&
-            data.user &&
-            data.user.id
+            data.user
         ) {
 
             userLoggedIn = true;
@@ -208,62 +98,44 @@ async function checkUserLogin() {
                 data.user;
 
 
-            /*
-             * Load this user's own cart.
-             */
-
-            window.cart =
-                loadUserCart(
-                    data.user.id
-                );
-
-
             showLoggedInUser(
                 data.user
             );
 
 
-            updateCart();
-
-
-            return;
+            await loadCart();
 
         }
 
+        else {
 
-        /*
-         * USER IS NOT LOGGED IN
-         */
+            userLoggedIn = false;
 
-        userLoggedIn = false;
+            window.currentUser = null;
 
-        window.currentUser =
-            null;
+            window.cart = [];
 
-        window.cart = [];
+            showLoggedOutUser();
 
+            updateCart();
 
-        showLoggedOutUser();
-
-        updateCart();
+        }
 
     }
 
     catch (error) {
 
         console.error(
-            "Session check failed:",
+            "Login check error:",
             error
         );
 
 
         userLoggedIn = false;
 
-        window.currentUser =
-            null;
+        window.currentUser = null;
 
         window.cart = [];
-
 
         showLoggedOutUser();
 
@@ -274,40 +146,79 @@ async function checkUserLogin() {
 }
 
 
-/* =========================================================
-   LOGGED-IN UI
-========================================================= */
+// =========================================================
+// SHOW LOGGED IN USER
+// =========================================================
 
 function showLoggedInUser(user) {
 
-    if (!authActions) {
+    if (!navActions) {
 
         return;
 
     }
 
 
-    authActions.innerHTML = `
+    navActions.innerHTML = `
 
         <button
             type="button"
             class="profile-btn"
             id="profile-btn"
         >
-            👤 ${escapeHTML(
+
+            👤
+            ${escapeHTML(
                 user.name || "Profile"
             )}
+
         </button>
+
 
         <button
             type="button"
             class="logout-btn"
             id="logout-btn"
         >
+
             Logout
+
+        </button>
+
+
+        <button
+            class="cart-btn"
+            id="cart-btn"
+            type="button"
+        >
+
+            🛒
+
+            <span>
+                Cart
+            </span>
+
+            <b id="cart-count">
+                0
+            </b>
+
         </button>
 
     `;
+
+
+    // Re-get cart elements because
+    // navActions was replaced.
+
+    window.cartButton =
+        document.getElementById(
+            "cart-btn"
+        );
+
+    window.cartCount =
+        document.getElementById(
+            "cart-count"
+        );
 
 
     const profileButton =
@@ -322,23 +233,20 @@ function showLoggedInUser(user) {
         );
 
 
-    /*
-     * PROFILE
-     */
-
     if (profileButton) {
 
         profileButton.addEventListener(
             "click",
-            openProfile
+            () => {
+
+                window.location.href =
+                    "/profile";
+
+            }
         );
 
     }
 
-
-    /*
-     * LOGOUT
-     */
 
     if (logoutButton) {
 
@@ -349,138 +257,801 @@ function showLoggedInUser(user) {
 
     }
 
+
+    connectCartButton();
+
+    updateCart();
+
 }
 
 
-/* =========================================================
-   LOGGED-OUT UI
-========================================================= */
+// =========================================================
+// SHOW LOGGED OUT USER
+// =========================================================
 
 function showLoggedOutUser() {
 
-    if (!authActions) {
+    if (!navActions) {
 
         return;
 
     }
 
 
-    authActions.innerHTML = `
+    navActions.innerHTML = `
 
         <a
             href="/login"
             class="login-btn"
-            id="login-link"
         >
             Login
         </a>
 
+
+        <button
+            class="cart-btn"
+            id="cart-btn"
+            type="button"
+        >
+
+            🛒
+
+            <span>
+                Cart
+            </span>
+
+            <b id="cart-count">
+                0
+            </b>
+
+        </button>
+
     `;
 
 
-    const loginLink =
+    window.cartButton =
         document.getElementById(
-            "login-link"
+            "cart-btn"
         );
 
 
-    /*
-     * If the user is somehow already logged in,
-     * clicking Login opens Profile.
-     */
-
-    if (loginLink) {
-
-        loginLink.addEventListener(
-            "click",
-            async event => {
-
-                if (userLoggedIn) {
-
-                    event.preventDefault();
-
-                    openProfile();
-
-                }
-
-            }
+    window.cartCount =
+        document.getElementById(
+            "cart-count"
         );
 
-    }
+
+    connectCartButton();
 
 }
 
 
-/* =========================================================
-   OPEN PROFILE
-========================================================= */
+// =========================================================
+// CONNECT CART BUTTON
+// =========================================================
 
-function openProfile() {
+function connectCartButton() {
 
-    /*
-     * User is not logged in.
-     */
-
-    if (
-        !userLoggedIn ||
-        !window.currentUser
-    ) {
-
-        alert(
-            "Please login to view your profile."
+    const button =
+        document.getElementById(
+            "cart-btn"
         );
 
 
-        window.location.href =
-            "/login";
-
+    if (!button) {
 
         return;
 
     }
 
 
-    /*
-     * User is logged in.
-     */
-
-    window.location.href =
-        "/profile";
+    button.addEventListener(
+        "click",
+        openCart
+    );
 
 }
 
 
-window.openProfile =
-    openProfile;
+// =========================================================
+// LOAD PRODUCTS FROM DATABASE
+// =========================================================
+
+async function loadHomeProducts() {
+
+    if (!homeProductsContainer) {
+
+        return;
+
+    }
 
 
-/* =========================================================
-   LOGOUT
-========================================================= */
+    homeProductsContainer.innerHTML = `
 
-async function logoutUser() {
+        <div class="loading-products">
 
-    /*
-     * Save the user's cart before logout.
-     *
-     * IMPORTANT:
-     * We DO NOT delete the stored cart.
-     *
-     * This allows the same user to get
-     * the cart back after logging in again.
-     */
+            Loading products...
 
-    saveCart();
+        </div>
+
+    `;
 
 
     try {
 
         const response =
             await fetch(
-                "/api/users/logout",
+                "/api/products",
+                {
+                    method: "GET",
+
+                    cache: "no-store"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Home Products API:",
+            data
+        );
+
+
+        if (
+            !response.ok ||
+            data.success !== true
+        ) {
+
+            showNoProducts();
+
+            return;
+
+        }
+
+
+        const products =
+            Array.isArray(data.products)
+                ? data.products
+                : [];
+
+
+        if (
+            products.length === 0
+        ) {
+
+            showNoProducts();
+
+            return;
+
+        }
+
+
+        // =================================================
+        // SAVE PRODUCTS BY ID
+        // =================================================
+
+        window.productsById = {};
+
+
+        products.forEach(
+            product => {
+
+                window.productsById[
+                    String(product.id)
+                ] = product;
+
+            }
+        );
+
+
+        // =================================================
+        // DISPLAY PRODUCTS
+        // =================================================
+
+        homeProductsContainer.innerHTML = "";
+
+
+        products.forEach(
+            product => {
+
+                const card =
+                    createHomeProductCard(
+                        product
+                    );
+
+
+                homeProductsContainer.appendChild(
+                    card
+                );
+
+            }
+        );
+
+
+        // =================================================
+        // CONNECT ADD TO CART BUTTONS
+        // =================================================
+
+        connectHomeCartButtons();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "HOME PRODUCT ERROR:",
+            error
+        );
+
+
+        showNoProducts();
+
+    }
+
+}
+
+
+// =========================================================
+// CREATE HOME PRODUCT CARD
+// =========================================================
+
+function createHomeProductCard(product) {
+
+    const card =
+        document.createElement(
+            "div"
+        );
+
+
+    card.className =
+        "product-card";
+
+
+    card.dataset.product =
+        product.id;
+
+
+    // =====================================================
+    // IMAGE
+    // =====================================================
+
+    let imageHTML =
+        "🛍️";
+
+
+    if (product.image) {
+
+        imageHTML = `
+
+            <img
+                src="${escapeAttribute(
+                    product.image
+                )}"
+                alt="${escapeAttribute(
+                    product.name
+                )}"
+            >
+
+        `;
+
+    }
+
+
+    // =====================================================
+    // STOCK
+    // =====================================================
+
+    const stock =
+        Number(
+            product.stock || 0
+        );
+
+
+    const outOfStock =
+        stock <= 0;
+
+
+    // =====================================================
+    // CARD HTML
+    // =====================================================
+
+    card.innerHTML = `
+
+        <div class="product-image">
+
+            <span class="product-emoji">
+
+                ${imageHTML}
+
+            </span>
+
+
+            <span class="ar-badge">
+
+                AR
+
+            </span>
+
+        </div>
+
+
+        <div class="product-info">
+
+            <p class="category">
+
+                ${escapeHTML(
+                    product.category_name ||
+                    product.category ||
+                    "Uncategorized"
+                )}
+
+            </p>
+
+
+            <h3>
+
+                ${escapeHTML(
+                    product.name
+                )}
+
+            </h3>
+
+
+            ${
+                product.description
+                ?
+                `
+
+                <p class="product-description">
+
+                    ${escapeHTML(
+                        product.description
+                    )}
+
+                </p>
+
+                `
+                :
+                ""
+            }
+
+
+            <div class="product-bottom">
+
+                <strong>
+
+                    $${Number(
+                        product.price || 0
+                    ).toFixed(2)}
+
+                </strong>
+
+
+                ${
+                    outOfStock
+
+                    ?
+
+                    `
+
+                    <button
+                        class="add-btn out-of-stock"
+                        type="button"
+                        disabled
+                    >
+
+                        Out of Stock
+
+                    </button>
+
+                    `
+
+                    :
+
+                    `
+
+                    <button
+                        class="add-btn"
+                        data-product-action="cart"
+                        data-product-id="${product.id}"
+                        type="button"
+                    >
+
+                        Add to Cart
+
+                    </button>
+
+                    `
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    return card;
+
+}
+
+
+// =========================================================
+// NO PRODUCTS
+// =========================================================
+
+function showNoProducts() {
+
+    if (!homeProductsContainer) {
+
+        return;
+
+    }
+
+
+    homeProductsContainer.innerHTML = `
+
+        <div class="products-message">
+
+            <div class="no-products-icon">
+
+                🛍️
+
+            </div>
+
+
+            <h3>
+
+                No products available.
+
+            </h3>
+
+
+            <p>
+
+                Products added by the admin
+                will appear here.
+
+            </p>
+
+        </div>
+
+    `;
+
+}
+
+
+// =========================================================
+// CONNECT HOME ADD TO CART BUTTONS
+// =========================================================
+
+function connectHomeCartButtons() {
+
+    const buttons =
+        document.querySelectorAll(
+            "#home-products-container [data-product-action='cart']"
+        );
+
+
+    buttons.forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                async event => {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+
+                    if (button.disabled) {
+
+                        return;
+
+                    }
+
+
+                    // =========================================
+                    // CHECK LOGIN
+                    // =========================================
+
+                    if (!userLoggedIn) {
+
+                        sessionStorage.setItem(
+                            "loginRedirect",
+                            window.location.pathname
+                        );
+
+
+                        alert(
+                            "Please login to add products to your cart."
+                        );
+
+
+                        window.location.href =
+                            "/login";
+
+
+                        return;
+
+                    }
+
+
+                    // =========================================
+                    // GET PRODUCT ID
+                    // =========================================
+
+                    const productId =
+                        button.dataset.productId;
+
+
+                    // =========================================
+                    // GET PRODUCT
+                    // =========================================
+
+                    const product =
+                        window.productsById[
+                            String(productId)
+                        ];
+
+
+                    if (!product) {
+
+                        console.error(
+                            "Product not found:",
+                            productId
+                        );
+
+                        return;
+
+                    }
+
+
+                    // =========================================
+                    // DISABLE BUTTON
+                    // =========================================
+
+                    button.disabled =
+                        true;
+
+
+                    const originalText =
+                        button.textContent.trim();
+
+
+                    button.textContent =
+                        "Adding...";
+
+
+                    // =========================================
+                    // ADD TO DATABASE CART
+                    // =========================================
+
+                    const result =
+                        await addToCart(
+                            product
+                        );
+
+
+                    // =========================================
+                    // FAILED
+                    // =========================================
+
+                    if (result === false) {
+
+                        button.disabled =
+                            false;
+
+                        button.textContent =
+                            originalText;
+
+                        return;
+
+                    }
+
+
+                    // =========================================
+                    // SUCCESS
+                    // =========================================
+
+                    button.textContent =
+                        "Added ✓";
+
+
+                    button.classList.add(
+                        "added"
+                    );
+
+
+                    setTimeout(
+                        () => {
+
+                            button.textContent =
+                                originalText;
+
+                            button.classList.remove(
+                                "added"
+                            );
+
+                            button.disabled =
+                                false;
+
+                        },
+                        1000
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// ADD TO CART
+// =========================================================
+
+async function addToCart(product) {
+
+    if (!userLoggedIn) {
+
+        alert(
+            "Please login first."
+        );
+
+        window.location.href =
+            "/login";
+
+        return false;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cart/add",
                 {
                     method: "POST",
-                    credentials: "include"
+
+                    credentials: "include",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            product_id:
+                                product.id,
+
+                            quantity:
+                                1
+
+                        })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            userLoggedIn = false;
+
+            window.currentUser = null;
+
+            window.cart = [];
+
+            updateCart();
+
+            alert(
+                "Please login first."
+            );
+
+
+            window.location.href =
+                "/login";
+
+
+            return false;
+
+        }
+
+
+        if (
+            response.ok &&
+            data.success === true
+        ) {
+
+            // Reload database cart.
+
+            await loadCart();
+
+
+            return true;
+
+        }
+
+
+        alert(
+            data.message ||
+            "Failed to add product."
+        );
+
+
+        return false;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Add to cart error:",
+            error
+        );
+
+
+        alert(
+            "Unable to add product to cart."
+        );
+
+
+        return false;
+
+    }
+
+}
+
+
+window.addToCart =
+    addToCart;
+
+
+// =========================================================
+// LOAD CART FROM DATABASE
+// =========================================================
+
+async function loadCart() {
+
+    if (!userLoggedIn) {
+
+        window.cart = [];
+
+        updateCart();
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cart",
+                {
+                    method: "GET",
+
+                    credentials: "include",
+
+                    cache: "no-store"
                 }
             );
 
@@ -494,235 +1065,84 @@ async function logoutUser() {
             data.success === true
         ) {
 
-            /*
-             * Clear active session.
-             */
+            window.cart =
+                data.items.map(
+                    item => ({
 
-            userLoggedIn = false;
+                        cart_item_id:
+                            item.cart_item_id,
 
-            window.currentUser =
-                null;
+                        id:
+                            item.product_id,
 
+                        product_id:
+                            item.product_id,
 
-            /*
-             * IMPORTANT:
-             *
-             * Empty the active cart.
-             *
-             * The cart is NOT removed from
-             * localStorage.
-             *
-             * Therefore:
-             *
-             * Logout -> active cart empty
-             *
-             * Login again -> old cart restored
-             */
+                        name:
+                            item.name,
 
-            window.cart = [];
+                        description:
+                            item.description,
 
+                        price:
+                            Number(
+                                item.price
+                            ),
 
-            showLoggedOutUser();
+                        stock:
+                            item.stock,
+
+                        rating:
+                            item.rating,
+
+                        category_name:
+                            item.category_name,
+
+                        quantity:
+                            Number(
+                                item.quantity
+                            )
+
+                    })
+                );
+
 
             updateCart();
 
-
-            /*
-             * Return to home.
-             */
-
-            window.location.href =
-                "/";
-
-
-            return;
-
         }
 
+        else {
 
-        alert(
-            data.message ||
-            "Logout failed."
-        );
+            window.cart = [];
+
+            updateCart();
+
+        }
 
     }
 
     catch (error) {
 
         console.error(
-            "Logout error:",
+            "Load cart error:",
             error
         );
 
 
-        alert(
-            "Unable to logout."
-        );
+        window.cart = [];
+
+        updateCart();
 
     }
 
 }
 
 
-/* =========================================================
-   CART ELEMENTS
-========================================================= */
-
-const cartButton =
-    document.getElementById(
-        "cart-btn"
-    );
-
-
-const cartCount =
-    document.getElementById(
-        "cart-count"
-    );
-
-
-const cartModal =
-    document.getElementById(
-        "cart-modal"
-    );
-
-
-const cartClose =
-    document.getElementById(
-        "cart-close"
-    );
-
-
-const cartItems =
-    document.getElementById(
-        "cart-items"
-    );
-
-
-const cartTotal =
-    document.getElementById(
-        "cart-total"
-    );
-
-
-const checkoutButton =
-    document.getElementById(
-        "checkout-btn"
-    );
-
-
-/* =========================================================
-   ADD TO CART
-========================================================= */
-
-function addToCart(product) {
-
-    /*
-     * User MUST be logged in.
-     */
-
-    if (
-        !userLoggedIn ||
-        !window.currentUser
-    ) {
-
-        alert(
-            "Please login before adding products to the cart."
-        );
-
-
-        window.location.href =
-            "/login";
-
-
-        return false;
-
-    }
-
-
-    if (!product) {
-
-        return false;
-
-    }
-
-
-    const productId =
-        String(product.id);
-
-
-    /*
-     * Check if product already exists.
-     */
-
-    const existingItem =
-        window.cart.find(
-            item =>
-                String(item.id) ===
-                productId
-        );
-
-
-    if (existingItem) {
-
-        existingItem.quantity =
-            Number(
-                existingItem.quantity || 0
-            ) + 1;
-
-    }
-
-    else {
-
-        window.cart.push({
-
-            ...product,
-
-            quantity: 1
-
-        });
-
-    }
-
-
-    /*
-     * Save to this user's cart.
-     */
-
-    saveCart();
-
-
-    updateCart();
-
-
-    return true;
-
-}
-
-
-window.addToCart =
-    addToCart;
-
-
-/* =========================================================
-   UPDATE CART
-========================================================= */
+// =========================================================
+// UPDATE CART UI
+// =========================================================
 
 function updateCart() {
-
-    /*
-     * Only save when logged in.
-     */
-
-    if (userLoggedIn) {
-
-        saveCart();
-
-    }
-
-
-    /*
-     * Total quantity.
-     */
 
     const totalQuantity =
         window.cart.reduce(
@@ -743,33 +1163,40 @@ function updateCart() {
         );
 
 
-    if (cartCount) {
+    const countElement =
+        document.getElementById(
+            "cart-count"
+        );
 
-        cartCount.textContent =
+
+    if (countElement) {
+
+        countElement.textContent =
             totalQuantity;
 
     }
 
 
-    /*
-     * Empty cart.
-     */
+    if (!cartItems) {
+
+        return;
+
+    }
+
 
     if (
         window.cart.length === 0
     ) {
 
-        if (cartItems) {
+        cartItems.innerHTML = `
 
-            cartItems.innerHTML = `
+            <p class="empty-cart">
 
-                <p class="empty-cart">
-                    Your cart is empty.
-                </p>
+                Your cart is empty.
 
-            `;
+            </p>
 
-        }
+        `;
 
 
         if (cartTotal) {
@@ -785,9 +1212,9 @@ function updateCart() {
     }
 
 
-    /*
-     * Calculate total.
-     */
+    // =====================================================
+    // TOTAL
+    // =====================================================
 
     const total =
         window.cart.reduce(
@@ -821,25 +1248,15 @@ function updateCart() {
     }
 
 
-    if (!cartItems) {
-
-        return;
-
-    }
-
+    // =====================================================
+    // CART ITEMS
+    // =====================================================
 
     cartItems.innerHTML = "";
 
 
-    /*
-     * Display cart products.
-     */
-
     window.cart.forEach(
-        (
-            product,
-            index
-        ) => {
+        product => {
 
             const item =
                 document.createElement(
@@ -851,50 +1268,13 @@ function updateCart() {
                 "cart-item";
 
 
-            let imageHTML =
-                escapeHTML(
-                    product.image ||
-                    "🛍️"
-                );
-
-
-            /*
-             * Real product image.
-             */
-
-            if (
-                typeof product.image ===
-                    "string" &&
-                (
-                    product.image.startsWith("/") ||
-                    product.image.startsWith("http")
-                )
-            ) {
-
-                imageHTML = `
-
-                    <img
-                        src="${escapeAttribute(
-                            product.image
-                        )}"
-                        alt="${escapeAttribute(
-                            product.name
-                        )}"
-                        class="cart-product-real-image"
-                    >
-
-                `;
-
-            }
-
-
             item.innerHTML = `
 
                 <div class="cart-item-info">
 
                     <div class="cart-item-image">
 
-                        ${imageHTML}
+                        🛍️
 
                     </div>
 
@@ -914,7 +1294,6 @@ function updateCart() {
 
                             ${escapeHTML(
                                 product.category_name ||
-                                product.category ||
                                 "Uncategorized"
                             )}
 
@@ -943,9 +1322,11 @@ function updateCart() {
                 <button
                     type="button"
                     class="remove-cart-item"
-                    data-index="${index}"
+                    data-cart-id="${product.cart_item_id}"
                 >
+
                     Remove
+
                 </button>
 
             `;
@@ -961,19 +1342,15 @@ function updateCart() {
 }
 
 
-window.updateCart =
-    updateCart;
-
-
-/* =========================================================
-   REMOVE FROM CART
-========================================================= */
+// =========================================================
+// REMOVE CART ITEM
+// =========================================================
 
 if (cartItems) {
 
     cartItems.addEventListener(
         "click",
-        event => {
+        async event => {
 
             const button =
                 event.target.closest(
@@ -988,45 +1365,68 @@ if (cartItems) {
             }
 
 
-            /*
-             * User must be logged in.
-             */
+            const cartItemId =
+                button.dataset.cartId;
 
-            if (!userLoggedIn) {
 
-                alert(
-                    "Please login first."
-                );
+            if (!cartItemId) {
 
                 return;
 
             }
 
 
-            const index =
-                Number(
-                    button.dataset.index
-                );
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/cart/${cartItemId}`,
+                        {
+                            method: "DELETE",
+
+                            credentials:
+                                "include"
+                        }
+                    );
 
 
-            if (
-                Number.isInteger(index) &&
-                index >= 0 &&
-                index <
-                    window.cart.length
-            ) {
+                const data =
+                    await response.json();
 
-                window.cart.splice(
-                    index,
-                    1
-                );
+
+                if (
+                    response.ok &&
+                    data.success === true
+                ) {
+
+                    await loadCart();
+
+                }
+
+                else {
+
+                    alert(
+                        data.message ||
+                        "Failed to remove product."
+                    );
+
+                }
 
             }
 
+            catch (error) {
 
-            saveCart();
+                console.error(
+                    "Remove cart error:",
+                    error
+                );
 
-            updateCart();
+
+                alert(
+                    "Unable to remove product."
+                );
+
+            }
 
         }
     );
@@ -1034,63 +1434,51 @@ if (cartItems) {
 }
 
 
-/* =========================================================
-   OPEN CART
-========================================================= */
+// =========================================================
+// OPEN CART
+// =========================================================
 
-if (cartButton) {
+async function openCart() {
 
-    cartButton.addEventListener(
-        "click",
-        () => {
+    if (!userLoggedIn) {
 
-            /*
-             * Cart can only be used by
-             * a logged-in user.
-             */
-
-            if (!userLoggedIn) {
-
-                alert(
-                    "Please login to view your cart."
-                );
+        alert(
+            "Please login to view your cart."
+        );
 
 
-                window.location.href =
-                    "/login";
+        window.location.href =
+            "/login";
 
 
-                return;
+        return;
 
-            }
-
-
-            updateCart();
+    }
 
 
-            if (cartModal) {
-
-                cartModal.classList.add(
-                    "active"
-                );
-
-            }
+    await loadCart();
 
 
-            document.body.style.overflow =
-                "hidden";
+    if (cartModal) {
 
-        }
-    );
+        cartModal.classList.add(
+            "active"
+        );
+
+    }
+
+
+    document.body.style.overflow =
+        "hidden";
 
 }
 
 
-/* =========================================================
-   CLOSE CART
-========================================================= */
+// =========================================================
+// CLOSE CART
+// =========================================================
 
-function closeCartModal() {
+function closeCart() {
 
     if (cartModal) {
 
@@ -1107,270 +1495,115 @@ function closeCartModal() {
 }
 
 
-window.closeCartModal =
-    closeCartModal;
-
-
 if (cartClose) {
 
     cartClose.addEventListener(
         "click",
-        closeCartModal
+        closeCart
     );
 
 }
 
 
-/* =========================================================
-   CLICK OUTSIDE CART
-========================================================= */
-
-if (cartModal) {
-
-    cartModal.addEventListener(
-        "click",
-        event => {
-
-            if (
-                event.target ===
-                cartModal
-            ) {
-
-                closeCartModal();
-
-            }
-
-        }
-    );
-
-}
+window.closeCart =
+    closeCart;
 
 
-/* =========================================================
-   CHECKOUT
-========================================================= */
+// =========================================================
+// LOGOUT
+// =========================================================
 
-if (checkoutButton) {
+async function logoutUser() {
 
-    checkoutButton.addEventListener(
-        "click",
-        async () => {
+    try {
 
-            /*
-             * Cart empty.
-             */
+        const response =
+            await fetch(
+                "/api/users/logout",
+                {
+                    method: "POST",
 
-            if (
-                window.cart.length === 0
-            ) {
-
-                alert(
-                    "Your cart is empty."
-                );
-
-                return;
-
-            }
-
-
-            /*
-             * User must be logged in.
-             */
-
-            if (
-                !userLoggedIn ||
-                !window.currentUser
-            ) {
-
-                alert(
-                    "Please login before checkout."
-                );
-
-
-                window.location.href =
-                    "/login";
-
-
-                return;
-
-            }
-
-
-            const shippingAddress =
-                prompt(
-                    "Enter your shipping address:"
-                );
-
-
-            if (!shippingAddress) {
-
-                alert(
-                    "Shipping address is required."
-                );
-
-                return;
-
-            }
-
-
-            const items =
-                window.cart.map(
-                    product => {
-
-                        return {
-
-                            product_id:
-                                Number(
-                                    product.id
-                                ),
-
-                            quantity:
-                                Number(
-                                    product.quantity
-                                )
-
-                        };
-
-                    }
-                );
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/products/checkout",
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            credentials:
-                                "include",
-
-                            body:
-                                JSON.stringify({
-
-                                    user_id:
-                                        Number(
-                                            window.currentUser.id
-                                        ),
-
-                                    shipping_address:
-                                        shippingAddress,
-
-                                    items:
-                                        items
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    !response.ok ||
-                    !data.success
-                ) {
-
-                    alert(
-                        data.message ||
-                        "Checkout failed."
-                    );
-
-                    return;
-
+                    credentials: "include"
                 }
+            );
 
 
-                alert(
-                    "Order placed successfully!\n\n" +
-                    "Order ID: " +
-                    data.order_id +
-                    "\n" +
-                    "Total: $" +
-                    Number(
-                        data.total_amount
-                    ).toFixed(2)
-                );
+        const data =
+            await response.json();
 
 
-                /*
-                 * Remove purchased products
-                 * from this user's cart.
-                 */
+        if (
+            response.ok &&
+            data.success === true
+        ) {
 
-                window.cart = [];
+            userLoggedIn = false;
 
+            window.currentUser =
+                null;
 
-                saveCart();
+            /*
+             * Do NOT delete the cart
+             * from the database.
+             */
 
-                updateCart();
+            window.cart = [];
 
-                closeCartModal();
+            updateCart();
 
-            }
-
-            catch (error) {
-
-                console.error(
-                    "CHECKOUT ERROR:",
-                    error
-                );
+            showLoggedOutUser();
 
 
-                alert(
-                    "Unable to connect to the server."
-                );
+            window.location.href =
+                "/";
 
-            }
+            return;
 
         }
-    );
+
+
+        alert(
+            data.message ||
+            "Logout failed."
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Logout error:",
+            error
+        );
+
+
+        alert(
+            "Unable to logout."
+        );
+
+    }
 
 }
 
 
-/* =========================================================
-   PRODUCT MODAL
-========================================================= */
+// =========================================================
+// EXPLORE PRODUCTS
+// =========================================================
 
-const productModal =
+const exploreButton =
     document.getElementById(
-        "product-modal"
+        "explore-products"
     );
 
 
-const modalClose =
-    document.getElementById(
-        "modal-close"
-    );
+if (exploreButton) {
 
-
-if (modalClose) {
-
-    modalClose.addEventListener(
+    exploreButton.addEventListener(
         "click",
         () => {
 
-            if (productModal) {
-
-                productModal.classList.remove(
-                    "active"
-                );
-
-            }
-
-
-            document.body.style.overflow =
-                "";
+            window.location.href =
+                "/products";
 
         }
     );
@@ -1378,25 +1611,24 @@ if (modalClose) {
 }
 
 
-if (productModal) {
+// =========================================================
+// VIEW ALL
+// =========================================================
 
-    productModal.addEventListener(
+const viewAllButton =
+    document.getElementById(
+        "view-all"
+    );
+
+
+if (viewAllButton) {
+
+    viewAllButton.addEventListener(
         "click",
-        event => {
+        () => {
 
-            if (
-                event.target ===
-                productModal
-            ) {
-
-                productModal.classList.remove(
-                    "active"
-                );
-
-                document.body.style.overflow =
-                    "";
-
-            }
+            window.location.href =
+                "/products";
 
         }
     );
@@ -1404,9 +1636,9 @@ if (productModal) {
 }
 
 
-/* =========================================================
-   HELPER FUNCTIONS
-========================================================= */
+// =========================================================
+// HTML ESCAPE
+// =========================================================
 
 function escapeHTML(value) {
 
@@ -1425,80 +1657,38 @@ function escapeHTML(value) {
 }
 
 
+// =========================================================
+// ATTRIBUTE ESCAPE
+// =========================================================
+
 function escapeAttribute(value) {
 
     return String(
         value ?? ""
     )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        );
-
-}
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-const exploreProducts =
-    document.getElementById(
-        "explore-products"
-    );
-
-
-if (exploreProducts) {
-
-    exploreProducts.addEventListener(
-        "click",
-        () => {
-
-            window.location.href =
-                "/products";
-
-        }
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
     );
 
 }
 
 
-const viewAll =
-    document.getElementById(
-        "view-all"
-    );
-
-
-if (viewAll) {
-
-    viewAll.addEventListener(
-        "click",
-        () => {
-
-            window.location.href =
-                "/products";
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ESCAPE KEY
-========================================================= */
+// =========================================================
+// ESCAPE KEY
+// =========================================================
 
 document.addEventListener(
     "keydown",
@@ -1508,16 +1698,7 @@ document.addEventListener(
             event.key === "Escape"
         ) {
 
-            if (productModal) {
-
-                productModal.classList.remove(
-                    "active"
-                );
-
-            }
-
-
-            closeCartModal();
+            closeCart();
 
         }
 
@@ -1525,12 +1706,26 @@ document.addEventListener(
 );
 
 
-/* =========================================================
-   INITIALIZE
-========================================================= */
+// =========================================================
+// INITIALIZE
+// =========================================================
 
-window.cart = [];
+async function initializeHomePage() {
 
-updateCart();
+    // Load products immediately.
 
-checkUserLogin();
+    await loadHomeProducts();
+
+
+    // Check user session.
+
+    await checkUserLogin();
+
+}
+
+
+// =========================================================
+// START
+// =========================================================
+
+initializeHomePage();
