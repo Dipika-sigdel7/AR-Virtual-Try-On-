@@ -1,7 +1,7 @@
 // =========================================================
 // AR ECOMMERCE
-// HOME PAGE
-// PRODUCT MODAL + SHARED CART + USER AUTH
+// HOME PAGE APP.JS
+// SHARED CART + USER SESSION + PRODUCT MODAL
 // =========================================================
 
 
@@ -9,8 +9,13 @@
    CART STORAGE
 ========================================================= */
 
-const CART_STORAGE_KEY = "ar_ecommerce_cart";
+const CART_STORAGE_KEY =
+    "ar_ecommerce_cart";
 
+
+/* =========================================================
+   CART
+========================================================= */
 
 function loadCart() {
 
@@ -21,18 +26,25 @@ function loadCart() {
                 CART_STORAGE_KEY
             );
 
+
         if (!savedCart) {
+
             return [];
+
         }
+
 
         const cart =
             JSON.parse(savedCart);
+
 
         return Array.isArray(cart)
             ? cart
             : [];
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(
             "Failed to load cart:",
@@ -46,16 +58,24 @@ function loadCart() {
 }
 
 
+window.cart =
+    loadCart();
+
+
 function saveCart() {
 
     try {
 
         localStorage.setItem(
             CART_STORAGE_KEY,
-            JSON.stringify(window.cart)
+            JSON.stringify(
+                window.cart
+            )
         );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(
             "Failed to save cart:",
@@ -67,11 +87,8 @@ function saveCart() {
 }
 
 
-window.cart = loadCart();
-
-
 /* =========================================================
-   USER
+   USER SESSION
 ========================================================= */
 
 window.currentUser = null;
@@ -80,7 +97,7 @@ let userLoggedIn = false;
 
 
 /* =========================================================
-   ELEMENTS
+   AUTH ELEMENT
 ========================================================= */
 
 const authActions =
@@ -89,40 +106,307 @@ const authActions =
     );
 
 
-const productModal =
-    document.getElementById(
-        "product-modal"
-    );
+/* =========================================================
+   CHECK CURRENT USER
+========================================================= */
 
-const modalClose =
-    document.getElementById(
-        "modal-close"
-    );
+async function checkUserLogin() {
 
-const modalProductImage =
-    document.getElementById(
-        "modal-product-image"
-    );
+    try {
 
-const modalProductName =
-    document.getElementById(
-        "modal-product-name"
-    );
+        const response =
+            await fetch(
+                "/api/users/me",
+                {
+                    method: "GET",
 
-const modalProductCategory =
-    document.getElementById(
-        "modal-product-category"
-    );
+                    credentials: "include",
 
-const modalProductPrice =
-    document.getElementById(
-        "modal-product-price"
-    );
+                    cache: "no-store"
+                }
+            );
 
-const modalRating =
-    document.getElementById(
-        "modal-rating"
-    );
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "CURRENT USER:",
+            data
+        );
+
+
+        if (
+            response.ok &&
+            data.success === true &&
+            data.loggedIn === true &&
+            data.user
+        ) {
+
+            userLoggedIn = true;
+
+            window.currentUser =
+                data.user;
+
+
+            showLoggedInUser(
+                data.user
+            );
+
+        }
+
+        else {
+
+            userLoggedIn = false;
+
+            window.currentUser = null;
+
+            showLoggedOutUser();
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Session check failed:",
+            error
+        );
+
+
+        userLoggedIn = false;
+
+        window.currentUser = null;
+
+        showLoggedOutUser();
+
+    }
+
+}
+
+
+/* =========================================================
+   LOGGED-IN UI
+========================================================= */
+
+function showLoggedInUser(user) {
+
+    if (!authActions) {
+
+        return;
+
+    }
+
+
+    authActions.innerHTML = `
+
+        <button
+            type="button"
+            class="profile-btn"
+            id="profile-btn"
+        >
+            👤 ${escapeHTML(
+                user.name || "Profile"
+            )}
+        </button>
+
+        <button
+            type="button"
+            class="logout-btn"
+            id="logout-btn"
+        >
+            Logout
+        </button>
+
+    `;
+
+
+    const profileButton =
+        document.getElementById(
+            "profile-btn"
+        );
+
+
+    const logoutButton =
+        document.getElementById(
+            "logout-btn"
+        );
+
+
+    /*
+     * Profile button
+     */
+
+    if (profileButton) {
+
+        profileButton.addEventListener(
+            "click",
+            openProfile
+        );
+
+    }
+
+
+    /*
+     * Logout button
+     */
+
+    if (logoutButton) {
+
+        logoutButton.addEventListener(
+            "click",
+            logoutUser
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOGGED-OUT UI
+========================================================= */
+
+function showLoggedOutUser() {
+
+    if (!authActions) {
+
+        return;
+
+    }
+
+
+    authActions.innerHTML = `
+
+        <a
+            href="/login"
+            class="login-btn"
+            id="login-link"
+        >
+            Login
+        </a>
+
+    `;
+
+}
+
+
+/* =========================================================
+   OPEN PROFILE
+========================================================= */
+
+function openProfile() {
+
+    /*
+     * If user is logged in,
+     * show profile.
+     */
+
+    if (
+        !userLoggedIn ||
+        !window.currentUser
+    ) {
+
+        window.location.href =
+            "/login";
+
+        return;
+
+    }
+
+
+    /*
+     * If profile page exists,
+     * open it.
+     */
+
+    window.location.href =
+        "/profile";
+
+}
+
+
+window.openProfile =
+    openProfile;
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+async function logoutUser() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/users/logout",
+                {
+                    method: "POST",
+
+                    credentials:
+                        "include"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.ok &&
+            data.success
+        ) {
+
+            userLoggedIn = false;
+
+            window.currentUser = null;
+
+
+            /*
+             * Clear UI.
+             */
+
+            showLoggedOutUser();
+
+
+            /*
+             * Go home after logout.
+             */
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
+
+
+        alert(
+            data.message ||
+            "Logout failed."
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Logout error:",
+            error
+        );
+
+
+        alert(
+            "Unable to logout."
+        );
+
+    }
+
+}
 
 
 /* =========================================================
@@ -166,273 +450,6 @@ const checkoutButton =
 
 
 /* =========================================================
-   PRODUCT DATA
-========================================================= */
-
-const products = {
-
-    smartphone: {
-        id: 1,
-        name: "Smartphone",
-        category: "Electronics",
-        price: 499,
-        image: "📱",
-        rating: "4.8 / 5"
-    },
-
-    sneakers: {
-        id: 2,
-        name: "Premium Sneakers",
-        category: "Fashion",
-        price: 99,
-        image: "👟",
-        rating: "4.7 / 5"
-    },
-
-    smartwatch: {
-        id: 3,
-        name: "Smart Watch",
-        category: "Accessories",
-        price: 149,
-        image: "⌚",
-        rating: "4.9 / 5"
-    }
-
-};
-
-
-window.productsById =
-    window.productsById || {};
-
-
-Object.values(products).forEach(
-    product => {
-
-        window.productsById[
-            String(product.id)
-        ] = product;
-
-    }
-);
-
-
-/* =========================================================
-   CHECK LOGIN
-========================================================= */
-
-async function checkUserLogin() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/auth/me",
-                {
-                    method: "GET",
-                    credentials: "include",
-                    cache: "no-store"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            response.ok &&
-            data.success === true &&
-            data.loggedIn === true &&
-            data.user
-        ) {
-
-            userLoggedIn = true;
-
-            window.currentUser =
-                data.user;
-
-            showLoggedInUser(
-                data.user
-            );
-
-            return true;
-
-        }
-
-
-        userLoggedIn = false;
-
-        window.currentUser = null;
-
-        showLoggedOutUser();
-
-        return false;
-
-    } catch (error) {
-
-        console.error(
-            "Login check failed:",
-            error
-        );
-
-        userLoggedIn = false;
-
-        window.currentUser = null;
-
-        showLoggedOutUser();
-
-        return false;
-
-    }
-
-}
-
-
-/* =========================================================
-   SHOW LOGGED-IN USER
-========================================================= */
-
-function showLoggedInUser(user) {
-
-    if (!authActions) {
-        return;
-    }
-
-
-    const displayName =
-        user.name ||
-        user.username ||
-        user.email ||
-        "Profile";
-
-
-    authActions.innerHTML = `
-
-        <a
-            href="/profile"
-            class="profile-btn"
-            id="profile-link"
-        >
-            👤 ${escapeHTML(displayName)}
-        </a>
-
-        <button
-            type="button"
-            class="logout-btn"
-            id="logout-btn"
-        >
-            Logout
-        </button>
-
-    `;
-
-
-    const logoutButton =
-        document.getElementById(
-            "logout-btn"
-        );
-
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            logoutUser
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   SHOW LOGGED-OUT USER
-========================================================= */
-
-function showLoggedOutUser() {
-
-    if (!authActions) {
-        return;
-    }
-
-
-    authActions.innerHTML = `
-
-        <a
-            href="/login"
-            class="login-btn"
-            id="login-link"
-        >
-            Login
-        </a>
-
-    `;
-
-}
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-async function logoutUser() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/auth/logout",
-                {
-                    method: "POST",
-                    credentials: "include"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            response.ok &&
-            data.success
-        ) {
-
-            userLoggedIn = false;
-
-            window.currentUser = null;
-
-            showLoggedOutUser();
-
-            window.location.href = "/";
-
-            return;
-
-        }
-
-
-        alert(
-            data.message ||
-            "Logout failed."
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Logout error:",
-            error
-        );
-
-        alert(
-            "Unable to logout."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
    ADD TO CART
 ========================================================= */
 
@@ -444,7 +461,10 @@ function addToCart(product) {
             "Please login before adding products to the cart."
         );
 
-        window.location.href = "/login";
+
+        window.location.href =
+            "/login";
+
 
         return false;
 
@@ -452,7 +472,9 @@ function addToCart(product) {
 
 
     if (!product) {
+
         return false;
+
     }
 
 
@@ -475,11 +497,16 @@ function addToCart(product) {
                 existingItem.quantity || 0
             ) + 1;
 
-    } else {
+    }
+
+    else {
 
         window.cart.push({
+
             ...product,
+
             quantity: 1
+
         });
 
     }
@@ -494,298 +521,8 @@ function addToCart(product) {
 }
 
 
-window.addToCart = addToCart;
-
-
-/* =========================================================
-   PRODUCT MODAL
-========================================================= */
-
-const productCards =
-    document.querySelectorAll(
-        ".product-card"
-    );
-
-
-productCards.forEach(card => {
-
-    card.addEventListener(
-        "click",
-        event => {
-
-            if (
-                event.target.closest(
-                    "[data-product-action='cart']"
-                )
-            ) {
-                return;
-            }
-
-
-            const productId =
-                card.getAttribute(
-                    "data-product"
-                );
-
-
-            if (!productId) {
-                return;
-            }
-
-
-            let product =
-                window.productsById[
-                    String(productId)
-                ];
-
-
-            if (!product) {
-
-                product =
-                    products[productId];
-
-            }
-
-
-            if (!product) {
-                return;
-            }
-
-
-            if (modalProductImage) {
-
-                if (
-                    typeof product.image === "string" &&
-                    (
-                        product.image.startsWith("/") ||
-                        product.image.startsWith("http")
-                    )
-                ) {
-
-                    modalProductImage.innerHTML = `
-
-                        <img
-                            src="${escapeAttribute(product.image)}"
-                            alt="${escapeAttribute(product.name)}"
-                        >
-
-                    `;
-
-                } else {
-
-                    modalProductImage.textContent =
-                        product.image || "🛍️";
-
-                }
-
-            }
-
-
-            if (modalProductName) {
-
-                modalProductName.textContent =
-                    product.name || "";
-
-            }
-
-
-            if (modalProductCategory) {
-
-                modalProductCategory.textContent =
-                    product.category_name ||
-                    product.category ||
-                    "Uncategorized";
-
-            }
-
-
-            if (modalProductPrice) {
-
-                modalProductPrice.textContent =
-                    `$${Number(
-                        product.price || 0
-                    ).toFixed(2)}`;
-
-            }
-
-
-            if (modalRating) {
-
-                modalRating.textContent =
-                    product.rating ||
-                    "No rating";
-
-            }
-
-
-            if (productModal) {
-
-                productModal.classList.add(
-                    "active"
-                );
-
-                document.body.style.overflow =
-                    "hidden";
-
-            }
-
-        }
-    );
-
-});
-
-
-/* =========================================================
-   CLOSE PRODUCT MODAL
-========================================================= */
-
-function closeProductModal() {
-
-    if (productModal) {
-
-        productModal.classList.remove(
-            "active"
-        );
-
-    }
-
-    document.body.style.overflow = "";
-
-}
-
-
-if (modalClose) {
-
-    modalClose.addEventListener(
-        "click",
-        closeProductModal
-    );
-
-}
-
-
-if (productModal) {
-
-    productModal.addEventListener(
-        "click",
-        event => {
-
-            if (
-                event.target ===
-                productModal
-            ) {
-
-                closeProductModal();
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ADD TO CART BUTTONS
-========================================================= */
-
-const addButtons =
-    document.querySelectorAll(
-        "[data-product-action='cart']"
-    );
-
-
-addButtons.forEach(button => {
-
-    button.addEventListener(
-        "click",
-        event => {
-
-            event.preventDefault();
-
-            event.stopPropagation();
-
-
-            const card =
-                button.closest(
-                    ".product-card"
-                );
-
-
-            if (!card) {
-                return;
-            }
-
-
-            const productId =
-                card.getAttribute(
-                    "data-product"
-                );
-
-
-            let product =
-                window.productsById[
-                    String(productId)
-                ];
-
-
-            if (!product) {
-
-                product =
-                    products[productId];
-
-            }
-
-
-            if (!product) {
-
-                console.error(
-                    "Product not found:",
-                    productId
-                );
-
-                return;
-
-            }
-
-
-            const added =
-                addToCart(product);
-
-
-            if (!added) {
-                return;
-            }
-
-
-            const originalText =
-                button.textContent;
-
-
-            button.textContent =
-                "Added ✓";
-
-
-            button.classList.add(
-                "added"
-            );
-
-
-            setTimeout(() => {
-
-                button.textContent =
-                    originalText;
-
-                button.classList.remove(
-                    "added"
-                );
-
-            }, 1000);
-
-        }
-    );
-
-});
+window.addToCart =
+    addToCart;
 
 
 /* =========================================================
@@ -799,12 +536,15 @@ function updateCart() {
 
     const totalQuantity =
         window.cart.reduce(
-            (total, product) => {
+            (
+                total,
+                item
+            ) => {
 
                 return (
                     total +
                     Number(
-                        product.quantity || 0
+                        item.quantity || 0
                     )
                 );
 
@@ -845,6 +585,7 @@ function updateCart() {
 
         }
 
+
         return;
 
     }
@@ -852,15 +593,20 @@ function updateCart() {
 
     const total =
         window.cart.reduce(
-            (sum, product) => {
+            (
+                sum,
+                item
+            ) => {
 
                 return (
                     sum +
-                    Number(
-                        product.price || 0
-                    ) *
-                    Number(
-                        product.quantity || 0
+                    (
+                        Number(
+                            item.price || 0
+                        ) *
+                        Number(
+                            item.quantity || 0
+                        )
                     )
                 );
 
@@ -878,7 +624,9 @@ function updateCart() {
 
 
     if (!cartItems) {
+
         return;
+
     }
 
 
@@ -886,7 +634,10 @@ function updateCart() {
 
 
     window.cart.forEach(
-        (product, index) => {
+        (
+            product,
+            index
+        ) => {
 
             const item =
                 document.createElement(
@@ -898,53 +649,64 @@ function updateCart() {
                 "cart-item";
 
 
-            let imageHTML =
-                product.image ||
-                "🛍️";
-
-
-            if (
-                typeof product.image === "string" &&
-                (
-                    product.image.startsWith("/") ||
-                    product.image.startsWith("http")
-                )
-            ) {
-
-                imageHTML = `
-
-                    <img
-                        src="${escapeAttribute(product.image)}"
-                        alt="${escapeAttribute(product.name)}"
-                        class="cart-product-real-image"
-                    >
-
-                `;
-
-            }
-
-
             item.innerHTML = `
 
                 <div class="cart-item-info">
 
                     <div class="cart-item-image">
-                        ${imageHTML}
+
+                        ${
+                            typeof product.image ===
+                            "string" &&
+                            (
+                                product.image.startsWith("/") ||
+                                product.image.startsWith("http")
+                            )
+
+                            ? `
+
+                                <img
+                                    src="${escapeAttribute(
+                                        product.image
+                                    )}"
+                                    alt="${escapeAttribute(
+                                        product.name
+                                    )}"
+                                    class="cart-product-real-image"
+                                >
+
+                            `
+
+                            : escapeHTML(
+                                product.image ||
+                                "🛍️"
+                            )
+                        }
+
                     </div>
+
 
                     <div class="cart-item-details">
 
                         <div class="cart-item-name">
-                            ${escapeHTML(product.name)}
+
+                            ${escapeHTML(
+                                product.name
+                            )}
+
                         </div>
 
+
                         <div class="cart-item-category">
+
                             ${escapeHTML(
                                 product.category_name ||
                                 product.category ||
                                 "Uncategorized"
                             )}
+
                         </div>
+
 
                         <div class="cart-item-price">
 
@@ -976,55 +738,71 @@ function updateCart() {
             `;
 
 
-            cartItems.appendChild(item);
+            cartItems.appendChild(
+                item
+            );
 
         }
     );
 
-
-    cartItems
-        .querySelectorAll(
-            ".remove-cart-item"
-        )
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const index =
-                        Number(
-                            button.dataset.index
-                        );
-
-
-                    if (
-                        Number.isInteger(index) &&
-                        index >= 0 &&
-                        index < window.cart.length
-                    ) {
-
-                        window.cart.splice(
-                            index,
-                            1
-                        );
-
-                    }
-
-
-                    saveCart();
-
-                    updateCart();
-
-                }
-            );
-
-        });
-
 }
 
 
-window.updateCart = updateCart;
+window.updateCart =
+    updateCart;
+
+
+/* =========================================================
+   CART REMOVE
+========================================================= */
+
+if (cartItems) {
+
+    cartItems.addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+                    ".remove-cart-item"
+                );
+
+
+            if (!button) {
+
+                return;
+
+            }
+
+
+            const index =
+                Number(
+                    button.dataset.index
+                );
+
+
+            if (
+                Number.isInteger(index) &&
+                index >= 0 &&
+                index < window.cart.length
+            ) {
+
+                window.cart.splice(
+                    index,
+                    1
+                );
+
+            }
+
+
+            saveCart();
+
+            updateCart();
+
+        }
+    );
+
+}
 
 
 /* =========================================================
@@ -1039,6 +817,7 @@ if (cartButton) {
 
             updateCart();
 
+
             if (cartModal) {
 
                 cartModal.classList.add(
@@ -1046,6 +825,7 @@ if (cartButton) {
                 );
 
             }
+
 
             document.body.style.overflow =
                 "hidden";
@@ -1070,7 +850,9 @@ function closeCartModal() {
 
     }
 
-    document.body.style.overflow = "";
+
+    document.body.style.overflow =
+        "";
 
 }
 
@@ -1089,240 +871,37 @@ if (cartClose) {
 }
 
 
-if (cartModal) {
-
-    cartModal.addEventListener(
-        "click",
-        event => {
-
-            if (
-                event.target ===
-                cartModal
-            ) {
-
-                closeCartModal();
-
-            }
-
-        }
-    );
-
-}
-
-
 /* =========================================================
-   CHECKOUT
+   PRODUCT MODAL
 ========================================================= */
 
-if (checkoutButton) {
-
-    checkoutButton.addEventListener(
-        "click",
-        async () => {
-
-            if (
-                window.cart.length === 0
-            ) {
-
-                alert(
-                    "Your cart is empty."
-                );
-
-                return;
-
-            }
-
-
-            if (!userLoggedIn) {
-
-                alert(
-                    "Please login before checkout."
-                );
-
-                window.location.href =
-                    "/login";
-
-                return;
-
-            }
-
-
-            const shippingAddress =
-                prompt(
-                    "Enter your shipping address:"
-                );
-
-
-            if (!shippingAddress) {
-
-                alert(
-                    "Shipping address is required."
-                );
-
-                return;
-
-            }
-
-
-            const items =
-                window.cart.map(
-                    product => ({
-
-                        product_id:
-                            Number(
-                                product.id
-                            ),
-
-                        quantity:
-                            Number(
-                                product.quantity
-                            )
-
-                    })
-                );
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/products/checkout",
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            credentials: "include",
-
-                            body:
-                                JSON.stringify({
-
-                                    shipping_address:
-                                        shippingAddress,
-
-                                    items:
-                                        items
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    !response.ok ||
-                    !data.success
-                ) {
-
-                    alert(
-                        data.message ||
-                        "Checkout failed."
-                    );
-
-                    return;
-
-                }
-
-
-                alert(
-                    "Order placed successfully!\n\n" +
-                    "Order ID: " +
-                    data.order_id +
-                    "\n" +
-                    "Total: $" +
-                    Number(
-                        data.total_amount
-                    ).toFixed(2)
-                );
-
-
-                window.cart = [];
-
-                saveCart();
-
-                updateCart();
-
-                closeCartModal();
-
-            } catch (error) {
-
-                console.error(
-                    "Checkout error:",
-                    error
-                );
-
-                alert(
-                    "Unable to connect to the server."
-                );
-
-            }
-
-        }
+const productModal =
+    document.getElementById(
+        "product-modal"
     );
 
-}
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-const navLinks =
-    document.querySelectorAll(
-        ".navbar nav a"
+const modalClose =
+    document.getElementById(
+        "modal-close"
     );
 
 
-navLinks.forEach(link => {
+if (modalClose) {
 
-    link.addEventListener(
+    modalClose.addEventListener(
         "click",
         () => {
 
-            navLinks.forEach(item => {
+            if (productModal) {
 
-                item.classList.remove(
+                productModal.classList.remove(
                     "active"
                 );
 
-            });
+            }
 
-
-            link.classList.add(
-                "active"
-            );
-
-        }
-    );
-
-});
-
-
-/* =========================================================
-   HERO BUTTON
-========================================================= */
-
-const exploreProducts =
-    document.getElementById(
-        "explore-products"
-    );
-
-
-if (exploreProducts) {
-
-    exploreProducts.addEventListener(
-        "click",
-        () => {
-
-            window.location.href =
-                "/products";
+            document.body.style.overflow =
+                "";
 
         }
     );
@@ -1331,32 +910,7 @@ if (exploreProducts) {
 
 
 /* =========================================================
-   VIEW ALL
-========================================================= */
-
-const viewAll =
-    document.getElementById(
-        "view-all"
-    );
-
-
-if (viewAll) {
-
-    viewAll.addEventListener(
-        "click",
-        () => {
-
-            window.location.href =
-                "/products";
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   HTML ESCAPE
+   HELPER FUNCTIONS
 ========================================================= */
 
 function escapeHTML(value) {
@@ -1366,17 +920,15 @@ function escapeHTML(value) {
             "div"
         );
 
+
     div.textContent =
         value ?? "";
+
 
     return div.innerHTML;
 
 }
 
-
-/* =========================================================
-   ATTRIBUTE ESCAPE
-========================================================= */
 
 function escapeAttribute(value) {
 
@@ -1401,6 +953,81 @@ function escapeAttribute(value) {
         );
 
 }
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+const exploreProducts =
+    document.getElementById(
+        "explore-products"
+    );
+
+
+if (exploreProducts) {
+
+    exploreProducts.addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "/products";
+
+        }
+    );
+
+}
+
+
+const viewAll =
+    document.getElementById(
+        "view-all"
+    );
+
+
+if (viewAll) {
+
+    viewAll.addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "/products";
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ESCAPE KEY
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            if (productModal) {
+
+                productModal.classList.remove(
+                    "active"
+                );
+
+            }
+
+
+            closeCartModal();
+
+        }
+
+    }
+);
 
 
 /* =========================================================
