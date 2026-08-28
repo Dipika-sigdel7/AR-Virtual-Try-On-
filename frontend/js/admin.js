@@ -1,4 +1,10 @@
 /* =========================================================
+   AR E-COMMERCE ADMIN DASHBOARD
+   ADMIN.JS
+========================================================= */
+
+
+/* =========================================================
    ELEMENTS
 ========================================================= */
 
@@ -106,11 +112,29 @@ let adminToken =
    INITIAL PAGE
 ========================================================= */
 
-if (adminToken) {
+initializeAdminPage();
 
-    showDashboard();
 
-} else {
+function initializeAdminPage() {
+
+    if (adminToken) {
+
+        showDashboard();
+
+    } else {
+
+        showLogin();
+
+    }
+
+}
+
+
+/* =========================================================
+   SHOW LOGIN
+========================================================= */
+
+function showLogin() {
 
     if (loginSection) {
 
@@ -120,7 +144,6 @@ if (adminToken) {
 
     }
 
-
     if (dashboardSection) {
 
         dashboardSection.classList.add(
@@ -128,7 +151,6 @@ if (adminToken) {
         );
 
     }
-
 
     if (logoutBtn) {
 
@@ -202,9 +224,7 @@ if (loginForm) {
                 }
 
 
-                /*
-                 * Save token
-                 */
+                /* Save token */
 
                 localStorage.setItem(
                     "adminToken",
@@ -296,10 +316,6 @@ async function loadCategories(
 
     try {
 
-        /*
-         * Temporary loading option
-         */
-
         categorySelect.innerHTML = `
             <option value="">
                 Loading categories...
@@ -330,16 +346,11 @@ async function loadCategories(
         }
 
 
-        /*
-         * Clear dropdown
-         */
-
-        categorySelect.innerHTML = "";
+        categorySelect.innerHTML =
+            "";
 
 
-        /*
-         * Default option
-         */
+        /* Default option */
 
         const defaultOption =
             document.createElement(
@@ -360,9 +371,7 @@ async function loadCategories(
         );
 
 
-        /*
-         * Existing categories
-         */
+        /* Existing categories */
 
         if (
             data.categories &&
@@ -396,19 +405,7 @@ async function loadCategories(
         }
 
 
-        /*
-         * IMPORTANT
-         *
-         * This option is always LAST.
-         *
-         * Therefore when the admin opens
-         * the dropdown they will see:
-         *
-         * Category 1
-         * Category 2
-         * Category 3
-         * + Add More Categories
-         */
+        /* Add category option */
 
         const addCategoryOption =
             document.createElement(
@@ -424,18 +421,12 @@ async function loadCategories(
             "+ Add More Categories";
 
 
-        addCategoryOption.className =
-            "add-category-option";
-
-
         categorySelect.appendChild(
             addCategoryOption
         );
 
 
-        /*
-         * Restore selected category
-         */
+        /* Restore selected category */
 
         if (
             selectedCategoryId !== null &&
@@ -443,7 +434,9 @@ async function loadCategories(
         ) {
 
             categorySelect.value =
-                String(selectedCategoryId);
+                String(
+                    selectedCategoryId
+                );
 
         }
 
@@ -481,30 +474,13 @@ if (categorySelect) {
         "change",
         function () {
 
-            /*
-             * Check if the special
-             * Add More Categories option
-             * was selected.
-             */
-
             if (
                 categorySelect.value ===
                 "__add_category__"
             ) {
 
-                /*
-                 * Return dropdown to normal
-                 * selection.
-                 */
-
                 categorySelect.value =
                     "";
-
-
-                /*
-                 * Open the form DIRECTLY
-                 * below the dropdown.
-                 */
 
                 openInlineCategoryForm();
 
@@ -527,21 +503,10 @@ function openInlineCategoryForm() {
     }
 
 
-    /*
-     * Show the form.
-     *
-     * It is physically located directly
-     * below the category dropdown in HTML.
-     */
-
     inlineCategoryForm.classList.remove(
         "hidden"
     );
 
-
-    /*
-     * Clear old message.
-     */
 
     if (inlineCategoryMessage) {
 
@@ -550,14 +515,6 @@ function openInlineCategoryForm() {
 
     }
 
-
-    /*
-     * Focus category name.
-     *
-     * preventScroll is intentional.
-     *
-     * It prevents the page from jumping.
-     */
 
     setTimeout(
         function () {
@@ -616,10 +573,6 @@ function closeInlineCategoryForm() {
     }
 
 
-    /*
-     * Reset dropdown
-     */
-
     if (categorySelect) {
 
         categorySelect.value =
@@ -631,7 +584,7 @@ function closeInlineCategoryForm() {
 
 
 /* =========================================================
-   CANCEL INLINE CATEGORY
+   CANCEL CATEGORY
 ========================================================= */
 
 if (cancelInlineCategoryBtn) {
@@ -649,7 +602,7 @@ if (cancelInlineCategoryBtn) {
 
 
 /* =========================================================
-   CLOSE INLINE CATEGORY X BUTTON
+   CLOSE CATEGORY X
 ========================================================= */
 
 if (closeInlineCategoryBtn) {
@@ -667,7 +620,7 @@ if (closeInlineCategoryBtn) {
 
 
 /* =========================================================
-   SAVE INLINE CATEGORY
+   SAVE CATEGORY
 ========================================================= */
 
 if (saveInlineCategoryBtn) {
@@ -684,10 +637,6 @@ if (saveInlineCategoryBtn) {
                 inlineCategoryDescription.value.trim();
 
 
-            /*
-             * Validate category name
-             */
-
             if (!name) {
 
                 inlineCategoryMessage.textContent =
@@ -700,10 +649,6 @@ if (saveInlineCategoryBtn) {
             }
 
 
-            /*
-             * Disable button
-             */
-
             saveInlineCategoryBtn.disabled =
                 true;
 
@@ -713,10 +658,6 @@ if (saveInlineCategoryBtn) {
 
 
             try {
-
-                /*
-                 * Send category to backend
-                 */
 
                 const response =
                     await fetch(
@@ -746,17 +687,13 @@ if (saveInlineCategoryBtn) {
 
                                 })
 
-                        }
-                    );
+                            }
+                        );
 
 
                 const data =
                     await response.json();
 
-
-                /*
-                 * Check response
-                 */
 
                 if (
                     !response.ok ||
@@ -771,10 +708,6 @@ if (saveInlineCategoryBtn) {
                 }
 
 
-                /*
-                 * Try to get new category ID
-                 */
-
                 const newCategoryId =
                     data.category?.id ||
                     data.category_id ||
@@ -782,32 +715,15 @@ if (saveInlineCategoryBtn) {
                     null;
 
 
-                /*
-                 * Success message
-                 */
-
                 inlineCategoryMessage.textContent =
                     data.message ||
                     "Category added successfully.";
 
 
-                /*
-                 * Reload categories.
-                 *
-                 * This makes the new category
-                 * immediately available in
-                 * the product dropdown.
-                 */
-
                 await loadCategories(
                     newCategoryId
                 );
 
-
-                /*
-                 * Close form after successful
-                 * creation.
-                 */
 
                 setTimeout(
                     function () {
@@ -952,6 +868,22 @@ function displayProducts(products) {
 
             card.innerHTML = `
 
+                ${
+                    product.image
+                        ? `
+                            <img
+                                src="${escapeHTML(
+                                    product.image
+                                )}"
+                                alt="${escapeHTML(
+                                    product.name
+                                )}"
+                            >
+                          `
+                        : ""
+                }
+
+
                 <div class="product-card-content">
 
                     <h3>
@@ -968,8 +900,7 @@ function displayProducts(products) {
                     </p>
 
 
-                    <p>
-                        <strong>Price:</strong>
+                    <p class="product-price">
                         Rs.
                         ${Number(
                             product.price || 0
@@ -978,15 +909,21 @@ function displayProducts(products) {
 
 
                     <p>
-                        <strong>Category:</strong>
+                        <strong>
+                            Category:
+                        </strong>
+
                         ${escapeHTML(
                             product.category_name || ""
                         )}
                     </p>
 
 
-                    <p>
-                        <strong>Stock:</strong>
+                    <p class="product-stock">
+                        <strong>
+                            Stock:
+                        </strong>
+
                         ${Number(
                             product.stock || 0
                         )}
@@ -994,7 +931,10 @@ function displayProducts(products) {
 
 
                     <p>
-                        <strong>Available:</strong>
+                        <strong>
+                            Available:
+                        </strong>
+
                         ${
                             Number(
                                 product.is_available
@@ -1009,8 +949,7 @@ function displayProducts(products) {
 
                         <button
                             type="button"
-                            class="edit-btn"
-                            onclick="editProduct(${product.id})"
+                            class="secondary-btn edit-btn"
                         >
                             Edit
                         </button>
@@ -1019,7 +958,6 @@ function displayProducts(products) {
                         <button
                             type="button"
                             class="delete-btn"
-                            onclick="deleteProduct(${product.id})"
                         >
                             Delete
                         </button>
@@ -1029,6 +967,54 @@ function displayProducts(products) {
                 </div>
 
             `;
+
+
+            /* Edit */
+
+            const editButton =
+                card.querySelector(
+                    ".edit-btn"
+                );
+
+
+            if (editButton) {
+
+                editButton.addEventListener(
+                    "click",
+                    function () {
+
+                        editProduct(
+                            product.id
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /* Delete */
+
+            const deleteButton =
+                card.querySelector(
+                    ".delete-btn"
+                );
+
+
+            if (deleteButton) {
+
+                deleteButton.addEventListener(
+                    "click",
+                    function () {
+
+                        deleteProduct(
+                            product.id
+                        );
+
+                    }
+                );
+
+            }
 
 
             productsContainer.appendChild(
@@ -1102,9 +1088,7 @@ if (productForm) {
                 stockInput.value;
 
 
-            /*
-             * Validate name
-             */
+            /* Validate name */
 
             if (!name) {
 
@@ -1118,10 +1102,7 @@ if (productForm) {
             }
 
 
-            /*
-             * Prevent special category option
-             * from being submitted.
-             */
+            /* Validate category */
 
             if (
                 !categoryId ||
@@ -1139,9 +1120,7 @@ if (productForm) {
             }
 
 
-            /*
-             * Validate price
-             */
+            /* Validate price */
 
             if (
                 !price ||
@@ -1158,9 +1137,7 @@ if (productForm) {
             }
 
 
-            /*
-             * Validate stock
-             */
+            /* Validate stock */
 
             if (
                 stock === "" ||
@@ -1176,10 +1153,6 @@ if (productForm) {
 
             }
 
-
-            /*
-             * Product data
-             */
 
             const productData = {
 
@@ -1338,7 +1311,7 @@ async function editProduct(id) {
         document.getElementById(
             "name"
         ).value =
-            product.name;
+            product.name || "";
 
 
         document.getElementById(
@@ -1346,10 +1319,6 @@ async function editProduct(id) {
         ).value =
             product.description || "";
 
-
-        /*
-         * Make sure categories are loaded.
-         */
 
         await loadCategories(
             product.category_id
@@ -1375,13 +1344,6 @@ async function editProduct(id) {
         imagePreview.innerHTML =
             "";
 
-
-        /*
-         * Product editing can scroll to
-         * the product form.
-         *
-         * This is NOT used for categories.
-         */
 
         productForm.scrollIntoView({
             behavior: "smooth",
@@ -1644,11 +1606,6 @@ function resetForm() {
     }
 
 
-    /*
-     * Close inline category form
-     * when product form is reset.
-     */
-
     closeInlineCategoryForm();
 
 }
@@ -1693,26 +1650,7 @@ if (logoutBtn) {
                 null;
 
 
-            if (dashboardSection) {
-
-                dashboardSection.classList.add(
-                    "hidden"
-                );
-
-            }
-
-
-            if (loginSection) {
-
-                loginSection.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-
-            logoutBtn.style.display =
-                "none";
+            showLogin();
 
 
             if (adminTokenInput) {
@@ -1759,6 +1697,12 @@ if (toggleToken) {
                     "Hide token"
                 );
 
+
+                toggleToken.setAttribute(
+                    "title",
+                    "Hide token"
+                );
+
             } else {
 
                 adminTokenInput.type =
@@ -1771,6 +1715,12 @@ if (toggleToken) {
 
                 toggleToken.setAttribute(
                     "aria-label",
+                    "Show token"
+                );
+
+
+                toggleToken.setAttribute(
+                    "title",
                     "Show token"
                 );
 

@@ -1318,6 +1318,328 @@ input[type="file"]::file-selector-button:hover {
 
 
 /* =========================================================
+   PROFILE POPUP
+   HOME PAGE ONLY
+========================================================= */
+
+.profile-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+
+    background:
+        rgba(0, 0, 0, 0.45);
+
+    backdrop-filter: blur(5px);
+
+    z-index: 9999;
+
+}
+
+
+/* =========================================================
+   SHOW PROFILE
+========================================================= */
+
+.profile-overlay.show {
+
+    display: flex;
+
+}
+
+
+/* =========================================================
+   PROFILE CARD
+========================================================= */
+
+.profile-card {
+
+    position: relative;
+
+    width: 100%;
+
+    max-width: 430px;
+
+    padding: 35px;
+
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    color: #222;
+
+    box-shadow:
+        0 20px 60px
+        rgba(0, 0, 0, 0.25);
+
+    text-align: center;
+
+    animation:
+        profileAppear 0.25s ease;
+
+}
+
+
+/* =========================================================
+   PROFILE ANIMATION
+========================================================= */
+
+@keyframes profileAppear {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(20px)
+            scale(0.95);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+
+    }
+
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
+.profile-close {
+
+    position: absolute;
+
+    top: 15px;
+
+    right: 15px;
+
+    width: 36px;
+
+    height: 36px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    color: #333;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.profile-close:hover {
+
+    background: #e2e2e2;
+
+    transform: rotate(90deg);
+
+}
+
+
+/* =========================================================
+   PROFILE AVATAR
+========================================================= */
+
+.profile-avatar {
+
+    width: 85px;
+
+    height: 85px;
+
+    margin:
+        0 auto 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    font-size: 40px;
+
+}
+
+
+/* =========================================================
+   PROFILE TITLE
+========================================================= */
+
+.profile-card h2 {
+
+    margin-bottom: 25px;
+
+    color: #222;
+
+}
+
+
+/* =========================================================
+   PROFILE INFORMATION
+========================================================= */
+
+.profile-info {
+
+    margin-bottom: 25px;
+
+    text-align: left;
+
+}
+
+
+.profile-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 14px 0;
+
+    border-bottom:
+        1px solid #eeeeee;
+
+}
+
+
+.profile-row:last-child {
+
+    border-bottom: none;
+
+}
+
+
+.profile-row strong {
+
+    color: #555;
+
+}
+
+
+.profile-row span {
+
+    color: #222;
+
+    word-break: break-word;
+
+    text-align: right;
+
+}
+
+
+/* =========================================================
+   LOGOUT BUTTON
+========================================================= */
+
+.profile-logout-btn {
+
+    width: 100%;
+
+    padding: 12px 20px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #e53935;
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.profile-logout-btn:hover {
+
+    background: #c62828;
+
+    transform: translateY(-2px);
+
+}
+
+
+/* =========================================================
+   AUTH BUTTON
+========================================================= */
+
+#auth-btn {
+
+    border: none;
+
+    cursor: pointer;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .profile-card {
+
+        padding: 30px 20px;
+
+    }
+
+    .profile-row {
+
+        flex-direction: column;
+
+        gap: 5px;
+
+    }
+
+    .profile-row span {
+
+        text-align: left;
+
+    }
+
+}
+
+
+/* =========================================================
    SCROLLBAR
 ========================================================= */
 

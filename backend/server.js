@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 
 const express = require("express");
@@ -6,7 +7,8 @@ const session = require("express-session");
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+    process.env.PORT || 3000;
 
 
 /* =========================================================
@@ -24,8 +26,11 @@ const pagesPath =
    MIDDLEWARE
 ========================================================= */
 
-// Parse JSON
-app.use(express.json());
+// Parse JSON requests
+app.use(
+    express.json()
+);
+
 
 // Parse form data
 app.use(
@@ -41,6 +46,7 @@ app.use(
 
 app.use(
     session({
+
         secret:
             process.env.SESSION_SECRET ||
             "ar-ecommerce-secret-key",
@@ -50,10 +56,16 @@ app.use(
         saveUninitialized: false,
 
         cookie: {
+
             httpOnly: true,
+
             secure: false,
-            maxAge: 24 * 60 * 60 * 1000
+
+            maxAge:
+                24 * 60 * 60 * 1000
+
         }
+
     })
 );
 
@@ -62,10 +74,11 @@ app.use(
    STATIC FILES
 ========================================================= */
 
-// Frontend static files
+// Frontend files
 app.use(
     express.static(frontendPath)
 );
+
 
 // Uploaded product images
 app.use(
@@ -95,10 +108,12 @@ app.use(
     productRoutes
 );
 
+
 app.use(
     "/api/admin/products",
     adminProductRoutes
 );
+
 
 app.use(
     "/api/users",
@@ -110,95 +125,163 @@ app.use(
    PAGE ROUTES
 ========================================================= */
 
-// Home
-app.get("/", (req, res) => {
-    res.sendFile(
-        path.join(pagesPath, "index.html")
-    );
-});
-
-
-// Login
-app.get("/login", (req, res) => {
-    res.sendFile(
-        path.join(pagesPath, "login.html")
-    );
-});
-
-
-// Register
-app.get("/register", (req, res) => {
-    res.sendFile(
-        path.join(pagesPath, "register.html")
-    );
-});
-
-
-// Products
-app.get("/products", (req, res) => {
-    res.sendFile(
-        path.join(pagesPath, "products.html")
-    );
-});
-
-
-// Services
-app.get("/services", (req, res) => {
-    res.sendFile(
-        path.join(pagesPath, "services.html")
-    );
-});
-
-
-// About
-app.get("/about", (req, res) => {
-    res.sendFile(
-        path.join(pagesPath, "about.html")
-    );
-});
-
-
-// Admin
-app.get("/admin", (req, res) => {
-    res.sendFile(
-        path.join(pagesPath, "admin.html")
-    );
-});
-
 
 /* =========================================================
-   PROFILE PAGE
+   HOME
 ========================================================= */
 
-app.get("/profile", (req, res) => {
-
-    if (!req.session.user) {
-        return res.redirect("/login");
-    }
+app.get("/", (req, res) => {
 
     res.sendFile(
-        path.join(pagesPath, "profile.html")
+        path.join(
+            pagesPath,
+            "index.html"
+        )
     );
+
 });
 
 
 /* =========================================================
-   LOGGED-IN USER CHECK
+   LOGIN
+========================================================= */
+
+app.get("/login", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "login.html"
+        )
+    );
+
+});
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+app.get("/register", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "register.html"
+        )
+    );
+
+});
+
+
+/* =========================================================
+   PRODUCTS
+========================================================= */
+
+app.get("/products", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "products.html"
+        )
+    );
+
+});
+
+
+/* =========================================================
+   SERVICES
+========================================================= */
+
+app.get("/services", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "services.html"
+        )
+    );
+
+});
+
+
+/* =========================================================
+   ABOUT
+========================================================= */
+
+app.get("/about", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "about.html"
+        )
+    );
+
+});
+
+
+/* =========================================================
+   ADMIN
+========================================================= */
+
+app.get("/admin", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "admin.html"
+        )
+    );
+
+});
+
+
+/* =========================================================
+   IMPORTANT
+=========================================================
+
+   There is NO /profile route.
+
+   The user profile is displayed as a popup
+   inside index.html.
+
+   Therefore we DO NOT need:
+
+       frontend/pages/profile.html
+
+========================================================= */
+
+
+/* =========================================================
+   LOGGED-IN USER
 ========================================================= */
 
 app.get("/api/auth/me", (req, res) => {
 
     if (!req.session.user) {
+
         return res.status(401).json({
+
             success: false,
-            message: "User is not logged in"
+
+            message:
+                "User is not logged in"
+
         });
+
     }
 
+
     res.json({
+
         success: true,
+
         user: req.session.user
+
     });
+
 });
 
 
@@ -206,52 +289,81 @@ app.get("/api/auth/me", (req, res) => {
    LOGOUT
 ========================================================= */
 
-app.post("/api/auth/logout", (req, res) => {
+app.post(
+    "/api/auth/logout",
+    (req, res) => {
 
-    req.session.destroy((error) => {
+        req.session.destroy(
+            (error) => {
 
-        if (error) {
-            console.error(
-                "Logout error:",
-                error
-            );
+                if (error) {
 
-            return res.status(500).json({
-                success: false,
-                message: "Logout failed"
-            });
-        }
+                    console.error(
+                        "Logout error:",
+                        error
+                    );
 
-        res.clearCookie("connect.sid");
 
-        res.json({
-            success: true,
-            message: "Logged out successfully"
-        });
-    });
-});
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Logout failed"
+
+                    });
+
+                }
+
+
+                res.clearCookie(
+                    "connect.sid"
+                );
+
+
+                res.json({
+
+                    success: true,
+
+                    message:
+                        "Logged out successfully"
+
+                });
+
+            }
+        );
+
+    }
+);
 
 
 /* =========================================================
    404
 ========================================================= */
 
-app.use((req, res) => {
+app.use(
+    (req, res) => {
 
-    res.status(404).send(
-        "Page not found"
-    );
-});
+        res.status(404).send(
+            "Page not found"
+        );
+
+    }
+);
 
 
 /* =========================================================
    START SERVER
 ========================================================= */
 
-app.listen(PORT, () => {
+app.listen(
+    PORT,
+    () => {
 
-    console.log(
-        `Server running on http://localhost:${PORT}`
-    );
+        console.log(
+            `Server running on http://localhost:${PORT}`
+        );
 
-});
+    }
+);
+
