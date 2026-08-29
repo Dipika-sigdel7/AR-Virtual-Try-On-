@@ -34,9 +34,7 @@ const pagesPath = path.join(
 // MIDDLEWARE
 // =========================================================
 
-app.use(
-    express.json()
-);
+app.use(express.json());
 
 app.use(
     express.urlencoded({
@@ -82,9 +80,7 @@ app.use(
 // =========================================================
 
 app.use(
-    express.static(
-        frontendPath
-    )
+    express.static(frontendPath)
 );
 
 
@@ -251,8 +247,12 @@ app.get(
 
 // =========================================================
 // PRODUCT DETAILS
-// IMPORTANT:
-// frontend uses /product-details.html
+// =========================================================
+// URL:
+// /product-details.html?id=1
+//
+// ACTUAL FILE:
+// frontend/pages/product_details.html
 // =========================================================
 
 app.get(
@@ -269,7 +269,7 @@ app.get(
                 if (error) {
 
                     console.error(
-                        "Product details error:",
+                        "Product details page error:",
                         error
                     );
 
@@ -291,7 +291,10 @@ app.get(
 
 
 // =========================================================
-// PRODUCT DETAILS WITHOUT HTML
+// PRODUCT DETAILS WITHOUT .HTML
+// =========================================================
+// Example:
+// /product-details?id=1
 // =========================================================
 
 app.get(
@@ -312,20 +315,27 @@ app.get(
 // =========================================================
 // OLD UNDERSCORE URL SUPPORT
 // =========================================================
+// /product_details.html?id=1
+//        ↓
+// /product-details.html?id=1
+// =========================================================
 
 app.get(
     "/product_details.html",
     (req, res) => {
 
-        const query =
-            req.url.includes("?")
-                ? req.url.substring(
-                    req.url.indexOf("?")
-                )
-                : "";
+        const queryString =
+            new URLSearchParams(
+                req.query
+            ).toString();
+
+        const redirectUrl =
+            queryString
+                ? `/product-details.html?${queryString}`
+                : "/product-details.html";
 
         res.redirect(
-            `/product-details.html${query}`
+            redirectUrl
         );
 
     }
@@ -335,20 +345,27 @@ app.get(
 // =========================================================
 // OLD UNDERSCORE URL SUPPORT
 // =========================================================
+// /product_details?id=1
+//        ↓
+// /product-details.html?id=1
+// =========================================================
 
 app.get(
     "/product_details",
     (req, res) => {
 
-        const query =
-            req.url.includes("?")
-                ? req.url.substring(
-                    req.url.indexOf("?")
-                )
-                : "";
+        const queryString =
+            new URLSearchParams(
+                req.query
+            ).toString();
+
+        const redirectUrl =
+            queryString
+                ? `/product-details.html?${queryString}`
+                : "/product-details.html";
 
         res.redirect(
-            `/product-details.html${query}`
+            redirectUrl
         );
 
     }
