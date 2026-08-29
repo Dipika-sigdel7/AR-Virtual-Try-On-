@@ -1,42 +1,31 @@
 // =========================================================
-// AR ECOMMERCE
+// AR E-COMMERCE
 // PRODUCT REVIEW ROUTES
+// GET + POST REVIEWS
+// LOGIN REQUIRED FOR POST
 // =========================================================
 
 const express = require("express");
+const router = express.Router();
 
-const router =
-    express.Router();
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
 
-const path =
-    require("path");
-
-const fs =
-    require("fs");
-
-const multer =
-    require("multer");
-
-const pool =
-    require("../config/db");
+const pool = require("../config/db");
 
 
 // =========================================================
 // REVIEW UPLOAD DIRECTORY
 // =========================================================
 
-const uploadDirectory =
-    path.join(
-        __dirname,
-        "../uploads/reviews"
-    );
+const uploadDirectory = path.join(
+    __dirname,
+    "../uploads/reviews"
+);
 
 
-if (
-    !fs.existsSync(
-        uploadDirectory
-    )
-) {
+if (!fs.existsSync(uploadDirectory)) {
 
     fs.mkdirSync(
         uploadDirectory,
@@ -52,107 +41,108 @@ if (
 // MULTER STORAGE
 // =========================================================
 
-const storage =
-    multer.diskStorage({
+const storage = multer.diskStorage({
 
-        destination:
-            (
-                req,
-                file,
-                cb
-            ) => {
+    destination: (
+        req,
+        file,
+        cb
+    ) => {
 
-                cb(
-                    null,
-                    uploadDirectory
-                );
+        cb(
+            null,
+            uploadDirectory
+        );
 
-            },
+    },
 
 
-        filename:
-            (
-                req,
-                file,
-                cb
-            ) => {
+    filename: (
+        req,
+        file,
+        cb
+    ) => {
 
-                const extension =
-                    path.extname(
-                        file.originalname
-                    );
-
-
-                const filename =
-                    `review-${Date.now()}-${Math.round(
-                        Math.random() * 1E9
-                    )}${extension}`;
+        const extension =
+            path.extname(
+                file.originalname
+            ).toLowerCase();
 
 
-                cb(
-                    null,
-                    filename
-                );
-
-            }
-
-    });
+        const filename =
+            `review-${Date.now()}-${Math.round(
+                Math.random() * 1E9
+            )}${extension}`;
 
 
-const upload =
-    multer({
+        cb(
+            null,
+            filename
+        );
 
-        storage,
+    }
 
-        limits: {
-
-            fileSize:
-                5 * 1024 * 1024
-
-        },
-
-        fileFilter:
-            (
-                req,
-                file,
-                cb
-            ) => {
-
-                const allowed =
-                    [
-                        "image/jpeg",
-                        "image/jpg",
-                        "image/png",
-                        "image/webp"
-                    ];
+});
 
 
-                if (
-                    allowed.includes(
-                        file.mimetype
-                    )
-                ) {
+// =========================================================
+// MULTER
+// =========================================================
 
-                    cb(
-                        null,
-                        true
-                    );
+const upload = multer({
 
-                }
+    storage,
 
-                else {
+    limits: {
 
-                    cb(
-                        new Error(
-                            "Only JPG, PNG and WEBP images are allowed."
-                        )
-                    );
+        fileSize:
+            5 * 1024 * 1024
 
-                }
+    },
 
-            }
 
-    });
+    fileFilter: (
+        req,
+        file,
+        cb
+    ) => {
+
+        const allowedTypes = [
+
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp"
+
+        ];
+
+
+        if (
+            allowedTypes.includes(
+                file.mimetype
+            )
+        ) {
+
+            cb(
+                null,
+                true
+            );
+
+        }
+
+        else {
+
+            cb(
+                new Error(
+                    "Only JPG, PNG and WEBP images are allowed."
+                )
+            );
+
+        }
+
+    }
+
+});
 
 
 // =========================================================
@@ -189,11 +179,12 @@ function requireLogin(
 
 // =========================================================
 // GET REVIEWS
-// GET /api/products/:productId/reviews
+//
+// GET /api/reviews/product/:productId
 // =========================================================
 
 router.get(
-    "/:productId/reviews",
+    "/product/:productId",
     async (
         req,
         res
@@ -210,7 +201,8 @@ router.get(
             if (
                 !Number.isInteger(
                     productId
-                )
+                ) ||
+                productId <= 0
             ) {
 
                 return res.status(400).json({
@@ -219,204 +211,6 @@ router.get(
 
                     message:
                         "Invalid product ID."
-
-                });
-
-            }
-
-
-            const [rows] =
-                await pool.execute(
-                    `
-                    SELECT
-
-                        r.id,
-
-                        r.product_id,
-
-                        r.user_id,
-
-                        r.rating,
-
-                        r.review,
-
-                        r.image,
-
-                        r.created_at,
-
-                        u.username
-
-                    FROM reviews r
-
-                    LEFT JOIN users u
-                        ON u.id = r.user_id
-
-                    WHERE r.product_id = ?
-
-                    ORDER BY r.created_at DESC
-                    `,
-                    [
-                        productId
-                    ]
-                );
-
-
-            return res.json({
-
-                success: true,
-
-                reviews:
-                    rows
-
-            });
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "GET REVIEWS ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Failed to load reviews."
-
-            });
-
-        }
-
-    }
-);
-
-
-// =========================================================
-// ADD REVIEW
-// POST /api/products/:productId/reviews
-// =========================================================
-
-router.post(
-    "/:productId/reviews",
-    requireLogin,
-    upload.single("image"),
-
-    async (
-        req,
-        res
-    ) => {
-
-        try {
-
-            const productId =
-                Number(
-                    req.params.productId
-                );
-
-
-            const userId =
-                Number(
-                    req.session.user.id
-                );
-
-
-            const rating =
-                Number(
-                    req.body.rating
-                );
-
-
-            const review =
-                String(
-                    req.body.review || ""
-                ).trim();
-
-
-            // =================================================
-            // VALIDATION
-            // =================================================
-
-            if (
-                !Number.isInteger(
-                    productId
-                )
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Invalid product ID."
-
-                });
-
-            }
-
-
-            if (
-                !Number.isInteger(
-                    userId
-                )
-            ) {
-
-                return res.status(401).json({
-
-                    success: false,
-
-                    message:
-                        "Please login again."
-
-                });
-
-            }
-
-
-            if (
-                rating < 1 ||
-                rating > 5
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Rating must be between 1 and 5."
-
-                });
-
-            }
-
-
-            if (!review) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Review cannot be empty."
-
-                });
-
-            }
-
-
-            if (
-                review.length > 1000
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Review is too long."
 
                 });
 
@@ -458,11 +252,333 @@ router.post(
 
 
             // =================================================
+            // GET REVIEWS
+            // =================================================
+
+            const [reviews] =
+                await pool.execute(
+                    `
+                    SELECT
+
+                        r.id,
+
+                        r.product_id,
+
+                        r.user_id,
+
+                        r.rating,
+
+                        r.review AS review_text,
+
+                        CASE
+                            WHEN r.image IS NOT NULL
+                            AND r.image != ''
+                            THEN CONCAT(
+                                '/uploads/reviews/',
+                                r.image
+                            )
+                            ELSE NULL
+                        END AS image_url,
+
+                        r.created_at,
+
+                        COALESCE(
+                            u.username,
+                            'Customer'
+                        ) AS username
+
+                    FROM reviews r
+
+                    LEFT JOIN users u
+                        ON u.id = r.user_id
+
+                    WHERE r.product_id = ?
+
+                    ORDER BY r.created_at DESC
+                    `,
+                    [
+                        productId
+                    ]
+                );
+
+
+            // =================================================
+            // REVIEW STATISTICS
+            // =================================================
+
+            const [statistics] =
+                await pool.execute(
+                    `
+                    SELECT
+
+                        COUNT(*) AS review_count,
+
+                        COALESCE(
+                            AVG(rating),
+                            0
+                        ) AS average_rating
+
+                    FROM reviews
+
+                    WHERE product_id = ?
+                    `,
+                    [
+                        productId
+                    ]
+                );
+
+
+            return res.json({
+
+                success: true,
+
+                reviews: reviews,
+
+                averageRating:
+                    Number(
+                        statistics[0]?.average_rating || 0
+                    ),
+
+                reviewCount:
+                    Number(
+                        statistics[0]?.review_count || 0
+                    )
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "GET REVIEWS ERROR:",
+                error
+            );
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Failed to load reviews."
+
+            });
+
+        }
+
+    }
+);
+
+
+// =========================================================
+// ADD REVIEW
+//
+// POST /api/reviews
+//
+// FormData:
+// product_id
+// rating
+// review_text
+// image
+// =========================================================
+
+router.post(
+    "/",
+    requireLogin,
+    upload.single("image"),
+
+    async (
+        req,
+        res
+    ) => {
+
+        try {
+
+            // =================================================
+            // PRODUCT ID
+            // =================================================
+
+            const productId =
+                Number(
+                    req.body.product_id
+                );
+
+
+            // =================================================
+            // USER ID
+            // =================================================
+
+            const userId =
+                Number(
+                    req.session.user.id
+                );
+
+
+            // =================================================
+            // RATING
+            // =================================================
+
+            const rating =
+                Number(
+                    req.body.rating
+                );
+
+
+            // =================================================
+            // REVIEW TEXT
+            // =================================================
+
+            const review =
+                String(
+                    req.body.review_text || ""
+                ).trim();
+
+
+            // =================================================
+            // VALIDATE PRODUCT
+            // =================================================
+
+            if (
+                !Number.isInteger(
+                    productId
+                ) ||
+                productId <= 0
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid product ID."
+
+                });
+
+            }
+
+
+            // =================================================
+            // VALIDATE USER
+            // =================================================
+
+            if (
+                !Number.isInteger(
+                    userId
+                ) ||
+                userId <= 0
+            ) {
+
+                return res.status(401).json({
+
+                    success: false,
+
+                    message:
+                        "Please login again."
+
+                });
+
+            }
+
+
+            // =================================================
+            // VALIDATE RATING
+            // =================================================
+
+            if (
+                !Number.isInteger(
+                    rating
+                ) ||
+                rating < 1 ||
+                rating > 5
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Rating must be between 1 and 5."
+
+                });
+
+            }
+
+
+            // =================================================
+            // VALIDATE REVIEW
+            // =================================================
+
+            if (!review) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Review cannot be empty."
+
+                });
+
+            }
+
+
+            if (
+                review.length > 1000
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Review cannot exceed 1000 characters."
+
+                });
+
+            }
+
+
+            // =================================================
+            // CHECK PRODUCT
+            // =================================================
+
+            const [products] =
+                await pool.execute(
+                    `
+                    SELECT
+                        id
+                    FROM products
+                    WHERE id = ?
+                    LIMIT 1
+                    `,
+                    [
+                        productId
+                    ]
+                );
+
+
+            if (
+                products.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Product not found."
+
+                });
+
+            }
+
+
+            // =================================================
             // IMAGE
             // =================================================
 
-            let imageName =
-                null;
+            let imageName = null;
 
 
             if (req.file) {
@@ -487,6 +603,7 @@ router.post(
                     review,
                     image
                 )
+
                 VALUES
                 (
                     ?,
@@ -537,6 +654,10 @@ router.post(
             );
 
 
+            // =================================================
+            // SUCCESS
+            // =================================================
+
             return res.status(201).json({
 
                 success: true,
@@ -584,8 +705,7 @@ router.use(
     ) => {
 
         if (
-            error instanceof
-            multer.MulterError
+            error instanceof multer.MulterError
         ) {
 
             if (
