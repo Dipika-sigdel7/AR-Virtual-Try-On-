@@ -9,7 +9,6 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
-const fs = require("fs");
 
 const app = express();
 
@@ -35,7 +34,7 @@ const pagesPath = path.join(
 // MIDDLEWARE
 // =========================================================
 
-// Parse JSON
+// Parse JSON requests
 app.use(
     express.json()
 );
@@ -75,6 +74,7 @@ app.use(
             maxAge:
                 24 * 60 * 60 * 1000
         }
+
     })
 );
 
@@ -94,15 +94,13 @@ app.use(
 // UPLOADED PRODUCT IMAGES
 // =========================================================
 
-const uploadsPath = path.join(
-    __dirname,
-    "uploads"
-);
-
 app.use(
     "/uploads",
     express.static(
-        uploadsPath
+        path.join(
+            __dirname,
+            "uploads"
+        )
     )
 );
 
@@ -128,6 +126,13 @@ const cartRoutes =
 // USER API ROUTES
 // =========================================================
 
+/*
+    POST /api/users/register
+    POST /api/users/login
+    GET  /api/users/me
+    POST /api/users/logout
+*/
+
 app.use(
     "/api/users",
     userRoutes
@@ -137,6 +142,11 @@ app.use(
 // =========================================================
 // PRODUCT API ROUTES
 // =========================================================
+
+/*
+    GET /api/products
+    GET /api/products/:id
+*/
 
 app.use(
     "/api/products",
@@ -148,6 +158,13 @@ app.use(
 // ADMIN PRODUCT API ROUTES
 // =========================================================
 
+/*
+    GET    /api/admin/products
+    POST   /api/admin/products
+    PUT    /api/admin/products/:id
+    DELETE /api/admin/products/:id
+*/
+
 app.use(
     "/api/admin/products",
     adminProductRoutes
@@ -158,66 +175,17 @@ app.use(
 // CART API ROUTES
 // =========================================================
 
+/*
+    GET    /api/cart
+    POST   /api/cart/add
+    DELETE /api/cart/:cartItemId
+    DELETE /api/cart
+*/
+
 app.use(
     "/api/cart",
     cartRoutes
 );
-
-
-// =========================================================
-// HELPER FUNCTION
-// =========================================================
-
-function sendPage(
-    res,
-    pageName
-) {
-
-    const filePath =
-        path.join(
-            pagesPath,
-            pageName
-        );
-
-
-    // Check whether the file exists
-    if (!fs.existsSync(filePath)) {
-
-        console.error(
-            `Page not found: ${filePath}`
-        );
-
-        return res
-            .status(404)
-            .send(
-                `Page "${pageName}" not found inside frontend/pages`
-            );
-    }
-
-
-    res.sendFile(
-        filePath,
-        error => {
-
-            if (error) {
-
-                console.error(
-                    `Error loading ${pageName}:`,
-                    error
-                );
-
-                if (!res.headersSent) {
-
-                    res
-                        .status(500)
-                        .send(
-                            `Unable to load ${pageName}`
-                        );
-                }
-            }
-        }
-    );
-}
 
 
 // =========================================================
@@ -233,9 +201,11 @@ app.get(
     "/",
     (req, res) => {
 
-        sendPage(
-            res,
-            "index.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "index.html"
+            )
         );
 
     }
@@ -250,9 +220,11 @@ app.get(
     "/login",
     (req, res) => {
 
-        sendPage(
-            res,
-            "login.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "login.html"
+            )
         );
 
     }
@@ -267,9 +239,11 @@ app.get(
     "/register",
     (req, res) => {
 
-        sendPage(
-            res,
-            "register.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "register.html"
+            )
         );
 
     }
@@ -284,9 +258,11 @@ app.get(
     "/products",
     (req, res) => {
 
-        sendPage(
-            res,
-            "products.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "products.html"
+            )
         );
 
     }
@@ -299,12 +275,34 @@ app.get(
 // =========================================================
 
 app.get(
-    "/product-details.html",
+    "/product_details.html",
     (req, res) => {
 
-        sendPage(
-            res,
-            "product-details.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "product_details.html"
+            ),
+            error => {
+
+                if (error) {
+
+                    console.error(
+                        "Product details page error:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Product details page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -317,12 +315,73 @@ app.get(
 // =========================================================
 
 app.get(
-    "/product-details",
+    "/product_details",
     (req, res) => {
 
-        sendPage(
-            res,
-            "product-details.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "product_details.html"
+            ),
+            error => {
+
+                if (error) {
+
+                    console.error(
+                        "Product details page error:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Product details page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// CART PAGE
+// =========================================================
+
+app.get(
+    "/cart",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "cart.html"
+            ),
+            error => {
+
+                if (error) {
+
+                    console.error(
+                        "Cart page error:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Cart page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -337,9 +396,11 @@ app.get(
     "/services",
     (req, res) => {
 
-        sendPage(
-            res,
-            "services.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "services.html"
+            )
         );
 
     }
@@ -354,9 +415,11 @@ app.get(
     "/about",
     (req, res) => {
 
-        sendPage(
-            res,
-            "about.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "about.html"
+            )
         );
 
     }
@@ -371,9 +434,11 @@ app.get(
     "/profile",
     (req, res) => {
 
-        sendPage(
-            res,
-            "profile.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "profile.html"
+            )
         );
 
     }
@@ -388,9 +453,11 @@ app.get(
     "/admin",
     (req, res) => {
 
-        sendPage(
-            res,
-            "admin.html"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "admin.html"
+            )
         );
 
     }
@@ -404,11 +471,9 @@ app.get(
 app.use(
     (req, res) => {
 
-        res
-            .status(404)
-            .send(
-                "Page not found"
-            );
+        res.status(404).send(
+            "Page not found"
+        );
 
     }
 );
@@ -426,11 +491,13 @@ app.use(
             err
         );
 
-        res
-            .status(500)
-            .send(
+        if (!res.headersSent) {
+
+            res.status(500).send(
                 "Internal server error"
             );
+
+        }
 
     }
 );
@@ -458,18 +525,6 @@ app.listen(
 
         console.log(
             "========================================"
-        );
-
-        console.log(
-            `Frontend: ${frontendPath}`
-        );
-
-        console.log(
-            `Pages:    ${pagesPath}`
-        );
-
-        console.log(
-            `Uploads:  ${uploadsPath}`
         );
 
     }
