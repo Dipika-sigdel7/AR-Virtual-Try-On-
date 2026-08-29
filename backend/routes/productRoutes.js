@@ -1,13 +1,20 @@
+
+// =========================================================
+// AR E-COMMERCE
+// PRODUCT ROUTES
+// PRODUCTS + CATEGORIES + CHECKOUT
+// =========================================================
+
 const express = require("express");
 const db = require("../config/db");
 
 const router = express.Router();
 
 
-// =====================================================
+// =========================================================
 // GET ALL PRODUCTS
 // GET /api/products
-// =====================================================
+// =========================================================
 
 router.get("/", async (req, res) => {
 
@@ -21,7 +28,15 @@ router.get("/", async (req, res) => {
                 p.price,
                 p.stock,
                 p.rating,
-                p.image,
+
+                (
+                    SELECT pi.image_url
+                    FROM product_images pi
+                    WHERE pi.product_id = p.id
+                    ORDER BY pi.is_primary DESC, pi.id ASC
+                    LIMIT 1
+                ) AS image,
+
                 p.is_available,
                 p.created_at,
 
@@ -30,7 +45,7 @@ router.get("/", async (req, res) => {
 
             FROM products p
 
-            INNER JOIN categories c
+            LEFT JOIN categories c
                 ON p.category_id = c.id
 
             WHERE p.is_available = 1
@@ -39,11 +54,85 @@ router.get("/", async (req, res) => {
         `);
 
 
-        res.json({
+        // =====================================================
+        // FORMAT IMAGE URL
+        // =====================================================
+
+        const formattedProducts = products.map(product => {
+
+            let image = null;
+
+            if (product.image) {
+
+                if (
+                    product.image.startsWith("/")
+                ) {
+
+                    image = product.image;
+
+                } else {
+
+                    image =
+                        `/uploads/products/${product.image}`;
+
+                }
+
+            }
+
+
+            return {
+
+                id:
+                    product.id,
+
+                name:
+                    product.name,
+
+                description:
+                    product.description || "",
+
+                price:
+                    Number(product.price || 0),
+
+                stock:
+                    Number(product.stock || 0),
+
+                rating:
+                    Number(product.rating || 0),
+
+                image:
+                    image,
+
+                is_available:
+                    Number(product.is_available),
+
+                created_at:
+                    product.created_at,
+
+                category_id:
+                    product.category_id,
+
+                category_name:
+                    product.category_name ||
+                    "Uncategorized"
+
+            };
+
+        });
+
+
+        console.log(
+            "PRODUCTS SENT TO FRONTEND:",
+            formattedProducts
+        );
+
+
+        return res.json({
 
             success: true,
 
-            products: products
+            products:
+                formattedProducts
 
         });
 
@@ -57,7 +146,7 @@ router.get("/", async (req, res) => {
         );
 
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -71,10 +160,10 @@ router.get("/", async (req, res) => {
 });
 
 
-// =====================================================
+// =========================================================
 // GET CATEGORIES
 // GET /api/products/categories
-// =====================================================
+// =========================================================
 
 router.get("/categories", async (req, res) => {
 
@@ -91,11 +180,12 @@ router.get("/categories", async (req, res) => {
             `);
 
 
-        res.json({
+        return res.json({
 
             success: true,
 
-            categories: categories
+            categories:
+                categories
 
         });
 
@@ -109,7 +199,7 @@ router.get("/categories", async (req, res) => {
         );
 
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -123,10 +213,10 @@ router.get("/categories", async (req, res) => {
 });
 
 
-// =====================================================
+// =========================================================
 // GET SINGLE PRODUCT
 // GET /api/products/:id
-// =====================================================
+// =========================================================
 
 router.get("/:id", async (req, res) => {
 
@@ -163,7 +253,15 @@ router.get("/:id", async (req, res) => {
                     p.price,
                     p.stock,
                     p.rating,
-                    p.image,
+
+                    (
+                        SELECT pi.image_url
+                        FROM product_images pi
+                        WHERE pi.product_id = p.id
+                        ORDER BY pi.is_primary DESC, pi.id ASC
+                        LIMIT 1
+                    ) AS image,
+
                     p.is_available,
                     p.created_at,
 
@@ -172,12 +270,14 @@ router.get("/:id", async (req, res) => {
 
                 FROM products p
 
-                INNER JOIN categories c
+                LEFT JOIN categories c
                     ON p.category_id = c.id
 
                 WHERE
                     p.id = ?
                     AND p.is_available = 1
+
+                LIMIT 1
                 `,
                 [productId]
             );
@@ -199,12 +299,46 @@ router.get("/:id", async (req, res) => {
         }
 
 
-        res.json({
+        const product =
+            products[0];
+
+
+        // =====================================================
+        // FORMAT IMAGE
+        // =====================================================
+
+        if (product.image) {
+
+            product.image =
+                product.image.startsWith("/")
+                    ? product.image
+                    : `/uploads/products/${product.image}`;
+
+        }
+
+        else {
+
+            product.image = null;
+
+        }
+
+
+        product.price =
+            Number(product.price || 0);
+
+        product.stock =
+            Number(product.stock || 0);
+
+        product.rating =
+            Number(product.rating || 0);
+
+
+        return res.json({
 
             success: true,
 
             product:
-                products[0]
+                product
 
         });
 
@@ -218,7 +352,7 @@ router.get("/:id", async (req, res) => {
         );
 
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -232,10 +366,10 @@ router.get("/:id", async (req, res) => {
 });
 
 
-// =====================================================
+// =========================================================
 // CHECKOUT
 // POST /api/products/checkout
-// =====================================================
+// =========================================================
 
 router.post("/checkout", async (req, res) => {
 
@@ -252,9 +386,9 @@ router.post("/checkout", async (req, res) => {
         } = req.body;
 
 
-        // =============================================
+        // =====================================================
         // VALIDATE USER
-        // =============================================
+        // =====================================================
 
         if (!user_id) {
 
@@ -270,11 +404,14 @@ router.post("/checkout", async (req, res) => {
         }
 
 
-        // =============================================
+        // =====================================================
         // VALIDATE ADDRESS
-        // =============================================
+        // =====================================================
 
-        if (!shipping_address) {
+        if (
+            !shipping_address ||
+            !String(shipping_address).trim()
+        ) {
 
             return res.status(400).json({
 
@@ -288,9 +425,9 @@ router.post("/checkout", async (req, res) => {
         }
 
 
-        // =============================================
+        // =====================================================
         // VALIDATE ITEMS
-        // =============================================
+        // =====================================================
 
         if (
             !Array.isArray(items) ||
@@ -309,10 +446,6 @@ router.post("/checkout", async (req, res) => {
         }
 
 
-        // =============================================
-        // START TRANSACTION
-        // =============================================
-
         await connection.beginTransaction();
 
 
@@ -321,15 +454,14 @@ router.post("/checkout", async (req, res) => {
         const orderItems = [];
 
 
-        // =============================================
+        // =====================================================
         // CHECK PRODUCTS
-        // =============================================
+        // =====================================================
 
         for (const item of items) {
 
             const productId =
                 Number(item.product_id);
-
 
             const quantity =
                 Number(item.quantity);
@@ -368,11 +500,8 @@ router.post("/checkout", async (req, res) => {
                         price,
                         stock,
                         is_available
-
                     FROM products
-
                     WHERE id = ?
-
                     FOR UPDATE
                     `,
                     [productId]
@@ -395,7 +524,7 @@ router.post("/checkout", async (req, res) => {
 
 
             if (
-                product.is_available !== 1
+                Number(product.is_available) !== 1
             ) {
 
                 throw new Error(
@@ -406,7 +535,7 @@ router.post("/checkout", async (req, res) => {
 
 
             if (
-                product.stock < quantity
+                Number(product.stock) < quantity
             ) {
 
                 throw new Error(
@@ -441,9 +570,9 @@ router.post("/checkout", async (req, res) => {
         }
 
 
-        // =============================================
+        // =====================================================
         // CREATE ORDER
-        // =============================================
+        // =====================================================
 
         const [orderResult] =
             await connection.execute(
@@ -457,7 +586,6 @@ router.post("/checkout", async (req, res) => {
                     payment_status,
                     shipping_address
                 )
-
                 VALUES
                 (
                     ?,
@@ -481,14 +609,11 @@ router.post("/checkout", async (req, res) => {
             orderResult.insertId;
 
 
-        // =============================================
-        // CREATE ORDER ITEMS
-        // =============================================
+        // =====================================================
+        // ORDER ITEMS
+        // =====================================================
 
-        for (
-            const item
-            of orderItems
-        ) {
+        for (const item of orderItems) {
 
             await connection.execute(
                 `
@@ -499,7 +624,6 @@ router.post("/checkout", async (req, res) => {
                     quantity,
                     price
                 )
-
                 VALUES
                 (?, ?, ?, ?)
                 `,
@@ -512,17 +636,10 @@ router.post("/checkout", async (req, res) => {
             );
 
 
-            // =========================================
-            // REDUCE STOCK
-            // =========================================
-
             await connection.execute(
                 `
                 UPDATE products
-
-                SET stock =
-                    stock - ?
-
+                SET stock = stock - ?
                 WHERE id = ?
                 `,
                 [
@@ -534,18 +651,10 @@ router.post("/checkout", async (req, res) => {
         }
 
 
-        // =============================================
-        // COMMIT
-        // =============================================
-
         await connection.commit();
 
 
-        // =============================================
-        // RESPONSE
-        // =============================================
-
-        res.status(201).json({
+        return res.status(201).json({
 
             success: true,
 
@@ -564,7 +673,20 @@ router.post("/checkout", async (req, res) => {
 
     catch (error) {
 
-        await connection.rollback();
+        try {
+
+            await connection.rollback();
+
+        }
+
+        catch (rollbackError) {
+
+            console.error(
+                "ROLLBACK ERROR:",
+                rollbackError
+            );
+
+        }
 
 
         console.error(
@@ -573,7 +695,7 @@ router.post("/checkout", async (req, res) => {
         );
 
 
-        res.status(400).json({
+        return res.status(400).json({
 
             success: false,
 
@@ -593,5 +715,8 @@ router.post("/checkout", async (req, res) => {
 });
 
 
-module.exports =
-    router;
+// =========================================================
+// EXPORT
+// =========================================================
+
+module.exports = router;

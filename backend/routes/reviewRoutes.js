@@ -1,6 +1,7 @@
 // =========================================================
 // AR E-COMMERCE
 // PRODUCT REVIEW ROUTES
+// REVIEWS + REVIEW IMAGES
 // =========================================================
 
 const express = require("express");
@@ -21,6 +22,7 @@ const uploadDirectory = path.join(
     __dirname,
     "../uploads/reviews"
 );
+
 
 if (!fs.existsSync(uploadDirectory)) {
 
@@ -49,17 +51,20 @@ const storage = multer.diskStorage({
 
     },
 
+
     filename: (req, file, cb) => {
 
         const extension =
             path.extname(
                 file.originalname
-            );
+            ).toLowerCase();
+
 
         const filename =
             `review-${Date.now()}-${Math.round(
                 Math.random() * 1E9
             )}${extension}`;
+
 
         cb(
             null,
@@ -72,12 +77,12 @@ const storage = multer.diskStorage({
 
 
 // =========================================================
-// MULTER
+// MULTER UPLOAD
 // =========================================================
 
 const upload = multer({
 
-    storage,
+    storage: storage,
 
     limits: {
 
@@ -86,21 +91,25 @@ const upload = multer({
 
     },
 
+
     fileFilter: (
         req,
         file,
         cb
     ) => {
 
-        const allowed = [
+        const allowedTypes = [
+
             "image/jpeg",
             "image/jpg",
             "image/png",
             "image/webp"
+
         ];
 
+
         if (
-            allowed.includes(
+            allowedTypes.includes(
                 file.mimetype
             )
         ) {
@@ -147,11 +156,12 @@ function requireLogin(
             success: false,
 
             message:
-                "Please login to continue."
+                "Please login to submit a review."
 
         });
 
     }
+
 
     next();
 
@@ -159,13 +169,14 @@ function requireLogin(
 
 
 // =========================================================
-// GET REVIEWS
+// GET PRODUCT REVIEWS
 //
 // GET /api/reviews/product/:productId
 // =========================================================
 
 router.get(
     "/product/:productId",
+
     async (
         req,
         res
@@ -173,15 +184,15 @@ router.get(
 
         try {
 
+            // =================================================
+            // PRODUCT ID
+            // =================================================
+
             const productId =
                 Number(
                     req.params.productId
                 );
 
-
-            // =================================================
-            // VALIDATE PRODUCT ID
-            // =================================================
 
             if (
                 !Number.isInteger(productId) ||
@@ -204,8 +215,7 @@ router.get(
             // GET REVIEWS
             //
             // IMPORTANT:
-            // DATABASE COLUMN = comment
-            // DATABASE COLUMN = image_url
+            // users table uses "name", NOT "username"
             // =================================================
 
             const [rows] =
@@ -228,7 +238,7 @@ router.get(
                         r.created_at,
 
                         COALESCE(
-                            u.username,
+                            u.name,
                             'Customer'
                         ) AS username
 
@@ -248,12 +258,15 @@ router.get(
 
 
             // =================================================
-            // CALCULATE AVERAGE
+            // CALCULATE AVERAGE RATING
             // =================================================
 
             let averageRating = 0;
 
-            if (rows.length > 0) {
+
+            if (
+                rows.length > 0
+            ) {
 
                 const total =
                     rows.reduce(
@@ -282,7 +295,7 @@ router.get(
 
 
             // =================================================
-            // FORMAT FOR FRONTEND
+            // FORMAT REVIEWS
             // =================================================
 
             const reviews =
@@ -306,7 +319,7 @@ router.get(
 
                             rating:
                                 Number(
-                                    row.rating
+                                    row.rating || 0
                                 ),
 
                             review_text:
@@ -336,17 +349,14 @@ router.get(
                 success: true,
 
                 reviews:
-
                     reviews,
 
                 averageRating:
-
                     Number(
                         averageRating.toFixed(1)
                     ),
 
                 reviewCount:
-
                     reviews.length
 
             });
@@ -377,14 +387,24 @@ router.get(
 
 
 // =========================================================
-// ADD REVIEW
+// ADD PRODUCT REVIEW
 //
 // POST /api/reviews/product/:productId
+//
+// Requires login.
+//
+// multipart/form-data:
+//
+// rating
+// review_text
+// image
 // =========================================================
 
 router.post(
     "/product/:productId",
+
     requireLogin,
+
     upload.single("image"),
 
     async (
@@ -406,46 +426,6 @@ router.post(
                 );
 
 
-            // =================================================
-            // USER ID
-            // =================================================
-
-            const userId =
-                Number(
-                    req.session.user.id
-                );
-
-
-            // =================================================
-            // RATING
-            // =================================================
-
-            const rating =
-                Number(
-                    req.body.rating
-                );
-
-
-            // =================================================
-            // REVIEW TEXT
-            //
-            // Frontend sends review_text.
-            // Database stores it in comment.
-            // =================================================
-
-            const review =
-                String(
-                    req.body.review_text ||
-                    req.body.review ||
-                    req.body.comment ||
-                    ""
-                ).trim();
-
-
-            // =================================================
-            // VALIDATE PRODUCT ID
-            // =================================================
-
             if (
                 !Number.isInteger(productId) ||
                 productId <= 0
@@ -464,8 +444,14 @@ router.post(
 
 
             // =================================================
-            // VALIDATE USER
+            // USER ID
             // =================================================
+
+            const userId =
+                Number(
+                    req.session.user.id
+                );
+
 
             if (
                 !Number.isInteger(userId) ||
@@ -485,8 +471,14 @@ router.post(
 
 
             // =================================================
-            // VALIDATE RATING
+            // RATING
             // =================================================
+
+            const rating =
+                Number(
+                    req.body.rating
+                );
+
 
             if (
                 !Number.isInteger(rating) ||
@@ -507,8 +499,17 @@ router.post(
 
 
             // =================================================
-            // VALIDATE COMMENT
+            // REVIEW TEXT
             // =================================================
+
+            const review =
+                String(
+                    req.body.review_text ||
+                    req.body.review ||
+                    req.body.comment ||
+                    ""
+                ).trim();
+
 
             if (!review) {
 
@@ -524,14 +525,16 @@ router.post(
             }
 
 
-            if (review.length > 1000) {
+            if (
+                review.length > 1000
+            ) {
 
                 return res.status(400).json({
 
                     success: false,
 
                     message:
-                        "Review is too long."
+                        "Review must be 1000 characters or less."
 
                 });
 
@@ -545,9 +548,13 @@ router.post(
             const [products] =
                 await pool.execute(
                     `
-                    SELECT id
+                    SELECT
+                        id
+
                     FROM products
+
                     WHERE id = ?
+
                     LIMIT 1
                     `,
                     [
@@ -586,10 +593,6 @@ router.post(
 
             // =================================================
             // INSERT REVIEW
-            //
-            // DATABASE:
-            // comment
-            // image_url
             // =================================================
 
             await pool.execute(
@@ -602,6 +605,7 @@ router.post(
                     comment,
                     image_url
                 )
+
                 VALUES
                 (
                     ?,
@@ -625,25 +629,42 @@ router.post(
             // UPDATE PRODUCT RATING
             // =================================================
 
-            await pool.execute(
-                `
-                UPDATE products
-                SET rating = (
-                    SELECT
-                        COALESCE(
-                            AVG(rating),
-                            0
-                        )
-                    FROM reviews
-                    WHERE product_id = ?
-                )
-                WHERE id = ?
-                `,
-                [
-                    productId,
-                    productId
-                ]
-            );
+            try {
+
+                await pool.execute(
+                    `
+                    UPDATE products
+
+                    SET rating = (
+                        SELECT
+                            COALESCE(
+                                AVG(rating),
+                                0
+                            )
+
+                        FROM reviews
+
+                        WHERE product_id = ?
+                    )
+
+                    WHERE id = ?
+                    `,
+                    [
+                        productId,
+                        productId
+                    ]
+                );
+
+            }
+
+            catch (ratingError) {
+
+                console.error(
+                    "PRODUCT RATING UPDATE ERROR:",
+                    ratingError
+                );
+
+            }
 
 
             // =================================================
@@ -670,7 +691,7 @@ router.post(
 
 
             // =================================================
-            // DELETE IMAGE IF DATABASE INSERT FAILED
+            // DELETE UPLOADED IMAGE IF INSERT FAILED
             // =================================================
 
             if (uploadedImage) {
@@ -715,6 +736,7 @@ router.post(
                 success: false,
 
                 message:
+                    error.message ||
                     "Failed to submit review."
 
             });
@@ -758,6 +780,16 @@ router.use(
 
             }
 
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    error.message
+
+            });
+
         }
 
 
@@ -768,7 +800,8 @@ router.use(
                 success: false,
 
                 message:
-                    error.message
+                    error.message ||
+                    "Invalid upload."
 
             });
 
