@@ -204,6 +204,7 @@ function getProductId() {
         );
 
     return params.get("id");
+
 }
 
 
@@ -220,6 +221,7 @@ function escapeHTML(value) {
         value ?? "";
 
     return div.innerHTML;
+
 }
 
 
@@ -230,10 +232,23 @@ function escapeHTML(value) {
 function escapeAttribute(value) {
 
     return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/"/g, "&quot;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        );
+
 }
 
 
@@ -260,12 +275,6 @@ async function checkUserLogin() {
             await response.json();
 
 
-        console.log(
-            "LOGIN STATUS:",
-            data
-        );
-
-
         if (
             response.ok &&
             data.success === true &&
@@ -288,7 +297,6 @@ async function checkUserLogin() {
 
         }
 
-
     }
 
     catch (error) {
@@ -305,7 +313,7 @@ async function checkUserLogin() {
     }
 
 
-    // Navigation should ALWAYS show Login
+    // Login button always remains Login
 
     if (loginNav) {
 
@@ -315,12 +323,11 @@ async function checkUserLogin() {
     }
 
 
-    // Update review UI
-
     updateReviewLoginUI();
 
 
     return userLoggedIn;
+
 }
 
 
@@ -330,8 +337,10 @@ async function checkUserLogin() {
 
 function updateReviewLoginUI() {
 
-    if (!reviewLoginMessage ||
-        !reviewForm) {
+    if (
+        !reviewLoginMessage ||
+        !reviewForm
+    ) {
 
         return;
 
@@ -339,9 +348,6 @@ function updateReviewLoginUI() {
 
 
     if (userLoggedIn) {
-
-        // Logged in
-        // Show review form
 
         reviewLoginMessage.style.display =
             "none";
@@ -352,9 +358,6 @@ function updateReviewLoginUI() {
     }
 
     else {
-
-        // Logged out
-        // Show login message
 
         reviewLoginMessage.style.display =
             "flex";
@@ -404,10 +407,6 @@ async function loadProduct() {
 
     if (!productId) {
 
-        console.error(
-            "No product ID found."
-        );
-
         showError();
 
         return;
@@ -447,12 +446,6 @@ async function loadProduct() {
             await response.json();
 
 
-        console.log(
-            "PRODUCT RESPONSE:",
-            data
-        );
-
-
         if (
             !response.ok ||
             data.success !== true ||
@@ -477,8 +470,6 @@ async function loadProduct() {
             currentProduct
         );
 
-
-        // Load reviews
 
         await loadReviews(
             productId
@@ -528,27 +519,15 @@ function displayProduct(product) {
         "block";
 
 
-    // -----------------------------------------------------
-    // CATEGORY
-    // -----------------------------------------------------
-
     productCategory.textContent =
         product.category_name ||
         "Uncategorized";
 
 
-    // -----------------------------------------------------
-    // NAME
-    // -----------------------------------------------------
-
     productName.textContent =
         product.name ||
         "Product";
 
-
-    // -----------------------------------------------------
-    // RATING
-    // -----------------------------------------------------
 
     productRating.textContent =
         `★ ${Number(
@@ -556,31 +535,21 @@ function displayProduct(product) {
         ).toFixed(1)}`;
 
 
-    // -----------------------------------------------------
-    // PRICE
-    // -----------------------------------------------------
-
     productPrice.textContent =
         `Rs. ${Number(
             product.price || 0
         ).toFixed(2)}`;
 
 
-    // -----------------------------------------------------
-    // DESCRIPTION
-    // -----------------------------------------------------
-
     productDescription.textContent =
         product.description ||
         "No description available.";
 
 
-    // -----------------------------------------------------
-    // STOCK
-    // -----------------------------------------------------
-
     const stock =
-        Number(product.stock || 0);
+        Number(
+            product.stock || 0
+        );
 
 
     if (stock > 0) {
@@ -604,10 +573,6 @@ function displayProduct(product) {
     }
 
 
-    // -----------------------------------------------------
-    // QUANTITY
-    // -----------------------------------------------------
-
     quantityInput.min =
         "1";
 
@@ -616,14 +581,9 @@ function displayProduct(product) {
             ? stock
             : 1;
 
-
     quantityInput.value =
         "1";
 
-
-    // -----------------------------------------------------
-    // BUTTONS
-    // -----------------------------------------------------
 
     addToCartBtn.disabled =
         stock <= 0;
@@ -631,10 +591,6 @@ function displayProduct(product) {
     buyNowBtn.disabled =
         stock <= 0;
 
-
-    // -----------------------------------------------------
-    // IMAGE
-    // -----------------------------------------------------
 
     if (product.image) {
 
@@ -1160,6 +1116,8 @@ if (buyNowBtn) {
                     userLoggedIn =
                         false;
 
+                    updateReviewLoginUI();
+
                     showLoginModal();
 
                     return;
@@ -1275,11 +1233,17 @@ stars.forEach(
 
 
                 const ratingLabels = {
+
                     1: "Poor",
+
                     2: "Fair",
+
                     3: "Good",
+
                     4: "Very Good",
+
                     5: "Excellent"
+
                 };
 
 
@@ -1377,9 +1341,6 @@ if (reviewImage) {
                     "Please select a valid image."
                 );
 
-                reviewImage.value =
-                    "";
-
                 clearReviewImage();
 
                 return;
@@ -1395,9 +1356,6 @@ if (reviewImage) {
                 alert(
                     "Image must be smaller than 5MB."
                 );
-
-                reviewImage.value =
-                    "";
 
                 clearReviewImage();
 
@@ -1489,8 +1447,6 @@ if (reviewForm) {
             event.preventDefault();
 
 
-            // Check login again
-
             const loggedIn =
                 await checkUserLogin();
 
@@ -1530,11 +1486,14 @@ if (reviewForm) {
                 reviewText.value.trim();
 
 
-            // -------------------------------------------------
+            // =================================================
             // VALIDATE RATING
-            // -------------------------------------------------
+            // =================================================
 
             if (
+                !Number.isInteger(
+                    rating
+                ) ||
                 rating < 1 ||
                 rating > 5
             ) {
@@ -1548,9 +1507,9 @@ if (reviewForm) {
             }
 
 
-            // -------------------------------------------------
-            // VALIDATE TEXT
-            // -------------------------------------------------
+            // =================================================
+            // VALIDATE REVIEW
+            // =================================================
 
             if (!text) {
 
@@ -1563,18 +1522,25 @@ if (reviewForm) {
             }
 
 
-            // -------------------------------------------------
+            if (
+                text.length > 1000
+            ) {
+
+                alert(
+                    "Review cannot be longer than 1000 characters."
+                );
+
+                return;
+
+            }
+
+
+            // =================================================
             // FORM DATA
-            // -------------------------------------------------
+            // =================================================
 
             const formData =
                 new FormData();
-
-
-            formData.append(
-                "product_id",
-                currentProduct.id
-            );
 
 
             formData.append(
@@ -1591,6 +1557,7 @@ if (reviewForm) {
 
             if (
                 reviewImage &&
+                reviewImage.files &&
                 reviewImage.files.length > 0
             ) {
 
@@ -1602,9 +1569,9 @@ if (reviewForm) {
             }
 
 
-            // -------------------------------------------------
-            // SUBMITTING
-            // -------------------------------------------------
+            // =================================================
+            // SUBMIT
+            // =================================================
 
             submitReviewBtn.disabled =
                 true;
@@ -1623,9 +1590,14 @@ if (reviewForm) {
 
             try {
 
+                // IMPORTANT:
+                // Product ID is now part of the URL.
+
                 const response =
                     await fetch(
-                        "/api/reviews",
+                        `/api/reviews/${encodeURIComponent(
+                            currentProduct.id
+                        )}`,
                         {
                             method: "POST",
 
@@ -1655,7 +1627,15 @@ if (reviewForm) {
                     userLoggedIn =
                         false;
 
+                    currentUser =
+                        null;
+
                     updateReviewLoginUI();
+
+                    sessionStorage.setItem(
+                        "loginRedirect",
+                        window.location.href
+                    );
 
                     showLoginModal();
 
@@ -1679,9 +1659,9 @@ if (reviewForm) {
                 }
 
 
-                // -------------------------------------------------
+                // =================================================
                 // SUCCESS
-                // -------------------------------------------------
+                // =================================================
 
                 alert(
                     "Review submitted successfully! ⭐"
@@ -1691,10 +1671,14 @@ if (reviewForm) {
                 resetReviewForm();
 
 
+                // Reload reviews
+
                 await loadReviews(
                     currentProduct.id
                 );
 
+
+                // Refresh product rating
 
                 await refreshProduct();
 
@@ -1736,19 +1720,31 @@ if (reviewForm) {
 
 function resetReviewForm() {
 
-    reviewForm.reset();
+    if (reviewForm) {
+
+        reviewForm.reset();
+
+    }
 
 
     selectedRating =
         0;
 
 
-    reviewRating.value =
-        "0";
+    if (reviewRating) {
+
+        reviewRating.value =
+            "0";
+
+    }
 
 
-    ratingText.textContent =
-        "Select a rating";
+    if (ratingText) {
+
+        ratingText.textContent =
+            "Select a rating";
+
+    }
 
 
     updateStars();
@@ -1769,6 +1765,7 @@ function resetReviewForm() {
 
 // =========================================================
 // LOAD REVIEWS
+// GET /api/reviews/:productId
 // =========================================================
 
 async function loadReviews(productId) {
@@ -1797,13 +1794,17 @@ async function loadReviews(productId) {
 
         const response =
             await fetch(
-                `/api/reviews/product/${encodeURIComponent(
+                `/api/reviews/${encodeURIComponent(
                     productId
                 )}`,
                 {
                     method: "GET",
-                    credentials: "include",
-                    cache: "no-store"
+
+                    credentials:
+                        "include",
+
+                    cache:
+                        "no-store"
                 }
             );
 
@@ -1851,7 +1852,9 @@ async function loadReviews(productId) {
 
 
         const reviews =
-            Array.isArray(data.reviews)
+            Array.isArray(
+                data.reviews
+            )
                 ? data.reviews
                 : [];
 
@@ -1951,29 +1954,42 @@ function updateReviewSummary(
 ) {
 
     let average =
-        Number(apiAverage);
+        Number(
+            apiAverage
+        );
 
 
     let count =
-        Number(apiCount);
+        Number(
+            apiCount
+        );
 
 
     if (
-        !Number.isFinite(average)
+        !Number.isFinite(
+            average
+        )
     ) {
 
-        if (reviews.length > 0) {
+        if (
+            reviews.length > 0
+        ) {
 
             const total =
                 reviews.reduce(
                     (
                         sum,
                         review
-                    ) =>
-                        sum +
-                        Number(
-                            review.rating || 0
-                        ),
+                    ) => {
+
+                        return (
+                            sum +
+                            Number(
+                                review.rating || 0
+                            )
+                        );
+
+                    },
                     0
                 );
 
@@ -1986,7 +2002,8 @@ function updateReviewSummary(
 
         else {
 
-            average = 0;
+            average =
+                0;
 
         }
 
@@ -1994,7 +2011,9 @@ function updateReviewSummary(
 
 
     if (
-        !Number.isFinite(count)
+        !Number.isFinite(
+            count
+        )
     ) {
 
         count =
@@ -2003,16 +2022,24 @@ function updateReviewSummary(
     }
 
 
-    reviewAverage.textContent =
-        average.toFixed(1);
+    if (reviewAverage) {
+
+        reviewAverage.textContent =
+            average.toFixed(1);
+
+    }
 
 
-    reviewCount.textContent =
-        `${count} ${
-            count === 1
-                ? "review"
-                : "reviews"
-        }`;
+    if (reviewCount) {
+
+        reviewCount.textContent =
+            `${count} ${
+                count === 1
+                    ? "review"
+                    : "reviews"
+            }`;
+
+    }
 
 }
 
@@ -2038,13 +2065,17 @@ function createReviewCard(review) {
             5,
             Math.max(
                 0,
-                Number(review.rating || 0)
+                Number(
+                    review.rating || 0
+                )
             )
         );
 
 
     const starsHTML =
-        "★".repeat(rating) +
+        "★".repeat(
+            rating
+        ) +
         "☆".repeat(
             5 - rating
         );
@@ -2054,7 +2085,9 @@ function createReviewCard(review) {
         "";
 
 
-    if (review.created_at) {
+    if (
+        review.created_at
+    ) {
 
         const date =
             new Date(
@@ -2197,8 +2230,12 @@ async function refreshProduct() {
                 )}`,
                 {
                     method: "GET",
-                    credentials: "include",
-                    cache: "no-store"
+
+                    credentials:
+                        "include",
+
+                    cache:
+                        "no-store"
                 }
             );
 
@@ -2277,7 +2314,9 @@ function updateProductInformation(product) {
 
 
     const stock =
-        Number(product.stock || 0);
+        Number(
+            product.stock || 0
+        );
 
 
     productStock.textContent =
@@ -2300,7 +2339,6 @@ function updateProductInformation(product) {
 
     addToCartBtn.disabled =
         stock <= 0;
-
 
     buyNowBtn.disabled =
         stock <= 0;
@@ -2378,13 +2416,8 @@ async function initialize() {
     }
 
 
-    // Check login first so the
-    // review form is displayed correctly.
-
     await checkUserLogin();
 
-
-    // Load product and reviews.
 
     await loadProduct();
 
