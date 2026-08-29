@@ -1,7 +1,7 @@
 // =========================================================
 // AR E-COMMERCE
 // EXPRESS SERVER
-// SESSION + USER + PRODUCT + CART
+// SESSION + USER + PRODUCT + CART + REVIEWS
 // =========================================================
 
 require("dotenv").config();
@@ -34,13 +34,10 @@ const pagesPath = path.join(
 // MIDDLEWARE
 // =========================================================
 
-// Parse JSON
 app.use(
     express.json()
 );
 
-
-// Parse form data
 app.use(
     express.urlencoded({
         extended: true
@@ -81,7 +78,7 @@ app.use(
 
 
 // =========================================================
-// STATIC FRONTEND FILES
+// STATIC FRONTEND
 // =========================================================
 
 app.use(
@@ -92,7 +89,7 @@ app.use(
 
 
 // =========================================================
-// UPLOADED PRODUCT IMAGES
+// PRODUCT UPLOADS
 // =========================================================
 
 app.use(
@@ -107,7 +104,7 @@ app.use(
 
 
 // =========================================================
-// IMPORT API ROUTES
+// IMPORT ROUTES
 // =========================================================
 
 const userRoutes =
@@ -122,17 +119,13 @@ const adminProductRoutes =
 const cartRoutes =
     require("./routes/cartRoutes");
 
+const reviewRoutes =
+    require("./routes/reviewRoutes");
+
 
 // =========================================================
-// USER API ROUTES
+// USER API
 // =========================================================
-
-/*
-    POST /api/users/register
-    POST /api/users/login
-    GET  /api/users/me
-    POST /api/users/logout
-*/
 
 app.use(
     "/api/users",
@@ -141,13 +134,8 @@ app.use(
 
 
 // =========================================================
-// PRODUCT API ROUTES
+// PRODUCT API
 // =========================================================
-
-/*
-    GET /api/products
-    GET /api/products/:id
-*/
 
 app.use(
     "/api/products",
@@ -156,15 +144,8 @@ app.use(
 
 
 // =========================================================
-// ADMIN PRODUCT API ROUTES
+// ADMIN PRODUCT API
 // =========================================================
-
-/*
-    GET    /api/admin/products
-    POST   /api/admin/products
-    PUT    /api/admin/products/:id
-    DELETE /api/admin/products/:id
-*/
 
 app.use(
     "/api/admin/products",
@@ -173,15 +154,8 @@ app.use(
 
 
 // =========================================================
-// CART API ROUTES
+// CART API
 // =========================================================
-
-/*
-    GET    /api/cart
-    POST   /api/cart/add
-    DELETE /api/cart/:cartItemId
-    DELETE /api/cart
-*/
 
 app.use(
     "/api/cart",
@@ -190,8 +164,13 @@ app.use(
 
 
 // =========================================================
-// PAGE ROUTES
+// REVIEW API
 // =========================================================
+
+app.use(
+    "/api/reviews",
+    reviewRoutes
+);
 
 
 // =========================================================
@@ -272,42 +251,25 @@ app.get(
 
 // =========================================================
 // PRODUCT DETAILS
-// =========================================================
-//
-// Supports:
-//
-// /product_details.html?id=1
-// /product_details?id=1
-// /product-details?id=1
-//
-// Actual file:
-//
-// frontend/pages/product_details.html
-//
+// IMPORTANT:
+// frontend uses /product-details.html
 // =========================================================
 
 app.get(
-    [
-        "/product_details.html",
-        "/product_details",
-        "/product-details"
-    ],
+    "/product-details.html",
     (req, res) => {
 
-        const productDetailsPage =
+        res.sendFile(
             path.join(
                 pagesPath,
                 "product_details.html"
-            );
-
-        res.sendFile(
-            productDetailsPage,
+            ),
             error => {
 
                 if (error) {
 
                     console.error(
-                        "Product details page error:",
+                        "Product details error:",
                         error
                     );
 
@@ -329,7 +291,72 @@ app.get(
 
 
 // =========================================================
-// CART PAGE
+// PRODUCT DETAILS WITHOUT HTML
+// =========================================================
+
+app.get(
+    "/product-details",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "product_details.html"
+            )
+        );
+
+    }
+);
+
+
+// =========================================================
+// OLD UNDERSCORE URL SUPPORT
+// =========================================================
+
+app.get(
+    "/product_details.html",
+    (req, res) => {
+
+        const query =
+            req.url.includes("?")
+                ? req.url.substring(
+                    req.url.indexOf("?")
+                )
+                : "";
+
+        res.redirect(
+            `/product-details.html${query}`
+        );
+
+    }
+);
+
+
+// =========================================================
+// OLD UNDERSCORE URL SUPPORT
+// =========================================================
+
+app.get(
+    "/product_details",
+    (req, res) => {
+
+        const query =
+            req.url.includes("?")
+                ? req.url.substring(
+                    req.url.indexOf("?")
+                )
+                : "";
+
+        res.redirect(
+            `/product-details.html${query}`
+        );
+
+    }
+);
+
+
+// =========================================================
+// CART
 // =========================================================
 
 app.get(
@@ -340,27 +367,7 @@ app.get(
             path.join(
                 pagesPath,
                 "cart.html"
-            ),
-            error => {
-
-                if (error) {
-
-                    console.error(
-                        "Cart page error:",
-                        error
-                    );
-
-                    if (!res.headersSent) {
-
-                        res.status(404).send(
-                            "Cart page not found."
-                        );
-
-                    }
-
-                }
-
-            }
+            )
         );
 
     }
@@ -449,12 +456,6 @@ app.get(
 
 app.use(
     (req, res) => {
-
-        console.log(
-            "404 - Page not found:",
-            req.method,
-            req.originalUrl
-        );
 
         res.status(404).send(
             "Page not found"
