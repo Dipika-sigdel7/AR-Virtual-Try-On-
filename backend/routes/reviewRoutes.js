@@ -1,8 +1,6 @@
 // =========================================================
 // AR E-COMMERCE
 // PRODUCT REVIEW ROUTES
-// GET + POST REVIEWS
-// LOGIN REQUIRED FOR POST
 // =========================================================
 
 const express = require("express");
@@ -43,11 +41,7 @@ if (!fs.existsSync(uploadDirectory)) {
 
 const storage = multer.diskStorage({
 
-    destination: (
-        req,
-        file,
-        cb
-    ) => {
+    destination: (req, file, cb) => {
 
         cb(
             null,
@@ -57,11 +51,7 @@ const storage = multer.diskStorage({
     },
 
 
-    filename: (
-        req,
-        file,
-        cb
-    ) => {
+    filename: (req, file, cb) => {
 
         const extension =
             path.extname(
@@ -85,10 +75,6 @@ const storage = multer.diskStorage({
 });
 
 
-// =========================================================
-// MULTER
-// =========================================================
-
 const upload = multer({
 
     storage,
@@ -100,25 +86,22 @@ const upload = multer({
 
     },
 
-
     fileFilter: (
         req,
         file,
         cb
     ) => {
 
-        const allowedTypes = [
-
+        const allowed = [
             "image/jpeg",
             "image/jpg",
             "image/png",
             "image/webp"
-
         ];
 
 
         if (
-            allowedTypes.includes(
+            allowed.includes(
                 file.mimetype
             )
         ) {
@@ -179,12 +162,11 @@ function requireLogin(
 
 // =========================================================
 // GET REVIEWS
-//
-// GET /api/reviews/product/:productId
+// GET /api/reviews/:productId
 // =========================================================
 
 router.get(
-    "/product/:productId",
+    "/:productId",
     async (
         req,
         res
@@ -218,44 +200,10 @@ router.get(
 
 
             // =================================================
-            // CHECK PRODUCT
-            // =================================================
-
-            const [products] =
-                await pool.execute(
-                    `
-                    SELECT id
-                    FROM products
-                    WHERE id = ?
-                    LIMIT 1
-                    `,
-                    [
-                        productId
-                    ]
-                );
-
-
-            if (
-                products.length === 0
-            ) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "Product not found."
-
-                });
-
-            }
-
-
-            // =================================================
             // GET REVIEWS
             // =================================================
 
-            const [reviews] =
+            const [rows] =
                 await pool.execute(
                     `
                     SELECT
@@ -268,17 +216,9 @@ router.get(
 
                         r.rating,
 
-                        r.review AS review_text,
+                        r.review,
 
-                        CASE
-                            WHEN r.image IS NOT NULL
-                            AND r.image != ''
-                            THEN CONCAT(
-                                '/uploads/reviews/',
-                                r.image
-                            )
-                            ELSE NULL
-                        END AS image_url,
+                        r.image,
 
                         r.created_at,
 
@@ -303,46 +243,94 @@ router.get(
 
 
             // =================================================
-            // REVIEW STATISTICS
+            // FORMAT REVIEW DATA FOR FRONTEND
             // =================================================
 
-            const [statistics] =
-                await pool.execute(
-                    `
-                    SELECT
+            const reviews =
+                rows.map(
+                    review => {
 
-                        COUNT(*) AS review_count,
+                        return {
 
-                        COALESCE(
-                            AVG(rating),
-                            0
-                        ) AS average_rating
+                            id:
+                                review.id,
 
-                    FROM reviews
+                            product_id:
+                                review.product_id,
 
-                    WHERE product_id = ?
-                    `,
-                    [
-                        productId
-                    ]
+                            user_id:
+                                review.user_id,
+
+                            rating:
+                                Number(
+                                    review.rating
+                                ),
+
+                            review_text:
+                                review.review,
+
+                            image_url:
+                                review.image
+                                    ? `/uploads/reviews/${encodeURIComponent(
+                                        review.image
+                                    )}`
+                                    : null,
+
+                            created_at:
+                                review.created_at,
+
+                            username:
+                                review.username
+
+                        };
+
+                    }
                 );
+
+
+            // =================================================
+            // CALCULATE SUMMARY
+            // =================================================
+
+            const reviewCount =
+                reviews.length;
+
+
+            const averageRating =
+                reviewCount > 0
+
+                    ? reviews.reduce(
+                        (
+                            total,
+                            item
+                        ) => {
+
+                            return (
+                                total +
+                                Number(
+                                    item.rating
+                                )
+                            );
+
+                        },
+                        0
+                    ) / reviewCount
+
+                    : 0;
 
 
             return res.json({
 
                 success: true,
 
-                reviews: reviews,
+                reviews,
 
                 averageRating:
                     Number(
-                        statistics[0]?.average_rating || 0
+                        averageRating.toFixed(1)
                     ),
 
-                reviewCount:
-                    Number(
-                        statistics[0]?.review_count || 0
-                    )
+                reviewCount
 
             });
 
@@ -373,18 +361,11 @@ router.get(
 
 // =========================================================
 // ADD REVIEW
-//
-// POST /api/reviews
-//
-// FormData:
-// product_id
-// rating
-// review_text
-// image
+// POST /api/reviews/:productId
 // =========================================================
 
 router.post(
-    "/",
+    "/:productId",
     requireLogin,
     upload.single("image"),
 
@@ -393,21 +374,16 @@ router.post(
         res
     ) => {
 
-        try {
+        let uploadedFile = null;
 
-            // =================================================
-            // PRODUCT ID
-            // =================================================
+
+        try {
 
             const productId =
                 Number(
-                    req.body.product_id
+                    req.params.productId
                 );
 
-
-            // =================================================
-            // USER ID
-            // =================================================
 
             const userId =
                 Number(
@@ -415,28 +391,22 @@ router.post(
                 );
 
 
-            // =================================================
-            // RATING
-            // =================================================
-
             const rating =
                 Number(
                     req.body.rating
                 );
 
 
-            // =================================================
-            // REVIEW TEXT
-            // =================================================
-
             const review =
                 String(
-                    req.body.review_text || ""
+                    req.body.review_text ||
+                    req.body.review ||
+                    ""
                 ).trim();
 
 
             // =================================================
-            // VALIDATE PRODUCT
+            // VALIDATE PRODUCT ID
             // =================================================
 
             if (
@@ -532,7 +502,7 @@ router.post(
                     success: false,
 
                     message:
-                        "Review cannot exceed 1000 characters."
+                        "Review is too long."
 
                 });
 
@@ -575,7 +545,7 @@ router.post(
 
 
             // =================================================
-            // IMAGE
+            // REVIEW IMAGE
             // =================================================
 
             let imageName = null;
@@ -585,6 +555,9 @@ router.post(
 
                 imageName =
                     req.file.filename;
+
+                uploadedFile =
+                    req.file.path;
 
             }
 
@@ -654,9 +627,9 @@ router.post(
             );
 
 
-            // =================================================
-            // SUCCESS
-            // =================================================
+            // File was successfully saved in DB
+            uploadedFile = null;
+
 
             return res.status(201).json({
 
@@ -675,6 +648,37 @@ router.post(
                 "POST REVIEW ERROR:",
                 error
             );
+
+
+            // =================================================
+            // DELETE UPLOADED IMAGE IF DB INSERT FAILED
+            // =================================================
+
+            if (
+                uploadedFile &&
+                fs.existsSync(
+                    uploadedFile
+                )
+            ) {
+
+                try {
+
+                    fs.unlinkSync(
+                        uploadedFile
+                    );
+
+                }
+
+                catch (deleteError) {
+
+                    console.error(
+                        "FAILED TO DELETE REVIEW IMAGE:",
+                        deleteError
+                    );
+
+                }
+
+            }
 
 
             return res.status(500).json({
@@ -705,7 +709,8 @@ router.use(
     ) => {
 
         if (
-            error instanceof multer.MulterError
+            error instanceof
+            multer.MulterError
         ) {
 
             if (
