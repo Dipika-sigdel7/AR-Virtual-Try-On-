@@ -21,29 +21,49 @@ router.get("/", async (req, res) => {
                 p.price,
                 p.stock,
                 p.rating,
+                p.image,
                 p.is_available,
                 p.created_at,
+
                 c.id AS category_id,
                 c.name AS category_name
+
             FROM products p
+
             INNER JOIN categories c
                 ON p.category_id = c.id
+
             WHERE p.is_available = 1
+
             ORDER BY p.created_at DESC
         `);
 
+
         res.json({
+
             success: true,
+
             products: products
+
         });
 
-    } catch (error) {
+    }
 
-        console.error("GET PRODUCTS ERROR:", error);
+    catch (error) {
+
+        console.error(
+            "GET PRODUCTS ERROR:",
+            error
+        );
+
 
         res.status(500).json({
+
             success: false,
-            message: error.message
+
+            message:
+                error.message
+
         });
 
     }
@@ -60,27 +80,42 @@ router.get("/categories", async (req, res) => {
 
     try {
 
-        const [categories] = await db.execute(`
-            SELECT
-                id,
-                name,
-                description
-            FROM categories
-            ORDER BY name ASC
-        `);
+        const [categories] =
+            await db.execute(`
+                SELECT
+                    id,
+                    name,
+                    description
+                FROM categories
+                ORDER BY name ASC
+            `);
+
 
         res.json({
+
             success: true,
+
             categories: categories
+
         });
 
-    } catch (error) {
+    }
 
-        console.error("GET CATEGORIES ERROR:", error);
+    catch (error) {
+
+        console.error(
+            "GET CATEGORIES ERROR:",
+            error
+        );
+
 
         res.status(500).json({
+
             success: false,
-            message: error.message
+
+            message:
+                error.message
+
         });
 
     }
@@ -97,67 +132,105 @@ router.get("/:id", async (req, res) => {
 
     try {
 
-        const productId = Number(req.params.id);
+        const productId =
+            Number(req.params.id);
 
-        if (!Number.isInteger(productId)) {
+
+        if (
+            !Number.isInteger(productId) ||
+            productId <= 0
+        ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Invalid product ID."
+
+                message:
+                    "Invalid product ID."
+
             });
 
         }
 
 
-        const [products] = await db.execute(
-            `
-            SELECT
-                p.id,
-                p.name,
-                p.description,
-                p.price,
-                p.stock,
-                p.rating,
-                p.is_available,
-                p.created_at,
-                c.id AS category_id,
-                c.name AS category_name
-            FROM products p
-            INNER JOIN categories c
-                ON p.category_id = c.id
-            WHERE p.id = ?
-            `,
-            [productId]
-        );
+        const [products] =
+            await db.execute(
+                `
+                SELECT
+                    p.id,
+                    p.name,
+                    p.description,
+                    p.price,
+                    p.stock,
+                    p.rating,
+                    p.image,
+                    p.is_available,
+                    p.created_at,
+
+                    c.id AS category_id,
+                    c.name AS category_name
+
+                FROM products p
+
+                INNER JOIN categories c
+                    ON p.category_id = c.id
+
+                WHERE
+                    p.id = ?
+                    AND p.is_available = 1
+                `,
+                [productId]
+            );
 
 
-        if (products.length === 0) {
+        if (
+            products.length === 0
+        ) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Product not found."
+
+                message:
+                    "Product not found."
+
             });
 
         }
 
 
         res.json({
+
             success: true,
-            product: products[0]
+
+            product:
+                products[0]
+
         });
 
-    } catch (error) {
+    }
 
-        console.error("GET PRODUCT ERROR:", error);
+    catch (error) {
+
+        console.error(
+            "GET PRODUCT ERROR:",
+            error
+        );
+
 
         res.status(500).json({
+
             success: false,
-            message: error.message
+
+            message:
+                error.message
+
         });
 
     }
 
 });
+
 
 // =====================================================
 // CHECKOUT
@@ -166,7 +239,9 @@ router.get("/:id", async (req, res) => {
 
 router.post("/checkout", async (req, res) => {
 
-    const connection = await db.getConnection();
+    const connection =
+        await db.getConnection();
+
 
     try {
 
@@ -178,34 +253,57 @@ router.post("/checkout", async (req, res) => {
 
 
         // =============================================
-        // VALIDATE REQUEST
+        // VALIDATE USER
         // =============================================
 
         if (!user_id) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "User ID is required."
+
+                message:
+                    "User ID is required."
+
             });
 
         }
 
+
+        // =============================================
+        // VALIDATE ADDRESS
+        // =============================================
 
         if (!shipping_address) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Shipping address is required."
+
+                message:
+                    "Shipping address is required."
+
             });
 
         }
 
 
-        if (!Array.isArray(items) || items.length === 0) {
+        // =============================================
+        // VALIDATE ITEMS
+        // =============================================
+
+        if (
+            !Array.isArray(items) ||
+            items.length === 0
+        ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Cart is empty."
+
+                message:
+                    "Cart is empty."
+
             });
 
         }
@@ -224,20 +322,23 @@ router.post("/checkout", async (req, res) => {
 
 
         // =============================================
-        // CHECK EVERY PRODUCT
+        // CHECK PRODUCTS
         // =============================================
 
         for (const item of items) {
 
-            const productId = Number(item.product_id);
-            const quantity = Number(item.quantity);
+            const productId =
+                Number(item.product_id);
 
 
-            // -----------------------------------------
-            // Validate product ID
-            // -----------------------------------------
+            const quantity =
+                Number(item.quantity);
 
-            if (!Number.isInteger(productId)) {
+
+            if (
+                !Number.isInteger(productId) ||
+                productId <= 0
+            ) {
 
                 throw new Error(
                     "Invalid product ID."
@@ -245,10 +346,6 @@ router.post("/checkout", async (req, res) => {
 
             }
 
-
-            // -----------------------------------------
-            // Validate quantity
-            // -----------------------------------------
 
             if (
                 !Number.isInteger(quantity) ||
@@ -262,32 +359,29 @@ router.post("/checkout", async (req, res) => {
             }
 
 
-            // -----------------------------------------
-            // Get product
-            // FOR UPDATE locks the row
-            // -----------------------------------------
+            const [products] =
+                await connection.execute(
+                    `
+                    SELECT
+                        id,
+                        name,
+                        price,
+                        stock,
+                        is_available
 
-            const [products] = await connection.execute(
-                `
-                SELECT
-                    id,
-                    name,
-                    price,
-                    stock,
-                    is_available
-                FROM products
-                WHERE id = ?
-                FOR UPDATE
-                `,
-                [productId]
-            );
+                    FROM products
+
+                    WHERE id = ?
+
+                    FOR UPDATE
+                    `,
+                    [productId]
+                );
 
 
-            // -----------------------------------------
-            // Product doesn't exist
-            // -----------------------------------------
-
-            if (products.length === 0) {
+            if (
+                products.length === 0
+            ) {
 
                 throw new Error(
                     `Product ${productId} not found.`
@@ -296,14 +390,13 @@ router.post("/checkout", async (req, res) => {
             }
 
 
-            const product = products[0];
+            const product =
+                products[0];
 
 
-            // -----------------------------------------
-            // Product unavailable
-            // -----------------------------------------
-
-            if (product.is_available !== 1) {
+            if (
+                product.is_available !== 1
+            ) {
 
                 throw new Error(
                     `${product.name} is currently unavailable.`
@@ -312,11 +405,9 @@ router.post("/checkout", async (req, res) => {
             }
 
 
-            // -----------------------------------------
-            // CHECK STOCK
-            // -----------------------------------------
-
-            if (product.stock < quantity) {
+            if (
+                product.stock < quantity
+            ) {
 
                 throw new Error(
                     `Not enough stock for ${product.name}. Available stock: ${product.stock}.`
@@ -325,25 +416,26 @@ router.post("/checkout", async (req, res) => {
             }
 
 
-            // -----------------------------------------
-            // CALCULATE ITEM TOTAL
-            // -----------------------------------------
-
             const itemTotal =
-                Number(product.price) * quantity;
+                Number(product.price) *
+                quantity;
 
 
-            totalAmount += itemTotal;
+            totalAmount +=
+                itemTotal;
 
-
-            // -----------------------------------------
-            // Store order item information
-            // -----------------------------------------
 
             orderItems.push({
-                product_id: product.id,
-                quantity: quantity,
-                price: product.price
+
+                product_id:
+                    product.id,
+
+                quantity:
+                    quantity,
+
+                price:
+                    product.price
+
             });
 
         }
@@ -353,26 +445,36 @@ router.post("/checkout", async (req, res) => {
         // CREATE ORDER
         // =============================================
 
-        const [orderResult] = await connection.execute(
-            `
-            INSERT INTO orders
-            (
-                user_id,
-                total_amount,
-                status,
-                payment_method,
-                payment_status,
-                shipping_address
-            )
-            VALUES (?, ?, 'pending', ?, 'pending', ?)
-            `,
-            [
-                user_id,
-                totalAmount,
-                "Cash on Delivery",
-                shipping_address
-            ]
-        );
+        const [orderResult] =
+            await connection.execute(
+                `
+                INSERT INTO orders
+                (
+                    user_id,
+                    total_amount,
+                    status,
+                    payment_method,
+                    payment_status,
+                    shipping_address
+                )
+
+                VALUES
+                (
+                    ?,
+                    ?,
+                    'pending',
+                    ?,
+                    'pending',
+                    ?
+                )
+                `,
+                [
+                    user_id,
+                    totalAmount,
+                    "Cash on Delivery",
+                    shipping_address
+                ]
+            );
 
 
         const orderId =
@@ -383,7 +485,10 @@ router.post("/checkout", async (req, res) => {
         // CREATE ORDER ITEMS
         // =============================================
 
-        for (const item of orderItems) {
+        for (
+            const item
+            of orderItems
+        ) {
 
             await connection.execute(
                 `
@@ -394,7 +499,9 @@ router.post("/checkout", async (req, res) => {
                     quantity,
                     price
                 )
-                VALUES (?, ?, ?, ?)
+
+                VALUES
+                (?, ?, ?, ?)
                 `,
                 [
                     orderId,
@@ -406,13 +513,16 @@ router.post("/checkout", async (req, res) => {
 
 
             // =========================================
-            // REDUCE PRODUCT STOCK
+            // REDUCE STOCK
             // =========================================
 
             await connection.execute(
                 `
                 UPDATE products
-                SET stock = stock - ?
+
+                SET stock =
+                    stock - ?
+
                 WHERE id = ?
                 `,
                 [
@@ -425,14 +535,14 @@ router.post("/checkout", async (req, res) => {
 
 
         // =============================================
-        // COMMIT TRANSACTION
+        // COMMIT
         // =============================================
 
         await connection.commit();
 
 
         // =============================================
-        // SUCCESS RESPONSE
+        // RESPONSE
         // =============================================
 
         res.status(201).json({
@@ -450,12 +560,9 @@ router.post("/checkout", async (req, res) => {
 
         });
 
+    }
 
-    } catch (error) {
-
-        // =============================================
-        // ROLLBACK
-        // =============================================
+    catch (error) {
 
         await connection.rollback();
 
@@ -475,12 +582,9 @@ router.post("/checkout", async (req, res) => {
 
         });
 
+    }
 
-    } finally {
-
-        // =============================================
-        // RELEASE CONNECTION
-        // =============================================
+    finally {
 
         connection.release();
 
@@ -489,4 +593,5 @@ router.post("/checkout", async (req, res) => {
 });
 
 
-module.exports = router;
+module.exports =
+    router;

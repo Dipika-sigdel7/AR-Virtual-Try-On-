@@ -12,29 +12,36 @@ const session = require("express-session");
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+    process.env.PORT || 3000;
 
 
 // =========================================================
 // FRONTEND PATHS
 // =========================================================
 
-const frontendPath = path.join(
-    __dirname,
-    "../frontend"
-);
+const frontendPath =
+    path.join(
+        __dirname,
+        "../frontend"
+    );
 
-const pagesPath = path.join(
-    frontendPath,
-    "pages"
-);
+
+const pagesPath =
+    path.join(
+        frontendPath,
+        "pages"
+    );
 
 
 // =========================================================
 // MIDDLEWARE
 // =========================================================
 
-app.use(express.json());
+app.use(
+    express.json()
+);
+
 
 app.use(
     express.urlencoded({
@@ -67,7 +74,10 @@ app.use(
             sameSite: "lax",
 
             maxAge:
-                24 * 60 * 60 * 1000
+                24 *
+                60 *
+                60 *
+                1000
 
         }
 
@@ -80,7 +90,9 @@ app.use(
 // =========================================================
 
 app.use(
-    express.static(frontendPath)
+    express.static(
+        frontendPath
+    )
 );
 
 
@@ -106,14 +118,18 @@ app.use(
 const userRoutes =
     require("./routes/userRoutes");
 
+
 const productRoutes =
     require("./routes/productRoutes");
+
 
 const adminProductRoutes =
     require("./routes/adminProductRoutes");
 
+
 const cartRoutes =
     require("./routes/cartRoutes");
+
 
 const reviewRoutes =
     require("./routes/reviewRoutes");
@@ -248,15 +264,19 @@ app.get(
 // =========================================================
 // PRODUCT DETAILS
 // =========================================================
-// URL:
-// /product-details.html?id=1
 //
 // ACTUAL FILE:
+//
 // frontend/pages/product_details.html
+//
+// URL:
+//
+// /product_details.html?id=1
+//
 // =========================================================
 
 app.get(
-    "/product-details.html",
+    "/product_details.html",
     (req, res) => {
 
         res.sendFile(
@@ -269,11 +289,14 @@ app.get(
                 if (error) {
 
                     console.error(
-                        "Product details page error:",
+                        "PRODUCT DETAILS ERROR:",
                         error
                     );
 
-                    if (!res.headersSent) {
+
+                    if (
+                        !res.headersSent
+                    ) {
 
                         res.status(404).send(
                             "Product details page not found."
@@ -293,12 +316,13 @@ app.get(
 // =========================================================
 // PRODUCT DETAILS WITHOUT .HTML
 // =========================================================
-// Example:
-// /product-details?id=1
+//
+// /product_details?id=1
+//
 // =========================================================
 
 app.get(
-    "/product-details",
+    "/product_details",
     (req, res) => {
 
         res.sendFile(
@@ -313,15 +337,17 @@ app.get(
 
 
 // =========================================================
-// OLD UNDERSCORE URL SUPPORT
+// ALSO SUPPORT HYPHEN URL
 // =========================================================
-// /product_details.html?id=1
-//        ↓
+//
 // /product-details.html?id=1
+//
+// This redirects to the real underscore URL.
+//
 // =========================================================
 
 app.get(
-    "/product_details.html",
+    "/product-details.html",
     (req, res) => {
 
         const queryString =
@@ -329,10 +355,12 @@ app.get(
                 req.query
             ).toString();
 
+
         const redirectUrl =
             queryString
-                ? `/product-details.html?${queryString}`
-                : "/product-details.html";
+                ? `/product_details.html?${queryString}`
+                : "/product_details.html";
+
 
         res.redirect(
             redirectUrl
@@ -343,15 +371,11 @@ app.get(
 
 
 // =========================================================
-// OLD UNDERSCORE URL SUPPORT
-// =========================================================
-// /product_details?id=1
-//        ↓
-// /product-details.html?id=1
+// ALSO SUPPORT HYPHEN URL WITHOUT HTML
 // =========================================================
 
 app.get(
-    "/product_details",
+    "/product-details",
     (req, res) => {
 
         const queryString =
@@ -359,10 +383,12 @@ app.get(
                 req.query
             ).toString();
 
+
         const redirectUrl =
             queryString
-                ? `/product-details.html?${queryString}`
-                : "/product-details.html";
+                ? `/product_details.html?${queryString}`
+                : "/product_details.html";
+
 
         res.redirect(
             redirectUrl
@@ -490,11 +516,14 @@ app.use(
     (err, req, res, next) => {
 
         console.error(
-            "Server Error:",
+            "SERVER ERROR:",
             err
         );
 
-        if (!res.headersSent) {
+
+        if (
+            !res.headersSent
+        ) {
 
             res.status(500).send(
                 "Internal server error"

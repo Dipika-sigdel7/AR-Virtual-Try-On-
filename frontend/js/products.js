@@ -1,238 +1,46 @@
 // =========================================================
 // AR ECOMMERCE
-// PRODUCT DETAILS PAGE
-// PRODUCT + CART + REVIEWS
+// PRODUCTS PAGE
+// DATABASE PRODUCTS + SHARED DATABASE CART
+// PRODUCT DETAILS NAVIGATION
 // =========================================================
 
 
 // =========================================================
-// GLOBAL
+// GLOBAL USER
 // =========================================================
 
-let currentProduct = null;
-
-let currentUser = null;
+window.currentUser = null;
 
 let userLoggedIn = false;
 
-let selectedRating = 0;
+
+// =========================================================
+// GLOBAL CART
+// =========================================================
+
+window.cart = [];
+
+
+// =========================================================
+// PRODUCTS
+// =========================================================
+
+window.productsById = {};
 
 
 // =========================================================
 // ELEMENTS
 // =========================================================
 
-const loading =
+const categoriesContainer =
     document.getElementById(
-        "loading"
-    );
-
-const errorMessage =
-    document.getElementById(
-        "errorMessage"
-    );
-
-const productDetails =
-    document.getElementById(
-        "productDetails"
-    );
-
-const reviewsSection =
-    document.getElementById(
-        "reviewsSection"
-    );
-
-const productImage =
-    document.getElementById(
-        "productImage"
-    );
-
-const productCategory =
-    document.getElementById(
-        "productCategory"
-    );
-
-const productName =
-    document.getElementById(
-        "productName"
-    );
-
-const productRating =
-    document.getElementById(
-        "productRating"
-    );
-
-const productPrice =
-    document.getElementById(
-        "productPrice"
-    );
-
-const productDescription =
-    document.getElementById(
-        "productDescription"
-    );
-
-const productStock =
-    document.getElementById(
-        "productStock"
-    );
-
-const quantityInput =
-    document.getElementById(
-        "quantity"
-    );
-
-const decreaseBtn =
-    document.getElementById(
-        "decreaseBtn"
-    );
-
-const increaseBtn =
-    document.getElementById(
-        "increaseBtn"
-    );
-
-const addToCartBtn =
-    document.getElementById(
-        "addToCartBtn"
-    );
-
-const buyNowBtn =
-    document.getElementById(
-        "buyNowBtn"
-    );
-
-const tryOnBtn =
-    document.getElementById(
-        "tryOnBtn"
-    );
-
-const loginNav =
-    document.getElementById(
-        "loginNav"
+        "categories-container"
     );
 
 
 // =========================================================
-// REVIEW ELEMENTS
-// =========================================================
-
-const writeReviewBtn =
-    document.getElementById(
-        "writeReviewBtn"
-    );
-
-const reviewFormContainer =
-    document.getElementById(
-        "reviewFormContainer"
-    );
-
-const reviewForm =
-    document.getElementById(
-        "reviewForm"
-    );
-
-const reviewRating =
-    document.getElementById(
-        "reviewRating"
-    );
-
-const reviewText =
-    document.getElementById(
-        "reviewText"
-    );
-
-const reviewImage =
-    document.getElementById(
-        "reviewImage"
-    );
-
-const imagePreview =
-    document.getElementById(
-        "imagePreview"
-    );
-
-const reviewsList =
-    document.getElementById(
-        "reviewsList"
-    );
-
-const cancelReviewBtn =
-    document.getElementById(
-        "cancelReviewBtn"
-    );
-
-const submitReviewBtn =
-    document.getElementById(
-        "submitReviewBtn"
-    );
-
-
-// =========================================================
-// LOGIN MODAL
-// =========================================================
-
-const loginModal =
-    document.getElementById(
-        "loginModal"
-    );
-
-const closeLoginModal =
-    document.getElementById(
-        "closeLoginModal"
-    );
-
-const goToLoginBtn =
-    document.getElementById(
-        "goToLoginBtn"
-    );
-
-const continueShoppingBtn =
-    document.getElementById(
-        "continueShoppingBtn"
-    );
-
-
-// =========================================================
-// GET PRODUCT ID
-// =========================================================
-
-function getProductId() {
-
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
-
-    return params.get(
-        "id"
-    );
-
-}
-
-
-// =========================================================
-// ESCAPE HTML
-// =========================================================
-
-function escapeHTML(value) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-    div.textContent =
-        value ?? "";
-
-    return div.innerHTML;
-
-}
-
-
-// =========================================================
-// CHECK LOGIN
+// CHECK CURRENT USER
 // =========================================================
 
 async function checkUserLogin() {
@@ -249,7 +57,6 @@ async function checkUserLogin() {
                 }
             );
 
-
         const data =
             await response.json();
 
@@ -263,15 +70,10 @@ async function checkUserLogin() {
 
             userLoggedIn = true;
 
-            currentUser =
+            window.currentUser =
                 data.user;
 
-            if (loginNav) {
-
-                loginNav.textContent =
-                    "Login";
-
-            }
+            await loadCart();
 
             return true;
 
@@ -280,7 +82,11 @@ async function checkUserLogin() {
 
         userLoggedIn = false;
 
-        currentUser = null;
+        window.currentUser = null;
+
+        window.cart = [];
+
+        updateCart();
 
         return false;
 
@@ -289,13 +95,17 @@ async function checkUserLogin() {
     catch (error) {
 
         console.error(
-            "Login check error:",
+            "SESSION CHECK ERROR:",
             error
         );
 
         userLoggedIn = false;
 
-        currentUser = null;
+        window.currentUser = null;
+
+        window.cart = [];
+
+        updateCart();
 
         return false;
 
@@ -305,18 +115,16 @@ async function checkUserLogin() {
 
 
 // =========================================================
-// LOAD PRODUCT
+// LOAD USER CART
 // =========================================================
 
-async function loadProduct() {
+async function loadCart() {
 
-    const productId =
-        getProductId();
+    if (!userLoggedIn) {
 
+        window.cart = [];
 
-    if (!productId) {
-
-        showError();
+        updateCart();
 
         return;
 
@@ -327,11 +135,10 @@ async function loadProduct() {
 
         const response =
             await fetch(
-                `/api/products/${encodeURIComponent(
-                    productId
-                )}`,
+                "/api/cart",
                 {
                     method: "GET",
+                    credentials: "include",
                     cache: "no-store"
                 }
             );
@@ -342,392 +149,90 @@ async function loadProduct() {
 
 
         if (
-            !response.ok ||
-            data.success !== true
+            response.ok &&
+            data.success === true
         ) {
 
-            showError();
+            window.cart =
+                Array.isArray(data.items)
+                    ? data.items.map(
+                        item => ({
 
-            return;
+                            cart_item_id:
+                                item.cart_item_id,
+
+                            id:
+                                item.product_id,
+
+                            product_id:
+                                item.product_id,
+
+                            name:
+                                item.name,
+
+                            description:
+                                item.description,
+
+                            image:
+                                item.image,
+
+                            price:
+                                Number(
+                                    item.price || 0
+                                ),
+
+                            stock:
+                                Number(
+                                    item.stock || 0
+                                ),
+
+                            rating:
+                                item.rating,
+
+                            category_name:
+                                item.category_name,
+
+                            quantity:
+                                Number(
+                                    item.quantity || 0
+                                )
+
+                        })
+                    )
+                    : [];
+
+
+            updateCart();
 
         }
 
+        else {
 
-        currentProduct =
-            data.product;
+            console.error(
+                data.message ||
+                "Failed to load cart."
+            );
 
+            window.cart = [];
 
-        displayProduct(
-            currentProduct
-        );
+            updateCart();
 
-
-        await loadReviews(
-            productId
-        );
+        }
 
     }
 
     catch (error) {
 
         console.error(
-            "PRODUCT LOAD ERROR:",
+            "LOAD CART ERROR:",
             error
         );
 
-        showError();
+        window.cart = [];
+
+        updateCart();
 
     }
-
-}
-
-
-// =========================================================
-// DISPLAY PRODUCT
-// =========================================================
-
-function displayProduct(product) {
-
-    loading.style.display =
-        "none";
-
-
-    errorMessage.style.display =
-        "none";
-
-
-    productDetails.style.display =
-        "grid";
-
-
-    reviewsSection.style.display =
-        "block";
-
-
-    productCategory.textContent =
-        product.category_name ||
-        product.category ||
-        "Uncategorized";
-
-
-    productName.textContent =
-        product.name ||
-        "Product";
-
-
-    productRating.textContent =
-        `★ ${Number(
-            product.rating || 0
-        ).toFixed(1)}`;
-
-
-    productPrice.textContent =
-        `Rs. ${Number(
-            product.price || 0
-        ).toFixed(2)}`;
-
-
-    productDescription.textContent =
-        product.description ||
-        "No description available.";
-
-
-    const stock =
-        Number(
-            product.stock || 0
-        );
-
-
-    if (stock > 0) {
-
-        productStock.textContent =
-            `${stock} available`;
-
-        productStock.className =
-            "stock-available";
-
-        quantityInput.max =
-            stock;
-
-    }
-
-    else {
-
-        productStock.textContent =
-            "Out of stock";
-
-        productStock.className =
-            "stock-unavailable";
-
-        addToCartBtn.disabled =
-            true;
-
-        buyNowBtn.disabled =
-            true;
-
-    }
-
-
-    // ---------------------------------------------
-    // IMAGE
-    // ---------------------------------------------
-
-    if (
-        product.image
-    ) {
-
-        productImage.src =
-            product.image;
-
-    }
-
-    else {
-
-        productImage.src =
-            "/images/product-placeholder.png";
-
-    }
-
-
-    productImage.alt =
-        product.name ||
-        "Product";
-
-
-    // ---------------------------------------------
-    // SAVE PRODUCT
-    // ---------------------------------------------
-
-    window.currentProduct =
-        product;
-
-}
-
-
-// =========================================================
-// ERROR
-// =========================================================
-
-function showError() {
-
-    loading.style.display =
-        "none";
-
-
-    productDetails.style.display =
-        "none";
-
-
-    reviewsSection.style.display =
-        "none";
-
-
-    errorMessage.style.display =
-        "block";
-
-}
-
-
-// =========================================================
-// QUANTITY
-// =========================================================
-
-if (decreaseBtn) {
-
-    decreaseBtn.addEventListener(
-        "click",
-        () => {
-
-            let quantity =
-                Number(
-                    quantityInput.value
-                ) || 1;
-
-
-            if (
-                quantity > 1
-            ) {
-
-                quantity--;
-
-            }
-
-
-            quantityInput.value =
-                quantity;
-
-        }
-    );
-
-}
-
-
-if (increaseBtn) {
-
-    increaseBtn.addEventListener(
-        "click",
-        () => {
-
-            let quantity =
-                Number(
-                    quantityInput.value
-                ) || 1;
-
-
-            const stock =
-                Number(
-                    currentProduct?.stock || 0
-                );
-
-
-            if (
-                stock > 0 &&
-                quantity < stock
-            ) {
-
-                quantity++;
-
-            }
-
-
-            quantityInput.value =
-                quantity;
-
-        }
-    );
-
-}
-
-
-// =========================================================
-// QUANTITY VALIDATION
-// =========================================================
-
-if (quantityInput) {
-
-    quantityInput.addEventListener(
-        "change",
-        () => {
-
-            let quantity =
-                Number(
-                    quantityInput.value
-                ) || 1;
-
-
-            const stock =
-                Number(
-                    currentProduct?.stock || 0
-                );
-
-
-            if (
-                quantity < 1
-            ) {
-
-                quantity = 1;
-
-            }
-
-
-            if (
-                stock > 0 &&
-                quantity > stock
-            ) {
-
-                quantity = stock;
-
-            }
-
-
-            quantityInput.value =
-                quantity;
-
-        }
-    );
-
-}
-
-
-// =========================================================
-// LOGIN MODAL
-// =========================================================
-
-function showLoginModal() {
-
-    if (!loginModal) {
-
-        return;
-
-    }
-
-
-    loginModal.style.display =
-        "flex";
-
-
-    document.body.style.overflow =
-        "hidden";
-
-}
-
-
-function hideLoginModal() {
-
-    if (!loginModal) {
-
-        return;
-
-    }
-
-
-    loginModal.style.display =
-        "none";
-
-
-    document.body.style.overflow =
-        "";
-
-}
-
-
-if (closeLoginModal) {
-
-    closeLoginModal.addEventListener(
-        "click",
-        hideLoginModal
-    );
-
-}
-
-
-if (continueShoppingBtn) {
-
-    continueShoppingBtn.addEventListener(
-        "click",
-        hideLoginModal
-    );
-
-}
-
-
-if (goToLoginBtn) {
-
-    goToLoginBtn.addEventListener(
-        "click",
-        () => {
-
-            sessionStorage.setItem(
-                "loginRedirect",
-                window.location.href
-            );
-
-
-            window.location.href =
-                "/login";
-
-        }
-    );
 
 }
 
@@ -736,854 +241,177 @@ if (goToLoginBtn) {
 // ADD TO CART
 // =========================================================
 
-if (addToCartBtn) {
+async function addToCart(product) {
 
-    addToCartBtn.addEventListener(
-        "click",
-        async () => {
+    if (!userLoggedIn) {
 
-            const loggedIn =
-                await checkUserLogin();
-
-
-            if (!loggedIn) {
-
-                sessionStorage.setItem(
-                    "loginRedirect",
-                    window.location.href
-                );
+        alert(
+            "Please login before adding products to the cart."
+        );
 
 
-                showLoginModal();
-
-                return;
-
-            }
-
-
-            if (!currentProduct) {
-
-                return;
-
-            }
+        sessionStorage.setItem(
+            "loginRedirect",
+            window.location.href
+        );
 
 
-            const quantity =
-                Number(
-                    quantityInput.value
-                ) || 1;
+        window.location.href =
+            "/login";
 
 
-            addToCartBtn.disabled =
-                true;
+        return false;
+
+    }
 
 
-            const oldText =
-                addToCartBtn.textContent;
+    if (
+        !product ||
+        !product.id
+    ) {
+
+        console.error(
+            "Invalid product:",
+            product
+        );
+
+        return false;
+
+    }
 
 
-            addToCartBtn.textContent =
-                "Adding...";
+    try {
 
+        const response =
+            await fetch(
+                "/api/cart/add",
+                {
+                    method: "POST",
 
-            try {
+                    credentials:
+                        "include",
 
-                const response =
-                    await fetch(
-                        "/api/cart/add",
-                        {
-                            method: "POST",
+                    headers: {
 
-                            credentials:
-                                "include",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    product_id:
-                                        Number(
-                                            currentProduct.id
-                                        ),
-
-                                    quantity:
-                                        quantity
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    response.status === 401
-                ) {
-
-                    userLoggedIn = false;
-
-                    showLoginModal();
-
-                    return;
-
-                }
-
-
-                if (
-                    !response.ok ||
-                    data.success !== true
-                ) {
-
-                    alert(
-                        data.message ||
-                        "Failed to add product."
-                    );
-
-                    return;
-
-                }
-
-
-                addToCartBtn.textContent =
-                    "Added ✓";
-
-
-                addToCartBtn.style.background =
-                    "#16a34a";
-
-
-                setTimeout(
-                    () => {
-
-                        addToCartBtn.textContent =
-                            oldText;
-
-                        addToCartBtn.style.background =
-                            "";
-
-                        addToCartBtn.disabled =
-                            false;
+                        "Content-Type":
+                            "application/json"
 
                     },
-                    1200
-                );
 
-            }
+                    body:
+                        JSON.stringify({
 
-            catch (error) {
+                            product_id:
+                                Number(
+                                    product.id
+                                ),
 
-                console.error(
-                    "ADD CART ERROR:",
-                    error
-                );
+                            quantity: 1
 
-
-                alert(
-                    "Unable to add product to cart."
-                );
-
-                addToCartBtn.textContent =
-                    oldText;
-
-                addToCartBtn.disabled =
-                    false;
-
-            }
-
-        }
-    );
-
-}
-
-
-// =========================================================
-// BUY NOW
-// =========================================================
-
-if (buyNowBtn) {
-
-    buyNowBtn.addEventListener(
-        "click",
-        async () => {
-
-            const loggedIn =
-                await checkUserLogin();
-
-
-            if (!loggedIn) {
-
-                sessionStorage.setItem(
-                    "loginRedirect",
-                    window.location.href
-                );
-
-
-                showLoginModal();
-
-                return;
-
-            }
-
-
-            if (!currentProduct) {
-
-                return;
-
-            }
-
-
-            const quantity =
-                Number(
-                    quantityInput.value
-                ) || 1;
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/cart/add",
-                        {
-                            method: "POST",
-
-                            credentials:
-                                "include",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    product_id:
-                                        Number(
-                                            currentProduct.id
-                                        ),
-
-                                    quantity:
-                                        quantity
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    !response.ok ||
-                    data.success !== true
-                ) {
-
-                    alert(
-                        data.message ||
-                        "Unable to continue."
-                    );
-
-                    return;
+                        })
 
                 }
+            );
 
 
-                window.location.href =
-                    "/cart";
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "BUY NOW ERROR:",
-                    error
-                );
+        const data =
+            await response.json();
 
 
-                alert(
-                    "Unable to continue."
-                );
+        if (
+            response.status === 401
+        ) {
 
-            }
+            userLoggedIn = false;
 
-        }
-    );
+            window.currentUser = null;
 
-}
+            window.cart = [];
 
-
-// =========================================================
-// TRY AR
-// =========================================================
-
-if (tryOnBtn) {
-
-    tryOnBtn.addEventListener(
-        "click",
-        async () => {
-
-            const loggedIn =
-                await checkUserLogin();
-
-
-            if (!loggedIn) {
-
-                sessionStorage.setItem(
-                    "loginRedirect",
-                    window.location.href
-                );
-
-
-                showLoginModal();
-
-                return;
-
-            }
+            updateCart();
 
 
             alert(
-                "AR Try-On will open here."
+                "Please login first."
             );
 
-        }
-    );
 
-}
-
-
-// =========================================================
-// WRITE REVIEW
-// =========================================================
-
-if (writeReviewBtn) {
-
-    writeReviewBtn.addEventListener(
-        "click",
-        async () => {
-
-            const loggedIn =
-                await checkUserLogin();
+            window.location.href =
+                "/login";
 
 
-            if (!loggedIn) {
-
-                sessionStorage.setItem(
-                    "loginRedirect",
-                    window.location.href
-                );
-
-
-                showLoginModal();
-
-                return;
-
-            }
-
-
-            reviewFormContainer.style.display =
-                "block";
-
-
-            writeReviewBtn.style.display =
-                "none";
-
-
-            reviewFormContainer.scrollIntoView({
-
-                behavior: "smooth",
-
-                block: "center"
-
-            });
+            return false;
 
         }
-    );
-
-}
 
 
-// =========================================================
-// CANCEL REVIEW
-// =========================================================
+        if (
+            !response.ok ||
+            data.success !== true
+        ) {
 
-if (cancelReviewBtn) {
+            alert(
+                data.message ||
+                "Failed to add product."
+            );
 
-    cancelReviewBtn.addEventListener(
-        "click",
-        () => {
-
-            reviewForm.reset();
-
-            selectedRating = 0;
-
-            reviewRating.value =
-                "0";
-
-
-            updateStars();
-
-
-            imagePreview.innerHTML =
-                "";
-
-            imagePreview.style.display =
-                "none";
-
-
-            reviewFormContainer.style.display =
-                "none";
-
-
-            writeReviewBtn.style.display =
-                "block";
+            return false;
 
         }
-    );
-
-}
 
 
-// =========================================================
-// STAR RATING
-// =========================================================
+        await loadCart();
 
-const stars =
-    document.querySelectorAll(
-        "#starRating button"
-    );
-
-
-stars.forEach(
-    star => {
-
-        star.addEventListener(
-            "click",
-            () => {
-
-                selectedRating =
-                    Number(
-                        star.dataset.rating
-                    );
-
-
-                reviewRating.value =
-                    selectedRating;
-
-
-                updateStars();
-
-            }
-        );
+        return true;
 
     }
-);
+
+    catch (error) {
+
+        console.error(
+            "ADD TO CART ERROR:",
+            error
+        );
 
 
-// =========================================================
-// UPDATE STARS
-// =========================================================
-
-function updateStars() {
-
-    stars.forEach(
-        star => {
-
-            const value =
-                Number(
-                    star.dataset.rating
-                );
+        alert(
+            "Unable to add product to cart."
+        );
 
 
-            if (
-                value <= selectedRating
-            ) {
+        return false;
 
-                star.classList.add(
-                    "active"
-                );
-
-            }
-
-            else {
-
-                star.classList.remove(
-                    "active"
-                );
-
-            }
-
-        }
-    );
+    }
 
 }
 
 
-// =========================================================
-// IMAGE PREVIEW
-// =========================================================
-
-if (reviewImage) {
-
-    reviewImage.addEventListener(
-        "change",
-        () => {
-
-            const file =
-                reviewImage.files[0];
-
-
-            if (!file) {
-
-                imagePreview.innerHTML =
-                    "";
-
-                imagePreview.style.display =
-                    "none";
-
-                return;
-
-            }
-
-
-            if (
-                !file.type.startsWith(
-                    "image/"
-                )
-            ) {
-
-                alert(
-                    "Please select an image file."
-                );
-
-                reviewImage.value =
-                    "";
-
-                return;
-
-            }
-
-
-            if (
-                file.size >
-                5 * 1024 * 1024
-            ) {
-
-                alert(
-                    "Image must be smaller than 5MB."
-                );
-
-                reviewImage.value =
-                    "";
-
-                return;
-
-            }
-
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                function (
-                    event
-                ) {
-
-                    imagePreview.innerHTML = `
-
-                        <img
-                            src="${event.target.result}"
-                            alt="Review image preview"
-                        >
-
-                    `;
-
-
-                    imagePreview.style.display =
-                        "block";
-
-                };
-
-
-            reader.readAsDataURL(
-                file
-            );
-
-        }
-    );
-
-}
+window.addToCart =
+    addToCart;
 
 
 // =========================================================
-// SUBMIT REVIEW
+// LOAD PRODUCTS
 // =========================================================
 
-if (reviewForm) {
+async function loadProducts() {
 
-    reviewForm.addEventListener(
-        "submit",
-        async event => {
+    if (!categoriesContainer) {
 
-            event.preventDefault();
-
-
-            const loggedIn =
-                await checkUserLogin();
-
-
-            if (!loggedIn) {
-
-                showLoginModal();
-
-                return;
-
-            }
-
-
-            if (!currentProduct) {
-
-                return;
-
-            }
-
-
-            const rating =
-                Number(
-                    reviewRating.value
-                );
-
-
-            const text =
-                reviewText.value.trim();
-
-
-            if (
-                rating < 1 ||
-                rating > 5
-            ) {
-
-                alert(
-                    "Please select a rating."
-                );
-
-                return;
-
-            }
-
-
-            if (!text) {
-
-                alert(
-                    "Please write your review."
-                );
-
-                return;
-
-            }
-
-
-            const formData =
-                new FormData();
-
-
-            formData.append(
-                "product_id",
-                currentProduct.id
-            );
-
-
-            formData.append(
-                "rating",
-                rating
-            );
-
-
-            formData.append(
-                "review_text",
-                text
-            );
-
-
-            if (
-                reviewImage.files.length > 0
-            ) {
-
-                formData.append(
-                    "image",
-                    reviewImage.files[0]
-                );
-
-            }
-
-
-            submitReviewBtn.disabled =
-                true;
-
-
-            submitReviewBtn.textContent =
-                "Submitting...";
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/reviews",
-                        {
-                            method: "POST",
-
-                            credentials:
-                                "include",
-
-                            body:
-                                formData
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    response.status === 401
-                ) {
-
-                    showLoginModal();
-
-                    return;
-
-                }
-
-
-                if (
-                    !response.ok ||
-                    data.success !== true
-                ) {
-
-                    alert(
-                        data.message ||
-                        "Failed to submit review."
-                    );
-
-                    return;
-
-                }
-
-
-                alert(
-                    "Review submitted successfully! ⭐"
-                );
-
-
-                reviewForm.reset();
-
-
-                selectedRating =
-                    0;
-
-
-                reviewRating.value =
-                    "0";
-
-
-                updateStars();
-
-
-                imagePreview.innerHTML =
-                    "";
-
-
-                imagePreview.style.display =
-                    "none";
-
-
-                reviewFormContainer.style.display =
-                    "none";
-
-
-                writeReviewBtn.style.display =
-                    "block";
-
-
-                await loadReviews(
-                    currentProduct.id
-                );
-
-
-                // Refresh product rating
-                await loadProduct();
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "SUBMIT REVIEW ERROR:",
-                    error
-                );
-
-
-                alert(
-                    "Unable to submit review."
-                );
-
-            }
-
-            finally {
-
-                submitReviewBtn.disabled =
-                    false;
-
-                submitReviewBtn.textContent =
-                    "Submit Review";
-
-            }
-
-        }
-    );
-
-}
-
-
-// =========================================================
-// LOAD REVIEWS
-// =========================================================
-
-async function loadReviews(
-    productId
-) {
-
-    if (!reviewsList) {
+        console.error(
+            "categories-container not found."
+        );
 
         return;
 
     }
 
 
-    reviewsList.innerHTML = `
+    categoriesContainer.innerHTML = `
 
-        <div class="reviews-loading">
+        <div class="loading-products">
 
-            <div class="loader small"></div>
-
-            Loading reviews...
+            Loading products...
 
         </div>
 
@@ -1594,9 +422,7 @@ async function loadReviews(
 
         const response =
             await fetch(
-                `/api/reviews/product/${encodeURIComponent(
-                    productId
-                )}`,
+                "/api/products",
                 {
                     method: "GET",
                     cache: "no-store"
@@ -1608,21 +434,27 @@ async function loadReviews(
             await response.json();
 
 
+        console.log(
+            "PRODUCTS API RESPONSE:",
+            data
+        );
+
+
         if (
             !response.ok ||
             data.success !== true
         ) {
 
-            reviewsList.innerHTML = `
+            categoriesContainer.innerHTML = `
 
-                <div class="no-reviews">
+                <div class="products-message">
 
-                    <div class="no-reviews-icon">
-                        💬
-                    </div>
+                    <h3>
+                        Unable to load products.
+                    </h3>
 
                     <p>
-                        Unable to load reviews.
+                        Please try again later.
                     </p>
 
                 </div>
@@ -1634,33 +466,31 @@ async function loadReviews(
         }
 
 
-        const reviews =
-            Array.isArray(
-                data.reviews
-            )
-                ? data.reviews
+        const products =
+            Array.isArray(data.products)
+                ? data.products
                 : [];
 
 
         if (
-            reviews.length === 0
+            products.length === 0
         ) {
 
-            reviewsList.innerHTML = `
+            categoriesContainer.innerHTML = `
 
-                <div class="no-reviews">
+                <div class="products-message">
 
-                    <div class="no-reviews-icon">
-                        ⭐
+                    <div class="no-products-icon">
+                        🛍️
                     </div>
 
                     <h3>
-                        No reviews yet
+                        No products available.
                     </h3>
 
                     <p>
-                        Be the first customer
-                        to review this product.
+                        Products added by the admin
+                        will appear here.
                     </p>
 
                 </div>
@@ -1672,42 +502,158 @@ async function loadReviews(
         }
 
 
-        reviewsList.innerHTML =
-            "";
+        // =================================================
+        // SAVE PRODUCTS BY ID
+        // =================================================
+
+        window.productsById = {};
 
 
-        reviews.forEach(
-            review => {
+        products.forEach(
+            product => {
 
-                reviewsList.appendChild(
-                    createReviewCard(
-                        review
-                    )
+                window.productsById[
+                    String(product.id)
+                ] = product;
+
+            }
+        );
+
+
+        // =================================================
+        // GROUP BY CATEGORY
+        // =================================================
+
+        const categories = {};
+
+
+        products.forEach(
+            product => {
+
+                const category =
+                    product.category_name ||
+                    product.category ||
+                    "Uncategorized";
+
+
+                if (
+                    !categories[category]
+                ) {
+
+                    categories[category] = [];
+
+                }
+
+
+                categories[category].push(
+                    product
                 );
 
             }
         );
+
+
+        categoriesContainer.innerHTML =
+            "";
+
+
+        // =================================================
+        // DISPLAY CATEGORIES
+        // =================================================
+
+        Object.keys(categories)
+            .forEach(
+                categoryName => {
+
+                    const section =
+                        document.createElement(
+                            "section"
+                        );
+
+
+                    section.className =
+                        "category-section";
+
+
+                    section.innerHTML = `
+
+                        <div class="category-heading">
+
+                            <div>
+
+                                <h2>
+                                    ${escapeHTML(
+                                        categoryName
+                                    )}
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+
+                    const grid =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    grid.className =
+                        "product-grid";
+
+
+                    categories[
+                        categoryName
+                    ].forEach(
+                        product => {
+
+                            grid.appendChild(
+                                createProductCard(
+                                    product
+                                )
+                            );
+
+                        }
+                    );
+
+
+                    section.appendChild(
+                        grid
+                    );
+
+
+                    categoriesContainer.appendChild(
+                        section
+                    );
+
+                }
+            );
+
+
+        connectCartButtons();
 
     }
 
     catch (error) {
 
         console.error(
-            "LOAD REVIEWS ERROR:",
+            "PRODUCT LOAD ERROR:",
             error
         );
 
 
-        reviewsList.innerHTML = `
+        categoriesContainer.innerHTML = `
 
-            <div class="no-reviews">
+            <div class="products-message">
 
-                <div class="no-reviews-icon">
-                    ⚠️
-                </div>
+                <h3>
+                    Unable to load products.
+                </h3>
 
                 <p>
-                    Unable to load reviews.
+                    Please try again later.
                 </p>
 
             </div>
@@ -1720,12 +666,10 @@ async function loadReviews(
 
 
 // =========================================================
-// CREATE REVIEW CARD
+// CREATE PRODUCT CARD
 // =========================================================
 
-function createReviewCard(
-    review
-) {
+function createProductCard(product) {
 
     const card =
         document.createElement(
@@ -1734,138 +678,228 @@ function createReviewCard(
 
 
     card.className =
-        "review-card";
+        "product-card";
 
 
-    const rating =
-        Number(
-            review.rating || 0
-        );
+    card.dataset.product =
+        product.id;
 
 
-    const starsHTML =
-        "★".repeat(rating) +
-        "☆".repeat(
-            5 - rating
-        );
+    // =====================================================
+    // PRODUCT IMAGE
+    // =====================================================
 
+    let imageHTML = `
 
-    let dateText =
-        "";
+        <span class="product-placeholder">
+            🛍️
+        </span>
 
-
-    if (
-        review.created_at
-    ) {
-
-        const date =
-            new Date(
-                review.created_at
-            );
-
-
-        if (
-            !Number.isNaN(
-                date.getTime()
-            )
-        ) {
-
-            dateText =
-                date.toLocaleDateString(
-                    undefined,
-                    {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric"
-                    }
-                );
-
-        }
-
-    }
-
-
-    const username =
-        escapeHTML(
-            review.username ||
-            "Customer"
-        );
-
-
-    const reviewContent =
-        escapeHTML(
-            review.review_text ||
-            ""
-        );
-
-
-    let imageHTML =
-        "";
+    `;
 
 
     if (
-        review.image_url
+        product.image
     ) {
 
         imageHTML = `
 
-            <div class="review-image">
-
-                <img
-                    src="${escapeAttribute(
-                        review.image_url
-                    )}"
-                    alt="Customer review image"
-                    loading="lazy"
-                >
-
-            </div>
+            <img
+                src="${escapeAttribute(
+                    product.image
+                )}"
+                alt="${escapeAttribute(
+                    product.name
+                )}"
+                loading="lazy"
+                onerror="this.style.display='none';"
+            >
 
         `;
 
     }
 
 
+    // =====================================================
+    // STOCK
+    // =====================================================
+
+    const stock =
+        Number(
+            product.stock || 0
+        );
+
+
+    const outOfStock =
+        stock <= 0;
+
+
+    // =====================================================
+    // CARD
+    // =====================================================
+
     card.innerHTML = `
 
-        <div class="review-top">
+        <div class="product-image">
 
-            <div>
+            <span class="product-emoji">
 
-                <div class="reviewer">
+                ${imageHTML}
 
-                    ${username}
+            </span>
 
-                </div>
-
-                <div class="review-stars">
-
-                    ${starsHTML}
-
-                </div>
-
-            </div>
-
-
-            <div class="review-date">
-
-                ${dateText}
-
-            </div>
+            <span class="ar-badge">
+                AR
+            </span>
 
         </div>
 
 
-        <div class="review-text">
+        <div class="product-info">
 
-            ${reviewContent}
+            <p class="category">
+
+                ${escapeHTML(
+                    product.category_name ||
+                    product.category ||
+                    "Uncategorized"
+                )}
+
+            </p>
+
+
+            <h3>
+
+                ${escapeHTML(
+                    product.name ||
+                    "Product"
+                )}
+
+            </h3>
+
+
+            <p class="product-description">
+
+                ${escapeHTML(
+                    product.description ||
+                    ""
+                )}
+
+            </p>
+
+
+            <div class="product-bottom">
+
+                <strong>
+
+                    Rs. ${Number(
+                        product.price || 0
+                    ).toFixed(2)}
+
+                </strong>
+
+
+                ${
+                    outOfStock
+
+                    ?
+
+                    `
+
+                    <button
+                        class="add-btn out-of-stock"
+                        type="button"
+                        disabled
+                    >
+                        Out of Stock
+                    </button>
+
+                    `
+
+                    :
+
+                    `
+
+                    <button
+                        class="add-btn"
+                        data-product-action="cart"
+                        type="button"
+                    >
+                        Add to Cart
+                    </button>
+
+                    `
+                }
+
+            </div>
 
         </div>
-
-
-        ${imageHTML}
 
     `;
+
+
+    // =====================================================
+    // OPEN PRODUCT DETAILS
+    // =====================================================
+
+    card.addEventListener(
+        "click",
+        event => {
+
+            /*
+             * Do not open details when
+             * Add to Cart is clicked.
+             */
+
+            if (
+                event.target.closest(
+                    "[data-product-action='cart']"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            const productId =
+                card.dataset.product;
+
+
+            if (!productId) {
+
+                console.error(
+                    "Product ID missing."
+                );
+
+                return;
+
+            }
+
+
+            console.log(
+                "Opening product details:",
+                productId
+            );
+
+
+            /*
+             * IMPORTANT
+             *
+             * Actual file:
+             * frontend/pages/product_details.html
+             *
+             * Therefore use:
+             * /product_details.html
+             */
+
+            window.location.href =
+                `/product_details.html?id=${encodeURIComponent(
+                    productId
+                )}`;
+
+        }
+    );
 
 
     return card;
@@ -1874,12 +908,611 @@ function createReviewCard(
 
 
 // =========================================================
-// ESCAPE ATTRIBUTE
+// CONNECT ADD TO CART BUTTONS
 // =========================================================
 
-function escapeAttribute(
-    value
-) {
+function connectCartButtons() {
+
+    const buttons =
+        document.querySelectorAll(
+            "[data-product-action='cart']"
+        );
+
+
+    buttons.forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                async event => {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+
+                    if (
+                        button.disabled
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const card =
+                        button.closest(
+                            ".product-card"
+                        );
+
+
+                    if (!card) {
+
+                        return;
+
+                    }
+
+
+                    const productId =
+                        card.dataset.product;
+
+
+                    const product =
+                        window.productsById[
+                            String(productId)
+                        ];
+
+
+                    if (!product) {
+
+                        console.error(
+                            "Product not found:",
+                            productId
+                        );
+
+                        return;
+
+                    }
+
+
+                    const loggedIn =
+                        await checkUserLogin();
+
+
+                    if (!loggedIn) {
+
+                        sessionStorage.setItem(
+                            "loginRedirect",
+                            window.location.pathname
+                        );
+
+
+                        alert(
+                            "Please login to add products to your cart."
+                        );
+
+
+                        window.location.href =
+                            "/login";
+
+
+                        return;
+
+                    }
+
+
+                    button.disabled =
+                        true;
+
+
+                    const oldText =
+                        button.textContent.trim();
+
+
+                    button.textContent =
+                        "Adding...";
+
+
+                    const success =
+                        await window.addToCart(
+                            product
+                        );
+
+
+                    if (
+                        success
+                    ) {
+
+                        button.textContent =
+                            "Added ✓";
+
+
+                        button.classList.add(
+                            "added"
+                        );
+
+
+                        setTimeout(
+                            () => {
+
+                                button.textContent =
+                                    oldText;
+
+                                button.classList.remove(
+                                    "added"
+                                );
+
+                                button.disabled =
+                                    false;
+
+                            },
+                            1000
+                        );
+
+                    }
+
+                    else {
+
+                        button.textContent =
+                            oldText;
+
+                        button.disabled =
+                            false;
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// UPDATE CART
+// =========================================================
+
+function updateCart() {
+
+    const cartCount =
+        document.getElementById(
+            "cart-count"
+        );
+
+
+    const cartItems =
+        document.getElementById(
+            "cart-items"
+        );
+
+
+    const cartTotal =
+        document.getElementById(
+            "cart-total"
+        );
+
+
+    const quantity =
+        window.cart.reduce(
+            (
+                total,
+                item
+            ) =>
+                total +
+                Number(
+                    item.quantity || 0
+                ),
+            0
+        );
+
+
+    if (cartCount) {
+
+        cartCount.textContent =
+            quantity;
+
+    }
+
+
+    if (
+        window.cart.length === 0
+    ) {
+
+        if (cartItems) {
+
+            cartItems.innerHTML = `
+
+                <p class="empty-cart">
+                    Your cart is empty.
+                </p>
+
+            `;
+
+        }
+
+
+        if (cartTotal) {
+
+            cartTotal.textContent =
+                "Rs. 0.00";
+
+        }
+
+
+        return;
+
+    }
+
+
+    let total = 0;
+
+
+    if (cartItems) {
+
+        cartItems.innerHTML =
+            "";
+
+    }
+
+
+    window.cart.forEach(
+        product => {
+
+            total +=
+                Number(
+                    product.price || 0
+                ) *
+                Number(
+                    product.quantity || 0
+                );
+
+
+            if (!cartItems) {
+
+                return;
+
+            }
+
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.className =
+                "cart-item";
+
+
+            item.innerHTML = `
+
+                <div class="cart-item-info">
+
+                    <div class="cart-item-image">
+
+                        ${
+                            product.image
+
+                            ?
+
+                            `
+
+                            <img
+                                src="${escapeAttribute(
+                                    product.image
+                                )}"
+                                alt="${escapeAttribute(
+                                    product.name
+                                )}"
+                            >
+
+                            `
+
+                            :
+
+                            "🛍️"
+                        }
+
+                    </div>
+
+
+                    <div class="cart-item-details">
+
+                        <div class="cart-item-name">
+
+                            ${escapeHTML(
+                                product.name
+                            )}
+
+                        </div>
+
+
+                        <div class="cart-item-category">
+
+                            ${escapeHTML(
+                                product.category_name ||
+                                "Uncategorized"
+                            )}
+
+                        </div>
+
+
+                        <div class="cart-item-price">
+
+                            Rs. ${Number(
+                                product.price || 0
+                            ).toFixed(2)}
+
+                            ×
+
+                            ${Number(
+                                product.quantity || 0
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="remove-cart-item"
+                    data-cart-id="${product.cart_item_id}"
+                >
+
+                    Remove
+
+                </button>
+
+            `;
+
+
+            cartItems.appendChild(
+                item
+            );
+
+        }
+    );
+
+
+    if (cartTotal) {
+
+        cartTotal.textContent =
+            `Rs. ${total.toFixed(2)}`;
+
+    }
+
+}
+
+
+// =========================================================
+// REMOVE CART ITEM
+// =========================================================
+
+document.addEventListener(
+    "click",
+    async event => {
+
+        const button =
+            event.target.closest(
+                ".remove-cart-item"
+            );
+
+
+        if (!button) {
+
+            return;
+
+        }
+
+
+        const cartItemId =
+            button.dataset.cartId;
+
+
+        if (!cartItemId) {
+
+            return;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/cart/${cartItemId}`,
+                    {
+                        method: "DELETE",
+                        credentials: "include"
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (
+                response.ok &&
+                data.success === true
+            ) {
+
+                await loadCart();
+
+            }
+
+            else {
+
+                alert(
+                    data.message ||
+                    "Failed to remove product."
+                );
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "REMOVE CART ERROR:",
+                error
+            );
+
+
+            alert(
+                "Unable to remove product."
+            );
+
+        }
+
+    }
+);
+
+
+// =========================================================
+// OPEN CART
+// =========================================================
+
+const cartButton =
+    document.getElementById(
+        "cart-btn"
+    );
+
+
+const cartModal =
+    document.getElementById(
+        "cart-modal"
+    );
+
+
+const cartClose =
+    document.getElementById(
+        "cart-close"
+    );
+
+
+if (cartButton) {
+
+    cartButton.addEventListener(
+        "click",
+        async () => {
+
+            if (!userLoggedIn) {
+
+                alert(
+                    "Please login to view your cart."
+                );
+
+
+                window.location.href =
+                    "/login";
+
+
+                return;
+
+            }
+
+
+            await loadCart();
+
+
+            if (cartModal) {
+
+                cartModal.classList.add(
+                    "active"
+                );
+
+            }
+
+
+            document.body.style.overflow =
+                "hidden";
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// CLOSE CART
+// =========================================================
+
+function closeCart() {
+
+    if (cartModal) {
+
+        cartModal.classList.remove(
+            "active"
+        );
+
+    }
+
+
+    document.body.style.overflow =
+        "";
+
+}
+
+
+if (cartClose) {
+
+    cartClose.addEventListener(
+        "click",
+        closeCart
+    );
+
+}
+
+
+// =========================================================
+// ESCAPE KEY
+// =========================================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeCart();
+
+        }
+
+    }
+);
+
+
+// =========================================================
+// HELPERS
+// =========================================================
+
+function escapeHTML(value) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        value ?? "";
+
+
+    return div.innerHTML;
+
+}
+
+
+function escapeAttribute(value) {
 
     return String(
         value ?? ""
@@ -1905,36 +1538,21 @@ function escapeAttribute(
 
 
 // =========================================================
-// CLOSE MODAL WITH ESC
-// =========================================================
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key === "Escape"
-        ) {
-
-            hideLoginModal();
-
-        }
-
-    }
-);
-
-
-// =========================================================
 // INITIALIZE
 // =========================================================
 
-async function initialize() {
+async function initializeProductsPage() {
+
+    console.log(
+        "Initializing products page..."
+    );
+
 
     await checkUserLogin();
 
-    await loadProduct();
+    await loadProducts();
 
 }
 
 
-initialize();
+initializeProductsPage();

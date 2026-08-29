@@ -1,396 +1,182 @@
+
 // =========================================================
-// AR ECOMMERCE
+// AR E-COMMERCE
 // PRODUCT DETAILS PAGE
 // PRODUCT + CART + REVIEWS
 // =========================================================
 
 
-/* =========================================================
-   GLOBAL
-========================================================= */
+// =========================================================
+// GLOBAL VARIABLES
+// =========================================================
 
 let currentProduct = null;
-
 let currentUser = null;
-
 let userLoggedIn = false;
-
 let selectedRating = 0;
 
 
-/* =========================================================
-   GET PRODUCT ID
-========================================================= */
-
-const urlParams =
-    new URLSearchParams(
-        window.location.search
-    );
-
-
-const productId =
-    urlParams.get("id");
-
-
-/* =========================================================
-   ELEMENTS
-========================================================= */
+// =========================================================
+// ELEMENTS
+// =========================================================
 
 const loading =
-    document.getElementById(
-        "loading"
-    );
-
+    document.getElementById("loading");
 
 const errorMessage =
-    document.getElementById(
-        "errorMessage"
-    );
-
+    document.getElementById("errorMessage");
 
 const productDetails =
-    document.getElementById(
-        "productDetails"
-    );
-
-
-const productImage =
-    document.getElementById(
-        "productImage"
-    );
-
-
-const imageFallback =
-    document.getElementById(
-        "imageFallback"
-    );
-
-
-const productCategory =
-    document.getElementById(
-        "productCategory"
-    );
-
-
-const productName =
-    document.getElementById(
-        "productName"
-    );
-
-
-const productRating =
-    document.getElementById(
-        "productRating"
-    );
-
-
-const productPrice =
-    document.getElementById(
-        "productPrice"
-    );
-
-
-const productDescription =
-    document.getElementById(
-        "productDescription"
-    );
-
-
-const productStock =
-    document.getElementById(
-        "productStock"
-    );
-
-
-const quantityInput =
-    document.getElementById(
-        "quantity"
-    );
-
-
-const decreaseBtn =
-    document.getElementById(
-        "decreaseBtn"
-    );
-
-
-const increaseBtn =
-    document.getElementById(
-        "increaseBtn"
-    );
-
-
-const addToCartBtn =
-    document.getElementById(
-        "addToCartBtn"
-    );
-
-
-const buyNowBtn =
-    document.getElementById(
-        "buyNowBtn"
-    );
-
-
-const tryOnBtn =
-    document.getElementById(
-        "tryOnBtn"
-    );
-
-
-const loginNav =
-    document.getElementById(
-        "loginNav"
-    );
-
-
-/* =========================================================
-   REVIEW ELEMENTS
-========================================================= */
+    document.getElementById("productDetails");
 
 const reviewsSection =
-    document.getElementById(
-        "reviewsSection"
-    );
+    document.getElementById("reviewsSection");
+
+const productImage =
+    document.getElementById("productImage");
+
+const productCategory =
+    document.getElementById("productCategory");
+
+const productName =
+    document.getElementById("productName");
+
+const productRating =
+    document.getElementById("productRating");
+
+const productPrice =
+    document.getElementById("productPrice");
+
+const productDescription =
+    document.getElementById("productDescription");
+
+const productStock =
+    document.getElementById("productStock");
+
+const quantityInput =
+    document.getElementById("quantity");
+
+const decreaseBtn =
+    document.getElementById("decreaseBtn");
+
+const increaseBtn =
+    document.getElementById("increaseBtn");
+
+const addToCartBtn =
+    document.getElementById("addToCartBtn");
+
+const buyNowBtn =
+    document.getElementById("buyNowBtn");
+
+const tryOnBtn =
+    document.getElementById("tryOnBtn");
+
+const loginNav =
+    document.getElementById("loginNav");
 
 
-const reviewAverage =
-    document.getElementById(
-        "reviewAverage"
-    );
+// =========================================================
+// REVIEW ELEMENTS
+// =========================================================
 
+const writeReviewBtn =
+    document.getElementById("writeReviewBtn");
 
-const reviewCount =
-    document.getElementById(
-        "reviewCount"
-    );
-
+const reviewFormContainer =
+    document.getElementById("reviewFormContainer");
 
 const reviewForm =
-    document.getElementById(
-        "reviewForm"
-    );
-
-
-const reviewLoginMessage =
-    document.getElementById(
-        "reviewLoginMessage"
-    );
-
-
-const reviewLoginBtn =
-    document.getElementById(
-        "reviewLoginBtn"
-    );
-
+    document.getElementById("reviewForm");
 
 const reviewRating =
-    document.getElementById(
-        "reviewRating"
-    );
-
-
-const ratingText =
-    document.getElementById(
-        "ratingText"
-    );
-
+    document.getElementById("reviewRating");
 
 const reviewText =
-    document.getElementById(
-        "reviewText"
-    );
-
-
-const characterCount =
-    document.getElementById(
-        "characterCount"
-    );
-
+    document.getElementById("reviewText");
 
 const reviewImage =
-    document.getElementById(
-        "reviewImage"
-    );
+    document.getElementById("reviewImage");
 
-
-const reviewImagePreview =
-    document.getElementById(
-        "reviewImagePreview"
-    );
-
-
-const previewImage =
-    document.getElementById(
-        "previewImage"
-    );
-
-
-const removeReviewImage =
-    document.getElementById(
-        "removeReviewImage"
-    );
-
-
-const submitReviewBtn =
-    document.getElementById(
-        "submitReviewBtn"
-    );
-
-
-const reviewFormMessage =
-    document.getElementById(
-        "reviewFormMessage"
-    );
-
+const imagePreview =
+    document.getElementById("imagePreview");
 
 const reviewsList =
-    document.getElementById(
-        "reviewsList"
-    );
+    document.getElementById("reviewsList");
+
+const cancelReviewBtn =
+    document.getElementById("cancelReviewBtn");
+
+const submitReviewBtn =
+    document.getElementById("submitReviewBtn");
 
 
-/* =========================================================
-   IMAGE URL FIX
-========================================================= */
+// =========================================================
+// LOGIN MODAL
+// =========================================================
 
-function getProductImageUrl(image) {
+const loginModal =
+    document.getElementById("loginModal");
 
-    if (!image) {
+const closeLoginModal =
+    document.getElementById("closeLoginModal");
 
-        return "";
+const goToLoginBtn =
+    document.getElementById("goToLoginBtn");
 
-    }
-
-
-    let value =
-        String(image).trim();
-
-
-    if (!value) {
-
-        return "";
-
-    }
+const continueShoppingBtn =
+    document.getElementById("continueShoppingBtn");
 
 
-    /*
-     * Already a complete URL.
-     */
+// =========================================================
+// GET PRODUCT ID
+// =========================================================
 
-    if (
-        value.startsWith("http://") ||
-        value.startsWith("https://") ||
-        value.startsWith("data:")
-    ) {
+function getProductId() {
 
-        return value;
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-    }
-
-
-    /*
-     * Already starts with /uploads.
-     */
-
-    if (
-        value.startsWith("/uploads/")
-    ) {
-
-        return value;
-
-    }
-
-
-    /*
-     * Database may contain:
-     *
-     * uploads/products/file.jpg
-     */
-
-    if (
-        value.startsWith("uploads/")
-    ) {
-
-        return "/" + value;
-
-    }
-
-
-    /*
-     * Database may contain:
-     *
-     * products/file.jpg
-     */
-
-    if (
-        value.startsWith("products/")
-    ) {
-
-        return "/uploads/" + value;
-
-    }
-
-
-    /*
-     * Database may contain only:
-     *
-     * file.jpg
-     *
-     * Your server serves:
-     * /uploads/products
-     */
-
-    return "/uploads/products/" + value;
-
+    return params.get("id");
 }
 
 
-/* =========================================================
-   SHOW ERROR
-========================================================= */
+// =========================================================
+// ESCAPE HTML
+// =========================================================
 
-function showError() {
+function escapeHTML(value) {
 
-    if (loading) {
+    const div =
+        document.createElement("div");
 
-        loading.style.display =
-            "none";
+    div.textContent =
+        value ?? "";
 
-    }
-
-
-    if (productDetails) {
-
-        productDetails.style.display =
-            "none";
-
-    }
-
-
-    if (reviewsSection) {
-
-        reviewsSection.style.display =
-            "none";
-
-    }
-
-
-    if (errorMessage) {
-
-        errorMessage.style.display =
-            "flex";
-
-    }
-
+    return div.innerHTML;
 }
 
 
-/* =========================================================
-   LOAD CURRENT USER
-========================================================= */
+// =========================================================
+// ESCAPE ATTRIBUTE
+// =========================================================
 
-async function checkLogin() {
+function escapeAttribute(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+
+// =========================================================
+// CHECK LOGIN
+// =========================================================
+
+async function checkUserLogin() {
 
     try {
 
@@ -421,126 +207,114 @@ async function checkLogin() {
             currentUser =
                 data.user;
 
+
+            // Login button should ALWAYS
+            // remain Login in navigation
+
+            if (loginNav) {
+
+                loginNav.textContent =
+                    "Login";
+
+            }
+
+
+            return true;
         }
 
-        else {
 
-            userLoggedIn = false;
+        userLoggedIn = false;
+        currentUser = null;
 
-            currentUser = null;
+
+        if (loginNav) {
+
+            loginNav.textContent =
+                "Login";
 
         }
 
 
-        updateNavigation();
-
-        updateReviewLoginState();
-
-        return userLoggedIn;
+        return false;
 
     }
 
     catch (error) {
 
         console.error(
-            "Login check error:",
+            "LOGIN CHECK ERROR:",
             error
         );
 
 
         userLoggedIn = false;
-
         currentUser = null;
 
-        updateNavigation();
 
-        updateReviewLoginState();
+        if (loginNav) {
+
+            loginNav.textContent =
+                "Login";
+
+        }
+
 
         return false;
-
     }
-
 }
 
 
-/* =========================================================
-   UPDATE NAVIGATION
-========================================================= */
-
-function updateNavigation() {
-
-    if (!loginNav) {
-
-        return;
-
-    }
-
-
-    /*
-     * Keep Login in navigation.
-     */
-
-    loginNav.textContent =
-        "Login";
-
-    loginNav.href =
-        "/login";
-
-}
-
-
-/* =========================================================
-   REVIEW LOGIN STATE
-========================================================= */
-
-function updateReviewLoginState() {
-
-    if (!reviewForm || !reviewLoginMessage) {
-
-        return;
-
-    }
-
-
-    if (userLoggedIn) {
-
-        reviewForm.style.display =
-            "block";
-
-        reviewLoginMessage.style.display =
-            "none";
-
-    }
-
-    else {
-
-        reviewForm.style.display =
-            "none";
-
-        reviewLoginMessage.style.display =
-            "flex";
-
-    }
-
-}
-
-
-/* =========================================================
-   LOAD PRODUCT
-========================================================= */
+// =========================================================
+// LOAD PRODUCT
+// =========================================================
 
 async function loadProduct() {
 
+    const productId =
+        getProductId();
+
+
+    // -----------------------------------------------------
+    // CHECK PRODUCT ID
+    // -----------------------------------------------------
+
     if (!productId) {
+
+        console.error(
+            "No product ID found in URL."
+        );
 
         showError();
 
-        return;
-
+        return false;
     }
 
 
     try {
+
+        if (loading) {
+
+            loading.style.display =
+                "block";
+
+        }
+
+
+        if (errorMessage) {
+
+            errorMessage.style.display =
+                "none";
+
+        }
+
+
+        if (productDetails) {
+
+            productDetails.style.display =
+                "none";
+
+        }
+
 
         const response =
             await fetch(
@@ -549,6 +323,7 @@ async function loadProduct() {
                 )}`,
                 {
                     method: "GET",
+                    credentials: "include",
                     cache: "no-store"
                 }
             );
@@ -558,20 +333,26 @@ async function loadProduct() {
             await response.json();
 
 
+        console.log(
+            "PRODUCT API RESPONSE:",
+            data
+        );
+
+
         if (
             !response.ok ||
-            data.success !== true
+            data.success !== true ||
+            !data.product
         ) {
 
             console.error(
-                "Product API error:",
+                "Product API failed:",
                 data
             );
 
             showError();
 
-            return;
-
+            return false;
         }
 
 
@@ -579,13 +360,8 @@ async function loadProduct() {
             data.product;
 
 
-        if (!currentProduct) {
-
-            showError();
-
-            return;
-
-        }
+        window.currentProduct =
+            currentProduct;
 
 
         displayProduct(
@@ -593,31 +369,14 @@ async function loadProduct() {
         );
 
 
-        if (loading) {
+        // Load reviews separately
 
-            loading.style.display =
-                "none";
-
-        }
-
-
-        if (productDetails) {
-
-            productDetails.style.display =
-                "grid";
-
-        }
+        await loadReviews(
+            productId
+        );
 
 
-        if (reviewsSection) {
-
-            reviewsSection.style.display =
-                "block";
-
-        }
-
-
-        await loadReviews();
+        return true;
 
     }
 
@@ -628,22 +387,68 @@ async function loadProduct() {
             error
         );
 
+
         showError();
 
-    }
+        return false;
 
+    }
 }
 
 
-/* =========================================================
-   DISPLAY PRODUCT
-========================================================= */
+// =========================================================
+// DISPLAY PRODUCT
+// =========================================================
 
 function displayProduct(product) {
 
-    /*
-     * Category
-     */
+    if (!product) {
+
+        showError();
+
+        return;
+    }
+
+
+    // -----------------------------------------------------
+    // SHOW PRODUCT
+    // -----------------------------------------------------
+
+    if (loading) {
+
+        loading.style.display =
+            "none";
+
+    }
+
+
+    if (errorMessage) {
+
+        errorMessage.style.display =
+            "none";
+
+    }
+
+
+    if (productDetails) {
+
+        productDetails.style.display =
+            "grid";
+
+    }
+
+
+    if (reviewsSection) {
+
+        reviewsSection.style.display =
+            "block";
+
+    }
+
+
+    // -----------------------------------------------------
+    // CATEGORY
+    // -----------------------------------------------------
 
     if (productCategory) {
 
@@ -655,9 +460,9 @@ function displayProduct(product) {
     }
 
 
-    /*
-     * Name
-     */
+    // -----------------------------------------------------
+    // NAME
+    // -----------------------------------------------------
 
     if (productName) {
 
@@ -668,43 +473,37 @@ function displayProduct(product) {
     }
 
 
-    /*
-     * Rating
-     */
-
-    const rating =
-        Number(
-            product.rating || 0
-        );
-
+    // -----------------------------------------------------
+    // RATING
+    // -----------------------------------------------------
 
     if (productRating) {
 
         productRating.textContent =
-            `★ ${rating.toFixed(1)}`;
+            `★ ${Number(
+                product.rating || 0
+            ).toFixed(1)}`;
 
     }
 
 
-    /*
-     * Price
-     */
+    // -----------------------------------------------------
+    // PRICE
+    // -----------------------------------------------------
 
     if (productPrice) {
 
         productPrice.textContent =
             `Rs. ${Number(
                 product.price || 0
-            ).toLocaleString(
-                "en-IN"
-            )}`;
+            ).toFixed(2)}`;
 
     }
 
 
-    /*
-     * Description
-     */
+    // -----------------------------------------------------
+    // DESCRIPTION
+    // -----------------------------------------------------
 
     if (productDescription) {
 
@@ -715,14 +514,12 @@ function displayProduct(product) {
     }
 
 
-    /*
-     * Stock
-     */
+    // -----------------------------------------------------
+    // STOCK
+    // -----------------------------------------------------
 
     const stock =
-        Number(
-            product.stock || 0
-        );
+        Number(product.stock || 0);
 
 
     if (productStock) {
@@ -732,9 +529,8 @@ function displayProduct(product) {
             productStock.textContent =
                 `${stock} available`;
 
-            productStock.classList.remove(
-                "out"
-            );
+            productStock.className =
+                "stock-available";
 
         }
 
@@ -743,146 +539,138 @@ function displayProduct(product) {
             productStock.textContent =
                 "Out of stock";
 
-            productStock.classList.add(
-                "out"
-            );
+            productStock.className =
+                "stock-unavailable";
 
         }
 
     }
 
-
-    /*
-     * Quantity
-     */
 
     if (quantityInput) {
 
-        quantityInput.value =
-            1;
+        quantityInput.min =
+            "1";
 
         quantityInput.max =
-            Math.max(
-                stock,
-                1
-            );
+            stock > 0
+                ? stock
+                : 1;
 
-    }
+        if (
+            Number(quantityInput.value) < 1
+        ) {
 
-
-    /*
-     * PRODUCT IMAGE
-     */
-
-    const imageUrl =
-        getProductImageUrl(
-            product.image
-        );
-
-
-    if (
-        productImage &&
-        imageUrl
-    ) {
-
-        productImage.src =
-            imageUrl;
-
-        productImage.alt =
-            product.name ||
-            "Product";
-
-        productImage.style.display =
-            "block";
-
-        if (imageFallback) {
-
-            imageFallback.style.display =
-                "none";
-
-        }
-
-
-        /*
-         * If image URL is invalid,
-         * show fallback instead.
-         */
-
-        productImage.onerror =
-            function () {
-
-                console.error(
-                    "Product image failed:",
-                    imageUrl
-                );
-
-
-                productImage.style.display =
-                    "none";
-
-
-                if (imageFallback) {
-
-                    imageFallback.style.display =
-                        "block";
-
-                }
-
-            };
-
-    }
-
-    else {
-
-        if (productImage) {
-
-            productImage.style.display =
-                "none";
-
-        }
-
-
-        if (imageFallback) {
-
-            imageFallback.style.display =
-                "block";
+            quantityInput.value =
+                "1";
 
         }
 
     }
 
 
-    /*
-     * Disable cart if out of stock.
-     */
+    // -----------------------------------------------------
+    // BUTTONS
+    // -----------------------------------------------------
 
     if (addToCartBtn) {
 
         addToCartBtn.disabled =
             stock <= 0;
 
-        if (stock <= 0) {
+    }
 
-            addToCartBtn.textContent =
-                "Out of Stock";
+
+    if (buyNowBtn) {
+
+        buyNowBtn.disabled =
+            stock <= 0;
+
+    }
+
+
+    // -----------------------------------------------------
+    // IMAGE
+    // -----------------------------------------------------
+
+    if (productImage) {
+
+        if (product.image) {
+
+            productImage.src =
+                product.image;
 
         }
 
         else {
 
-            addToCartBtn.textContent =
-                "Add to Cart";
+            productImage.src =
+                "/images/product-placeholder.png";
 
         }
 
+
+        productImage.alt =
+            product.name ||
+            "Product";
+
     }
 
+
+    // -----------------------------------------------------
+    // SAVE PRODUCT
+    // -----------------------------------------------------
+
+    currentProduct =
+        product;
+
+    window.currentProduct =
+        product;
 }
 
 
-/* =========================================================
-   QUANTITY
-========================================================= */
+// =========================================================
+// SHOW ERROR
+// =========================================================
+
+function showError() {
+
+    if (loading) {
+
+        loading.style.display =
+            "none";
+
+    }
+
+
+    if (productDetails) {
+
+        productDetails.style.display =
+            "none";
+
+    }
+
+
+    if (reviewsSection) {
+
+        reviewsSection.style.display =
+            "none";
+
+    }
+
+
+    if (errorMessage) {
+
+        errorMessage.style.display =
+            "block";
+
+    }
+}
+
+
+// =========================================================
+// QUANTITY - DECREASE
+// =========================================================
 
 if (decreaseBtn) {
 
@@ -890,10 +678,17 @@ if (decreaseBtn) {
         "click",
         () => {
 
+            if (!quantityInput) {
+
+                return;
+
+            }
+
+
             let quantity =
                 Number(
                     quantityInput.value
-                );
+                ) || 1;
 
 
             quantity =
@@ -912,60 +707,27 @@ if (decreaseBtn) {
 }
 
 
+// =========================================================
+// QUANTITY - INCREASE
+// =========================================================
+
 if (increaseBtn) {
 
     increaseBtn.addEventListener(
         "click",
         () => {
 
-            let quantity =
-                Number(
-                    quantityInput.value
-                );
+            if (!quantityInput) {
 
-
-            const stock =
-                Number(
-                    currentProduct?.stock || 0
-                );
-
-
-            quantity++;
-
-
-            if (
-                stock > 0 &&
-                quantity > stock
-            ) {
-
-                quantity =
-                    stock;
+                return;
 
             }
 
 
-            quantityInput.value =
-                Math.max(
-                    1,
-                    quantity
-                );
-
-        }
-    );
-
-}
-
-
-if (quantityInput) {
-
-    quantityInput.addEventListener(
-        "change",
-        () => {
-
             let quantity =
                 Number(
                     quantityInput.value
-                );
+                ) || 1;
 
 
             const stock =
@@ -975,22 +737,11 @@ if (quantityInput) {
 
 
             if (
-                !Number.isFinite(quantity) ||
-                quantity < 1
-            ) {
-
-                quantity = 1;
-
-            }
-
-
-            if (
                 stock > 0 &&
-                quantity > stock
+                quantity < stock
             ) {
 
-                quantity =
-                    stock;
+                quantity++;
 
             }
 
@@ -1004,9 +755,144 @@ if (quantityInput) {
 }
 
 
-/* =========================================================
-   ADD TO CART
-========================================================= */
+// =========================================================
+// QUANTITY VALIDATION
+// =========================================================
+
+if (quantityInput) {
+
+    quantityInput.addEventListener(
+        "input",
+        () => {
+
+            let quantity =
+                Number(
+                    quantityInput.value
+                ) || 1;
+
+
+            const stock =
+                Number(
+                    currentProduct?.stock || 0
+                );
+
+
+            if (quantity < 1) {
+
+                quantity = 1;
+
+            }
+
+
+            if (
+                stock > 0 &&
+                quantity > stock
+            ) {
+
+                quantity = stock;
+
+            }
+
+
+            quantityInput.value =
+                quantity;
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// LOGIN MODAL
+// =========================================================
+
+function showLoginModal() {
+
+    if (!loginModal) {
+
+        return;
+
+    }
+
+
+    loginModal.style.display =
+        "flex";
+
+    document.body.style.overflow =
+        "hidden";
+}
+
+
+function hideLoginModal() {
+
+    if (!loginModal) {
+
+        return;
+
+    }
+
+
+    loginModal.style.display =
+        "none";
+
+    document.body.style.overflow =
+        "";
+}
+
+
+// =========================================================
+// CLOSE LOGIN MODAL
+// =========================================================
+
+if (closeLoginModal) {
+
+    closeLoginModal.addEventListener(
+        "click",
+        hideLoginModal
+    );
+
+}
+
+
+if (continueShoppingBtn) {
+
+    continueShoppingBtn.addEventListener(
+        "click",
+        hideLoginModal
+    );
+
+}
+
+
+// =========================================================
+// GO TO LOGIN
+// =========================================================
+
+if (goToLoginBtn) {
+
+    goToLoginBtn.addEventListener(
+        "click",
+        () => {
+
+            sessionStorage.setItem(
+                "loginRedirect",
+                window.location.href
+            );
+
+
+            window.location.href =
+                "/login";
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// ADD TO CART
+// =========================================================
 
 if (addToCartBtn) {
 
@@ -1014,35 +900,30 @@ if (addToCartBtn) {
         "click",
         async () => {
 
-            if (!currentProduct) {
+            const loggedIn =
+                await checkUserLogin();
+
+
+            if (!loggedIn) {
+
+                sessionStorage.setItem(
+                    "loginRedirect",
+                    window.location.href
+                );
+
+
+                showLoginModal();
 
                 return;
 
             }
 
 
-            /*
-             * Same login behavior as
-             * Products page.
-             */
-
-            if (!userLoggedIn) {
-
-                sessionStorage.setItem(
-                    "loginRedirect",
-                    window.location.pathname +
-                    window.location.search
-                );
-
+            if (!currentProduct) {
 
                 alert(
-                    "Please login before adding products to the cart."
+                    "Product is not loaded yet."
                 );
-
-
-                window.location.href =
-                    "/login";
-
 
                 return;
 
@@ -1050,23 +931,216 @@ if (addToCartBtn) {
 
 
             const quantity =
-                Math.max(
-                    1,
-                    Number(
-                        quantityInput?.value || 1
-                    )
+                Number(
+                    quantityInput?.value
+                ) || 1;
+
+
+            const stock =
+                Number(
+                    currentProduct.stock || 0
                 );
+
+
+            if (stock <= 0) {
+
+                alert(
+                    "This product is out of stock."
+                );
+
+                return;
+
+            }
+
+
+            if (quantity > stock) {
+
+                alert(
+                    "Requested quantity is not available."
+                );
+
+                return;
+
+            }
+
+
+            const oldText =
+                addToCartBtn.textContent;
+
+
+            addToCartBtn.disabled =
+                true;
+
+            addToCartBtn.textContent =
+                "Adding...";
 
 
             try {
 
-                addToCartBtn.disabled =
-                    true;
+                const response =
+                    await fetch(
+                        "/api/cart/add",
+                        {
+                            method: "POST",
+
+                            credentials:
+                                "include",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    product_id:
+                                        Number(
+                                            currentProduct.id
+                                        ),
+
+                                    quantity:
+                                        quantity
+
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                console.log(
+                    "ADD CART RESPONSE:",
+                    data
+                );
+
+
+                if (
+                    response.status === 401
+                ) {
+
+                    userLoggedIn =
+                        false;
+
+                    showLoginModal();
+
+                    return;
+
+                }
+
+
+                if (
+                    !response.ok ||
+                    data.success !== true
+                ) {
+
+                    alert(
+                        data.message ||
+                        "Failed to add product to cart."
+                    );
+
+                    return;
+
+                }
 
 
                 addToCartBtn.textContent =
-                    "Adding...";
+                    "Added ✓";
 
+
+                setTimeout(
+                    () => {
+
+                        addToCartBtn.textContent =
+                            oldText;
+
+                        addToCartBtn.disabled =
+                            false;
+
+                    },
+                    1200
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "ADD CART ERROR:",
+                    error
+                );
+
+
+                alert(
+                    "Unable to add product to cart."
+                );
+
+                addToCartBtn.textContent =
+                    oldText;
+
+                addToCartBtn.disabled =
+                    false;
+
+            }
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// BUY NOW
+// =========================================================
+
+if (buyNowBtn) {
+
+    buyNowBtn.addEventListener(
+        "click",
+        async () => {
+
+            const loggedIn =
+                await checkUserLogin();
+
+
+            if (!loggedIn) {
+
+                sessionStorage.setItem(
+                    "loginRedirect",
+                    window.location.href
+                );
+
+
+                showLoginModal();
+
+                return;
+
+            }
+
+
+            if (!currentProduct) {
+
+                alert(
+                    "Product is not loaded yet."
+                );
+
+                return;
+
+            }
+
+
+            const quantity =
+                Number(
+                    quantityInput?.value
+                ) || 1;
+
+
+            try {
 
                 const response =
                     await fetch(
@@ -1109,173 +1183,14 @@ if (addToCartBtn) {
                     response.status === 401
                 ) {
 
-                    userLoggedIn = false;
+                    userLoggedIn =
+                        false;
 
-                    currentUser = null;
-
-                    updateReviewLoginState();
-
-
-                    alert(
-                        "Please login first."
-                    );
-
-
-                    window.location.href =
-                        "/login";
-
+                    showLoginModal();
 
                     return;
 
                 }
-
-
-                if (
-                    !response.ok ||
-                    data.success !== true
-                ) {
-
-                    throw new Error(
-                        data.message ||
-                        "Failed to add product."
-                    );
-
-                }
-
-
-                addToCartBtn.textContent =
-                    "Added ✓";
-
-
-                setTimeout(
-                    () => {
-
-                        addToCartBtn.textContent =
-                            "Add to Cart";
-
-                        addToCartBtn.disabled =
-                            false;
-
-                    },
-                    1200
-                );
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "Add cart error:",
-                    error
-                );
-
-
-                alert(
-                    error.message ||
-                    "Unable to add product."
-                );
-
-
-                addToCartBtn.textContent =
-                    "Add to Cart";
-
-                addToCartBtn.disabled =
-                    false;
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   BUY NOW
-========================================================= */
-
-if (buyNowBtn) {
-
-    buyNowBtn.addEventListener(
-        "click",
-        async () => {
-
-            if (!currentProduct) {
-
-                return;
-
-            }
-
-
-            if (!userLoggedIn) {
-
-                sessionStorage.setItem(
-                    "loginRedirect",
-                    window.location.pathname +
-                    window.location.search
-                );
-
-
-                alert(
-                    "Please login before buying."
-                );
-
-
-                window.location.href =
-                    "/login";
-
-
-                return;
-
-            }
-
-
-            const quantity =
-                Math.max(
-                    1,
-                    Number(
-                        quantityInput?.value || 1
-                    )
-                );
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/cart/add",
-                        {
-                            method: "POST",
-
-                            credentials:
-                                "include",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    product_id:
-                                        Number(
-                                            currentProduct.id
-                                        ),
-
-                                    quantity:
-                                        quantity
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
 
 
                 if (
@@ -1301,7 +1216,7 @@ if (buyNowBtn) {
             catch (error) {
 
                 console.error(
-                    "Buy now error:",
+                    "BUY NOW ERROR:",
                     error
                 );
 
@@ -1318,36 +1233,38 @@ if (buyNowBtn) {
 }
 
 
-/* =========================================================
-   AR BUTTON
-========================================================= */
+// =========================================================
+// TRY AR
+// =========================================================
 
 if (tryOnBtn) {
 
     tryOnBtn.addEventListener(
         "click",
-        () => {
+        async () => {
 
-            if (!currentProduct) {
+            const loggedIn =
+                await checkUserLogin();
+
+
+            if (!loggedIn) {
+
+                sessionStorage.setItem(
+                    "loginRedirect",
+                    window.location.href
+                );
+
+
+                showLoginModal();
 
                 return;
 
             }
 
 
-            /*
-             * Keep your AR button ready.
-             * Replace this later with your AR page.
-             */
-
-            const arUrl =
-                `/ar-tryon.html?id=${encodeURIComponent(
-                    currentProduct.id
-                )}`;
-
-
-            window.location.href =
-                arUrl;
+            alert(
+                "AR Try-On will open here."
+            );
 
         }
     );
@@ -1355,25 +1272,72 @@ if (tryOnBtn) {
 }
 
 
-/* =========================================================
-   REVIEW LOGIN
-========================================================= */
+// =========================================================
+// WRITE REVIEW
+// =========================================================
 
-if (reviewLoginBtn) {
+if (writeReviewBtn) {
 
-    reviewLoginBtn.addEventListener(
+    writeReviewBtn.addEventListener(
+        "click",
+        async () => {
+
+            const loggedIn =
+                await checkUserLogin();
+
+
+            if (!loggedIn) {
+
+                sessionStorage.setItem(
+                    "loginRedirect",
+                    window.location.href
+                );
+
+
+                showLoginModal();
+
+                return;
+
+            }
+
+
+            if (!reviewFormContainer) {
+
+                return;
+
+            }
+
+
+            reviewFormContainer.style.display =
+                "block";
+
+
+            writeReviewBtn.style.display =
+                "none";
+
+
+            reviewFormContainer.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// CANCEL REVIEW
+// =========================================================
+
+if (cancelReviewBtn) {
+
+    cancelReviewBtn.addEventListener(
         "click",
         () => {
 
-            sessionStorage.setItem(
-                "loginRedirect",
-                window.location.pathname +
-                window.location.search
-            );
-
-
-            window.location.href =
-                "/login";
+            resetReviewForm();
 
         }
     );
@@ -1381,26 +1345,26 @@ if (reviewLoginBtn) {
 }
 
 
-/* =========================================================
-   STAR RATING
-========================================================= */
+// =========================================================
+// STAR RATING
+// =========================================================
 
-const starButtons =
+const stars =
     document.querySelectorAll(
         "#starRating button"
     );
 
 
-starButtons.forEach(
-    button => {
+stars.forEach(
+    star => {
 
-        button.addEventListener(
+        star.addEventListener(
             "click",
             () => {
 
                 selectedRating =
                     Number(
-                        button.dataset.rating
+                        star.dataset.rating
                     );
 
 
@@ -1414,31 +1378,6 @@ starButtons.forEach(
 
                 updateStars();
 
-
-                if (ratingText) {
-
-                    const labels = {
-
-                        1: "Very bad",
-
-                        2: "Bad",
-
-                        3: "Average",
-
-                        4: "Good",
-
-                        5: "Excellent"
-
-                    };
-
-
-                    ratingText.textContent =
-                        labels[
-                            selectedRating
-                        ];
-
-                }
-
             }
         );
 
@@ -1446,27 +1385,26 @@ starButtons.forEach(
 );
 
 
-/* =========================================================
-   UPDATE STARS
-========================================================= */
+// =========================================================
+// UPDATE STARS
+// =========================================================
 
 function updateStars() {
 
-    starButtons.forEach(
-        button => {
+    stars.forEach(
+        star => {
 
-            const rating =
+            const value =
                 Number(
-                    button.dataset.rating
+                    star.dataset.rating
                 );
 
 
             if (
-                rating <=
-                selectedRating
+                value <= selectedRating
             ) {
 
-                button.classList.add(
+                star.classList.add(
                     "active"
                 );
 
@@ -1474,7 +1412,7 @@ function updateStars() {
 
             else {
 
-                button.classList.remove(
+                star.classList.remove(
                     "active"
                 );
 
@@ -1482,36 +1420,12 @@ function updateStars() {
 
         }
     );
-
 }
 
 
-/* =========================================================
-   REVIEW TEXT COUNTER
-========================================================= */
-
-if (reviewText) {
-
-    reviewText.addEventListener(
-        "input",
-        () => {
-
-            if (characterCount) {
-
-                characterCount.textContent =
-                    reviewText.value.length;
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   REVIEW IMAGE PREVIEW
-========================================================= */
+// =========================================================
+// IMAGE PREVIEW
+// =========================================================
 
 if (reviewImage) {
 
@@ -1520,19 +1434,43 @@ if (reviewImage) {
         () => {
 
             const file =
-                reviewImage.files[0];
+                reviewImage.files?.[0];
 
 
             if (!file) {
+
+                clearImagePreview();
 
                 return;
 
             }
 
 
-            /*
-             * Maximum 5 MB.
-             */
+            // ------------------------------------------------
+            // FILE TYPE
+            // ------------------------------------------------
+
+            if (
+                !file.type.startsWith("image/")
+            ) {
+
+                alert(
+                    "Please select a valid image file."
+                );
+
+                reviewImage.value =
+                    "";
+
+                clearImagePreview();
+
+                return;
+
+            }
+
+
+            // ------------------------------------------------
+            // FILE SIZE
+            // ------------------------------------------------
 
             if (
                 file.size >
@@ -1540,46 +1478,13 @@ if (reviewImage) {
             ) {
 
                 alert(
-                    "Image must be smaller than 5 MB."
+                    "Image must be smaller than 5MB."
                 );
-
 
                 reviewImage.value =
                     "";
 
-
-                return;
-
-            }
-
-
-            const allowedTypes = [
-
-                "image/jpeg",
-
-                "image/png",
-
-                "image/jpg",
-
-                "image/webp"
-
-            ];
-
-
-            if (
-                !allowedTypes.includes(
-                    file.type
-                )
-            ) {
-
-                alert(
-                    "Please select a JPG, PNG or WEBP image."
-                );
-
-
-                reviewImage.value =
-                    "";
-
+                clearImagePreview();
 
                 return;
 
@@ -1593,19 +1498,32 @@ if (reviewImage) {
             reader.onload =
                 event => {
 
-                    previewImage.src =
-                        event.target.result;
+                    if (!imagePreview) {
+
+                        return;
+
+                    }
 
 
-                    reviewImagePreview.style.display =
+                    imagePreview.innerHTML = `
+
+                        <img
+                            src="${escapeAttribute(
+                                event.target.result
+                            )}"
+                            alt="Review image preview"
+                        >
+
+                    `;
+
+
+                    imagePreview.style.display =
                         "block";
 
                 };
 
 
-            reader.readAsDataURL(
-                file
-            );
+            reader.readAsDataURL(file);
 
         }
     );
@@ -1613,36 +1531,9 @@ if (reviewImage) {
 }
 
 
-/* =========================================================
-   REMOVE REVIEW IMAGE
-========================================================= */
-
-if (removeReviewImage) {
-
-    removeReviewImage.addEventListener(
-        "click",
-        () => {
-
-            reviewImage.value =
-                "";
-
-
-            reviewImagePreview.style.display =
-                "none";
-
-
-            previewImage.src =
-                "";
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   SUBMIT REVIEW
-========================================================= */
+// =========================================================
+// SUBMIT REVIEW
+// =========================================================
 
 if (reviewForm) {
 
@@ -1653,105 +1544,141 @@ if (reviewForm) {
             event.preventDefault();
 
 
-            if (!userLoggedIn) {
+            const loggedIn =
+                await checkUserLogin();
+
+
+            if (!loggedIn) {
 
                 sessionStorage.setItem(
                     "loginRedirect",
-                    window.location.pathname +
-                    window.location.search
+                    window.location.href
                 );
 
+
+                showLoginModal();
+
+                return;
+
+            }
+
+
+            if (!currentProduct) {
 
                 alert(
-                    "Please login to submit a review."
+                    "Product has not loaded yet."
                 );
-
-
-                window.location.href =
-                    "/login";
-
 
                 return;
 
             }
 
 
-            if (
-                selectedRating < 1 ||
-                selectedRating > 5
-            ) {
-
-                showReviewMessage(
-                    "Please select a rating.",
-                    "error"
+            const rating =
+                Number(
+                    reviewRating?.value ||
+                    selectedRating
                 );
-
-
-                return;
-
-            }
 
 
             const text =
-                reviewText.value.trim();
+                reviewText?.value.trim() ||
+                "";
 
+
+            // ------------------------------------------------
+            // VALIDATE RATING
+            // ------------------------------------------------
+
+            if (
+                rating < 1 ||
+                rating > 5
+            ) {
+
+                alert(
+                    "Please select a rating."
+                );
+
+                return;
+
+            }
+
+
+            // ------------------------------------------------
+            // VALIDATE REVIEW
+            // ------------------------------------------------
 
             if (!text) {
 
-                showReviewMessage(
-                    "Please write your review.",
-                    "error"
+                alert(
+                    "Please write your review."
                 );
 
-
                 return;
+
+            }
+
+
+            // ------------------------------------------------
+            // CREATE FORM DATA
+            // ------------------------------------------------
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                "product_id",
+                currentProduct.id
+            );
+
+
+            formData.append(
+                "rating",
+                rating
+            );
+
+
+            formData.append(
+                "review_text",
+                text
+            );
+
+
+            if (
+                reviewImage &&
+                reviewImage.files &&
+                reviewImage.files.length > 0
+            ) {
+
+                formData.append(
+                    "image",
+                    reviewImage.files[0]
+                );
+
+            }
+
+
+            // ------------------------------------------------
+            // SUBMIT BUTTON
+            // ------------------------------------------------
+
+            if (submitReviewBtn) {
+
+                submitReviewBtn.disabled =
+                    true;
+
+                submitReviewBtn.textContent =
+                    "Submitting...";
 
             }
 
 
             try {
 
-                submitReviewBtn.disabled =
-                    true;
-
-
-                submitReviewBtn.textContent =
-                    "Submitting...";
-
-
-                const formData =
-                    new FormData();
-
-
-                formData.append(
-                    "rating",
-                    selectedRating
-                );
-
-
-                formData.append(
-                    "review",
-                    text
-                );
-
-
-                if (
-                    reviewImage.files.length > 0
-                ) {
-
-                    formData.append(
-                        "image",
-                        reviewImage.files[0]
-                    );
-
-                }
-
-
                 const response =
                     await fetch(
-                        `/api/products/${encodeURIComponent(
-                            productId
-                        )}/reviews`,
+                        "/api/reviews",
                         {
                             method: "POST",
 
@@ -1760,6 +1687,7 @@ if (reviewForm) {
 
                             body:
                                 formData
+
                         }
                     );
 
@@ -1768,32 +1696,20 @@ if (reviewForm) {
                     await response.json();
 
 
+                console.log(
+                    "REVIEW API RESPONSE:",
+                    data
+                );
+
+
                 if (
                     response.status === 401
                 ) {
 
-                    userLoggedIn = false;
+                    userLoggedIn =
+                        false;
 
-                    currentUser = null;
-
-                    updateReviewLoginState();
-
-
-                    sessionStorage.setItem(
-                        "loginRedirect",
-                        window.location.pathname +
-                        window.location.search
-                    );
-
-
-                    alert(
-                        "Please login first."
-                    );
-
-
-                    window.location.href =
-                        "/login";
-
+                    showLoginModal();
 
                     return;
 
@@ -1805,58 +1721,71 @@ if (reviewForm) {
                     data.success !== true
                 ) {
 
-                    throw new Error(
+                    alert(
                         data.message ||
                         "Failed to submit review."
                     );
 
+                    return;
+
                 }
 
 
-                showReviewMessage(
-                    "Review submitted successfully!",
-                    "success"
+                // ------------------------------------------------
+                // SUCCESS
+                // ------------------------------------------------
+
+                alert(
+                    "Review submitted successfully! ⭐"
                 );
 
 
                 resetReviewForm();
 
 
-                await loadReviews();
+                // ------------------------------------------------
+                // RELOAD REVIEWS
+                // ------------------------------------------------
+
+                await loadReviews(
+                    currentProduct.id
+                );
 
 
-                /*
-                 * Update product rating
-                 * after review.
-                 */
+                // ------------------------------------------------
+                // RELOAD PRODUCT RATING
+                // ------------------------------------------------
 
-                await loadProductRating();
+                await refreshProduct();
+
 
             }
 
             catch (error) {
 
                 console.error(
-                    "Submit review error:",
+                    "SUBMIT REVIEW ERROR:",
                     error
                 );
 
 
-                showReviewMessage(
-                    error.message ||
-                    "Unable to submit review.",
-                    "error"
+                alert(
+                    "Unable to submit review."
                 );
 
             }
 
             finally {
 
-                submitReviewBtn.disabled =
-                    false;
+                if (submitReviewBtn) {
 
-                submitReviewBtn.textContent =
-                    "Submit Review";
+                    submitReviewBtn.disabled =
+                        false;
+
+                    submitReviewBtn.textContent =
+                        "Submit Review";
+
+                }
 
             }
 
@@ -1866,42 +1795,21 @@ if (reviewForm) {
 }
 
 
-/* =========================================================
-   REVIEW MESSAGE
-========================================================= */
+// =========================================================
+// RESET REVIEW FORM
+// =========================================================
 
-function showReviewMessage(
-    message,
-    type
-) {
+function resetReviewForm() {
 
-    if (!reviewFormMessage) {
+    if (reviewForm) {
 
-        return;
+        reviewForm.reset();
 
     }
 
 
-    reviewFormMessage.textContent =
-        message;
-
-
-    reviewFormMessage.className =
-        `review-form-message ${type}`;
-
-}
-
-
-/* =========================================================
-   RESET REVIEW FORM
-========================================================= */
-
-function resetReviewForm() {
-
-    reviewForm.reset();
-
-
-    selectedRating = 0;
+    selectedRating =
+        0;
 
 
     if (reviewRating) {
@@ -1912,67 +1820,66 @@ function resetReviewForm() {
     }
 
 
-    if (ratingText) {
-
-        ratingText.textContent =
-            "Select a rating";
-
-    }
-
-
-    if (characterCount) {
-
-        characterCount.textContent =
-            "0";
-
-    }
-
-
     updateStars();
 
 
-    if (reviewImagePreview) {
+    clearImagePreview();
 
-        reviewImagePreview.style.display =
+
+    if (reviewFormContainer) {
+
+        reviewFormContainer.style.display =
             "none";
 
     }
 
 
-    if (previewImage) {
+    if (writeReviewBtn) {
 
-        previewImage.src =
-            "";
+        writeReviewBtn.style.display =
+            "block";
 
     }
 
 }
 
 
-/* =========================================================
-   LOAD REVIEWS
-========================================================= */
+// =========================================================
+// CLEAR IMAGE PREVIEW
+// =========================================================
 
-async function loadReviews() {
+function clearImagePreview() {
 
-    if (!productId || !reviewsList) {
+    if (!imagePreview) {
 
         return;
 
     }
 
 
-    reviewsList.innerHTML = `
+    imagePreview.innerHTML =
+        "";
 
-        <div class="reviews-loading">
+    imagePreview.style.display =
+        "none";
+}
 
-            <div class="small-loader"></div>
 
-            Loading reviews...
+// =========================================================
+// REFRESH PRODUCT ONLY
+// =========================================================
 
-        </div>
+async function refreshProduct() {
 
-    `;
+    const productId =
+        getProductId();
+
+
+    if (!productId) {
+
+        return;
+
+    }
 
 
     try {
@@ -1981,9 +1888,10 @@ async function loadReviews() {
             await fetch(
                 `/api/products/${encodeURIComponent(
                     productId
-                )}/reviews`,
+                )}`,
                 {
                     method: "GET",
+                    credentials: "include",
                     cache: "no-store"
                 }
             );
@@ -1995,13 +1903,227 @@ async function loadReviews() {
 
         if (
             !response.ok ||
+            data.success !== true ||
+            !data.product
+        ) {
+
+            return;
+
+        }
+
+
+        currentProduct =
+            data.product;
+
+
+        window.currentProduct =
+            currentProduct;
+
+
+        // Update only product information.
+        // Do NOT call loadReviews() here.
+
+        updateProductInformation(
+            currentProduct
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "REFRESH PRODUCT ERROR:",
+            error
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// UPDATE PRODUCT INFORMATION
+// =========================================================
+
+function updateProductInformation(product) {
+
+    if (!product) {
+
+        return;
+
+    }
+
+
+    if (productCategory) {
+
+        productCategory.textContent =
+            product.category_name ||
+            product.category ||
+            "Uncategorized";
+
+    }
+
+
+    if (productName) {
+
+        productName.textContent =
+            product.name ||
+            "Product";
+
+    }
+
+
+    if (productRating) {
+
+        productRating.textContent =
+            `★ ${Number(
+                product.rating || 0
+            ).toFixed(1)}`;
+
+    }
+
+
+    if (productPrice) {
+
+        productPrice.textContent =
+            `Rs. ${Number(
+                product.price || 0
+            ).toFixed(2)}`;
+
+    }
+
+
+    if (productDescription) {
+
+        productDescription.textContent =
+            product.description ||
+            "No description available.";
+
+    }
+
+
+    const stock =
+        Number(product.stock || 0);
+
+
+    if (productStock) {
+
+        productStock.textContent =
+            stock > 0
+                ? `${stock} available`
+                : "Out of stock";
+
+        productStock.className =
+            stock > 0
+                ? "stock-available"
+                : "stock-unavailable";
+
+    }
+
+
+    if (quantityInput) {
+
+        quantityInput.max =
+            stock > 0
+                ? stock
+                : 1;
+
+    }
+
+
+    if (addToCartBtn) {
+
+        addToCartBtn.disabled =
+            stock <= 0;
+
+    }
+
+
+    if (buyNowBtn) {
+
+        buyNowBtn.disabled =
+            stock <= 0;
+
+    }
+
+}
+
+
+// =========================================================
+// LOAD REVIEWS
+// =========================================================
+
+async function loadReviews(productId) {
+
+    if (!reviewsList) {
+
+        return;
+
+    }
+
+
+    reviewsList.innerHTML = `
+
+        <div class="reviews-loading">
+
+            <div class="loader small"></div>
+
+            <span>
+                Loading reviews...
+            </span>
+
+        </div>
+
+    `;
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/reviews/product/${encodeURIComponent(
+                    productId
+                )}`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    cache: "no-store"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "REVIEWS API RESPONSE:",
+            data
+        );
+
+
+        if (
+            !response.ok ||
             data.success !== true
         ) {
 
-            throw new Error(
-                data.message ||
-                "Failed to load reviews."
-            );
+            reviewsList.innerHTML = `
+
+                <div class="no-reviews">
+
+                    <div class="no-reviews-icon">
+                        ⚠️
+                    </div>
+
+                    <p>
+                        Unable to load reviews.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
 
         }
 
@@ -2012,13 +2134,50 @@ async function loadReviews() {
                 : [];
 
 
-        updateReviewSummary(
-            reviews
-        );
+        if (
+            reviews.length === 0
+        ) {
+
+            reviewsList.innerHTML = `
+
+                <div class="no-reviews">
+
+                    <div class="no-reviews-icon">
+                        ⭐
+                    </div>
+
+                    <h3>
+                        No reviews yet
+                    </h3>
+
+                    <p>
+                        Be the first customer
+                        to review this product.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
 
 
-        displayReviews(
-            reviews
+        reviewsList.innerHTML =
+            "";
+
+
+        reviews.forEach(
+            review => {
+
+                reviewsList.appendChild(
+                    createReviewCard(
+                        review
+                    )
+                );
+
+            }
         );
 
     }
@@ -2026,16 +2185,22 @@ async function loadReviews() {
     catch (error) {
 
         console.error(
-            "Load reviews error:",
+            "LOAD REVIEWS ERROR:",
             error
         );
 
 
         reviewsList.innerHTML = `
 
-            <div class="reviews-empty">
+            <div class="no-reviews">
 
-                Unable to load reviews.
+                <div class="no-reviews-icon">
+                    ⚠️
+                </div>
+
+                <p>
+                    Unable to load reviews.
+                </p>
 
             </div>
 
@@ -2046,258 +2211,196 @@ async function loadReviews() {
 }
 
 
-/* =========================================================
-   REVIEW SUMMARY
-========================================================= */
+// =========================================================
+// CREATE REVIEW CARD
+// =========================================================
 
-function updateReviewSummary(
-    reviews
-) {
+function createReviewCard(review) {
 
-    if (!reviews.length) {
-
-        if (reviewAverage) {
-
-            reviewAverage.textContent =
-                "0.0";
-
-        }
-
-
-        if (reviewCount) {
-
-            reviewCount.textContent =
-                "0 reviews";
-
-        }
-
-
-        return;
-
-    }
-
-
-    const total =
-        reviews.reduce(
-            (
-                sum,
-                review
-            ) =>
-                sum +
-                Number(
-                    review.rating || 0
-                ),
-            0
+    const card =
+        document.createElement(
+            "article"
         );
 
 
-    const average =
-        total /
-        reviews.length;
+    card.className =
+        "review-card";
 
 
-    if (reviewAverage) {
+    const rating =
+        Math.min(
+            5,
+            Math.max(
+                0,
+                Number(review.rating || 0)
+            )
+        );
 
-        reviewAverage.textContent =
-            average.toFixed(1);
+
+    const starsHTML =
+        "★".repeat(rating) +
+        "☆".repeat(
+            5 - rating
+        );
+
+
+    let dateText =
+        "";
+
+
+    if (review.created_at) {
+
+        const date =
+            new Date(
+                review.created_at
+            );
+
+
+        if (
+            !Number.isNaN(
+                date.getTime()
+            )
+        ) {
+
+            dateText =
+                date.toLocaleDateString(
+                    undefined,
+                    {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric"
+                    }
+                );
+
+        }
 
     }
 
 
-    if (reviewCount) {
-
-        reviewCount.textContent =
-            `${reviews.length} ${
-                reviews.length === 1
-                    ? "review"
-                    : "reviews"
-            }`;
-
-    }
-
-}
+    const username =
+        escapeHTML(
+            review.username ||
+            "Customer"
+        );
 
 
-/* =========================================================
-   DISPLAY REVIEWS
-========================================================= */
+    const reviewContent =
+        escapeHTML(
+            review.review_text ||
+            ""
+        );
 
-function displayReviews(
-    reviews
-) {
 
-    if (!reviews.length) {
+    let imageHTML =
+        "";
 
-        reviewsList.innerHTML = `
 
-            <div class="reviews-empty">
+    if (
+        review.image_url
+    ) {
 
-                <div style="font-size:40px;margin-bottom:10px;">
-                    💬
-                </div>
+        imageHTML = `
 
-                <h3>
-                    No reviews yet
-                </h3>
+            <div class="review-image">
 
-                <p>
-                    Be the first customer to review this product.
-                </p>
+                <img
+                    src="${escapeAttribute(
+                        review.image_url
+                    )}"
+                    alt="Customer review image"
+                    loading="lazy"
+                >
 
             </div>
 
         `;
 
-        return;
-
     }
 
 
-    reviewsList.innerHTML =
-        "";
+    card.innerHTML = `
 
+        <div class="review-top">
 
-    reviews.forEach(
-        review => {
+            <div>
 
-            const card =
-                document.createElement(
-                    "div"
-                );
+                <div class="reviewer">
 
-
-            card.className =
-                "review-card";
-
-
-            const reviewerName =
-                review.username ||
-                review.name ||
-                "Customer";
-
-
-            const rating =
-                Number(
-                    review.rating || 0
-                );
-
-
-            const stars =
-                "★".repeat(
-                    rating
-                ) +
-                "☆".repeat(
-                    5 - rating
-                );
-
-
-            const date =
-                formatReviewDate(
-                    review.created_at
-                );
-
-
-            const imageUrl =
-                review.image
-                    ? getReviewImageUrl(
-                        review.image
-                    )
-                    : "";
-
-
-            card.innerHTML = `
-
-                <div class="review-top">
-
-                    <div class="reviewer">
-
-                        <div class="reviewer-avatar">
-
-                            ${escapeHTML(
-                                reviewerName
-                                    .charAt(0)
-                                    .toUpperCase()
-                            )}
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="reviewer-name">
-
-                                ${escapeHTML(
-                                    reviewerName
-                                )}
-
-                            </div>
-
-
-                            <div class="review-date">
-
-                                ${escapeHTML(
-                                    date
-                                )}
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="review-stars">
-
-                        ${stars}
-
-                    </div>
+                    ${username}
 
                 </div>
 
+                <div class="review-stars">
 
-                <p class="review-text">
+                    ${starsHTML}
 
-                    ${escapeHTML(
-                        review.review ||
-                        review.comment ||
-                        ""
-                    )}
+                </div>
 
-                </p>
+            </div>
 
 
-                ${
-                    imageUrl
+            <div class="review-date">
 
-                    ?
+                ${dateText}
 
-                    `
+            </div>
 
-                    <div class="review-photo">
-
-                        <img
-                            src="${escapeAttribute(
-                                imageUrl
-                            )}"
-                            alt="Customer review image"
-                        >
-
-                    </div>
-
-                    `
-
-                    :
-
-                    ""
-
-                }
-
-            `;
+        </div>
 
 
-            reviewsList.appendChild(
-                card
-            );
+        <div class="review-text">
+
+            ${reviewContent}
+
+        </div>
+
+
+        ${imageHTML}
+
+    `;
+
+
+    return card;
+}
+
+
+// =========================================================
+// CLOSE LOGIN MODAL WITH ESC
+// =========================================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            hideLoginModal();
+
+        }
+
+    }
+);
+
+
+// =========================================================
+// CLOSE LOGIN MODAL WHEN CLICKING OUTSIDE
+// =========================================================
+
+if (loginModal) {
+
+    loginModal.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target === loginModal
+            ) {
+
+                hideLoginModal();
+
+            }
 
         }
     );
@@ -2305,224 +2408,51 @@ function displayReviews(
 }
 
 
-/* =========================================================
-   REVIEW IMAGE URL
-========================================================= */
+// =========================================================
+// INITIALIZE PAGE
+// =========================================================
 
-function getReviewImageUrl(
-    image
-) {
+async function initialize() {
 
-    if (!image) {
-
-        return "";
-
-    }
+    console.log(
+        "Initializing product details page..."
+    );
 
 
-    const value =
-        String(image).trim();
+    const productId =
+        getProductId();
 
 
-    if (
-        value.startsWith(
-            "http://"
-        ) ||
-        value.startsWith(
-            "https://"
-        )
-    ) {
+    console.log(
+        "Product ID:",
+        productId
+    );
 
-        return value;
+
+    if (!productId) {
+
+        showError();
+
+        return;
 
     }
 
 
-    if (
-        value.startsWith(
-            "/uploads/"
-        )
-    ) {
+    // Check login but do not block
+    // product loading if login check fails.
 
-        return value;
-
-    }
+    await checkUserLogin();
 
 
-    if (
-        value.startsWith(
-            "uploads/"
-        )
-    ) {
-
-        return "/" + value;
-
-    }
-
-
-    return "/uploads/reviews/" + value;
-
-}
-
-
-/* =========================================================
-   LOAD PRODUCT RATING
-========================================================= */
-
-async function loadProductRating() {
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/products/${encodeURIComponent(
-                    productId
-                )}`,
-                {
-                    cache: "no-store"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            response.ok &&
-            data.success === true &&
-            data.product
-        ) {
-
-            const rating =
-                Number(
-                    data.product.rating || 0
-                );
-
-
-            if (productRating) {
-
-                productRating.textContent =
-                    `★ ${rating.toFixed(1)}`;
-
-            }
-
-        }
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Rating refresh error:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   DATE
-========================================================= */
-
-function formatReviewDate(
-    date
-) {
-
-    if (!date) {
-
-        return "";
-
-    }
-
-
-    try {
-
-        return new Date(
-            date
-        ).toLocaleDateString(
-            "en-US",
-            {
-                year: "numeric",
-                month: "short",
-                day: "numeric"
-            }
-        );
-
-    }
-
-    catch {
-
-        return "";
-
-    }
-
-}
-
-
-/* =========================================================
-   SECURITY HELPERS
-========================================================= */
-
-function escapeHTML(
-    value
-) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        value ?? "";
-
-
-    return div.innerHTML;
-
-}
-
-
-function escapeAttribute(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        );
-
-}
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
-
-async function initializeProductDetails() {
-
-    await checkLogin();
+    // Load product and reviews
 
     await loadProduct();
 
 }
 
 
-initializeProductDetails();
+// =========================================================
+// START
+// =========================================================
+
+initialize();
