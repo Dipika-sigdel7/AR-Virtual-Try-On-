@@ -179,10 +179,12 @@ router.get(
                 );
 
 
+            // =================================================
+            // VALIDATE PRODUCT ID
+            // =================================================
+
             if (
-                !Number.isInteger(
-                    productId
-                ) ||
+                !Number.isInteger(productId) ||
                 productId <= 0
             ) {
 
@@ -198,6 +200,14 @@ router.get(
             }
 
 
+            // =================================================
+            // GET REVIEWS
+            //
+            // IMPORTANT:
+            // DATABASE COLUMN = comment
+            // DATABASE COLUMN = image_url
+            // =================================================
+
             const [rows] =
                 await pool.execute(
                     `
@@ -211,9 +221,9 @@ router.get(
 
                         r.rating,
 
-                        r.review,
+                        r.comment,
 
-                        r.image,
+                        r.image_url,
 
                         r.created_at,
 
@@ -238,7 +248,7 @@ router.get(
 
 
             // =================================================
-            // CALCULATE SUMMARY
+            // CALCULATE AVERAGE
             // =================================================
 
             let averageRating = 0;
@@ -250,57 +260,66 @@ router.get(
                         (
                             sum,
                             row
-                        ) =>
-                            sum +
-                            Number(
-                                row.rating || 0
-                            ),
+                        ) => {
+
+                            return (
+                                sum +
+                                Number(
+                                    row.rating || 0
+                                )
+                            );
+
+                        },
                         0
                     );
 
+
                 averageRating =
-                    total / rows.length;
+                    total /
+                    rows.length;
 
             }
 
 
             // =================================================
-            // FORMAT REVIEWS FOR FRONTEND
+            // FORMAT FOR FRONTEND
             // =================================================
 
             const reviews =
                 rows.map(
-                    review => {
+                    row => {
 
                         return {
 
                             id:
-                                review.id,
+                                row.id,
 
                             product_id:
-                                review.product_id,
+                                row.product_id,
 
                             user_id:
-                                review.user_id,
+                                row.user_id,
 
                             username:
-                                review.username,
+                                row.username ||
+                                "Customer",
 
                             rating:
                                 Number(
-                                    review.rating
+                                    row.rating
                                 ),
 
                             review_text:
-                                review.review,
+                                row.comment ||
+                                "",
 
                             image_url:
-                                review.image
-                                    ? `/uploads/reviews/${review.image}`
+                                row.image_url
+                                    ? `/uploads/reviews/${row.image_url}`
                                     : null,
 
                             created_at:
-                                review.created_at
+                                row.created_at
 
                         };
 
@@ -308,18 +327,26 @@ router.get(
                 );
 
 
+            // =================================================
+            // RESPONSE
+            // =================================================
+
             return res.json({
 
                 success: true,
 
-                reviews,
+                reviews:
+
+                    reviews,
 
                 averageRating:
+
                     Number(
                         averageRating.toFixed(1)
                     ),
 
                 reviewCount:
+
                     reviews.length
 
             });
@@ -400,13 +427,17 @@ router.post(
 
 
             // =================================================
-            // SUPPORT BOTH FIELD NAMES
+            // REVIEW TEXT
+            //
+            // Frontend sends review_text.
+            // Database stores it in comment.
             // =================================================
 
             const review =
                 String(
                     req.body.review_text ||
                     req.body.review ||
+                    req.body.comment ||
                     ""
                 ).trim();
 
@@ -416,9 +447,7 @@ router.post(
             // =================================================
 
             if (
-                !Number.isInteger(
-                    productId
-                ) ||
+                !Number.isInteger(productId) ||
                 productId <= 0
             ) {
 
@@ -439,9 +468,7 @@ router.post(
             // =================================================
 
             if (
-                !Number.isInteger(
-                    userId
-                ) ||
+                !Number.isInteger(userId) ||
                 userId <= 0
             ) {
 
@@ -462,9 +489,7 @@ router.post(
             // =================================================
 
             if (
-                !Number.isInteger(
-                    rating
-                ) ||
+                !Number.isInteger(rating) ||
                 rating < 1 ||
                 rating > 5
             ) {
@@ -482,7 +507,7 @@ router.post(
 
 
             // =================================================
-            // VALIDATE REVIEW
+            // VALIDATE COMMENT
             // =================================================
 
             if (!review) {
@@ -499,9 +524,7 @@ router.post(
             }
 
 
-            if (
-                review.length > 1000
-            ) {
+            if (review.length > 1000) {
 
                 return res.status(400).json({
 
@@ -522,8 +545,7 @@ router.post(
             const [products] =
                 await pool.execute(
                     `
-                    SELECT
-                        id
+                    SELECT id
                     FROM products
                     WHERE id = ?
                     LIMIT 1
@@ -564,6 +586,10 @@ router.post(
 
             // =================================================
             // INSERT REVIEW
+            //
+            // DATABASE:
+            // comment
+            // image_url
             // =================================================
 
             await pool.execute(
@@ -573,8 +599,8 @@ router.post(
                     product_id,
                     user_id,
                     rating,
-                    review,
-                    image
+                    comment,
+                    image_url
                 )
                 VALUES
                 (
@@ -644,7 +670,7 @@ router.post(
 
 
             // =================================================
-            // DELETE UPLOADED IMAGE IF DB INSERT FAILED
+            // DELETE IMAGE IF DATABASE INSERT FAILED
             // =================================================
 
             if (uploadedImage) {
@@ -654,6 +680,7 @@ router.post(
                         uploadDirectory,
                         uploadedImage
                     );
+
 
                 try {
 
@@ -753,6 +780,10 @@ router.use(
     }
 );
 
+
+// =========================================================
+// EXPORT
+// =========================================================
 
 module.exports =
     router;
