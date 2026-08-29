@@ -34,7 +34,7 @@ const pagesPath = path.join(
 // MIDDLEWARE
 // =========================================================
 
-// Parse JSON requests
+// Parse JSON
 app.use(
     express.json()
 );
@@ -73,6 +73,7 @@ app.use(
 
             maxAge:
                 24 * 60 * 60 * 1000
+
         }
 
     })
@@ -271,58 +272,36 @@ app.get(
 
 // =========================================================
 // PRODUCT DETAILS
-// WITH .HTML
+// =========================================================
+//
+// Supports:
+//
+// /product_details.html?id=1
+// /product_details?id=1
+// /product-details?id=1
+//
+// Actual file:
+//
+// frontend/pages/product_details.html
+//
 // =========================================================
 
 app.get(
-    "/product_details.html",
+    [
+        "/product_details.html",
+        "/product_details",
+        "/product-details"
+    ],
     (req, res) => {
 
-        res.sendFile(
+        const productDetailsPage =
             path.join(
                 pagesPath,
                 "product_details.html"
-            ),
-            error => {
-
-                if (error) {
-
-                    console.error(
-                        "Product details page error:",
-                        error
-                    );
-
-                    if (!res.headersSent) {
-
-                        res.status(404).send(
-                            "Product details page not found."
-                        );
-
-                    }
-
-                }
-
-            }
-        );
-
-    }
-);
-
-
-// =========================================================
-// PRODUCT DETAILS
-// WITHOUT .HTML
-// =========================================================
-
-app.get(
-    "/product_details",
-    (req, res) => {
+            );
 
         res.sendFile(
-            path.join(
-                pagesPath,
-                "product_details.html"
-            ),
+            productDetailsPage,
             error => {
 
                 if (error) {
@@ -470,6 +449,12 @@ app.get(
 
 app.use(
     (req, res) => {
+
+        console.log(
+            "404 - Page not found:",
+            req.method,
+            req.originalUrl
+        );
 
         res.status(404).send(
             "Page not found"

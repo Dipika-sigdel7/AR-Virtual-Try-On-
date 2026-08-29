@@ -1,4 +1,3 @@
-
 // =========================================================
 // AR ECOMMERCE
 // PRODUCTS PAGE
@@ -192,6 +191,9 @@ async function loadCart() {
                             category_name:
                                 item.category_name,
 
+                            image:
+                                item.image || null,
+
                             quantity:
                                 Number(
                                     item.quantity || 0
@@ -241,7 +243,6 @@ async function loadCart() {
 
 /* =========================================================
    ADD TO CART
-   SAME FUNCTION USED BY HOME PAGE
 ========================================================= */
 
 async function addToCart(product) {
@@ -402,6 +403,10 @@ window.addToCart =
 async function loadProducts() {
 
     if (!categoriesContainer) {
+
+        console.error(
+            "categories-container not found."
+        );
 
         return;
 
@@ -664,9 +669,9 @@ function createProductCard(product) {
         "product-card";
 
 
-    /*
-     * Store product ID on card.
-     */
+    /* =====================================================
+       STORE PRODUCT ID
+    ===================================================== */
 
     card.dataset.product =
         product.id;
@@ -783,7 +788,7 @@ function createProductCard(product) {
 
                 <strong>
 
-                    $${Number(
+                    Rs. ${Number(
                         product.price || 0
                     ).toFixed(2)}
 
@@ -839,8 +844,8 @@ function createProductCard(product) {
         event => {
 
             /*
-             * If user clicked the Add to Cart button,
-             * do NOT open product details.
+             * Do not open details when clicking
+             * Add to Cart.
              */
 
             if (
@@ -855,10 +860,12 @@ function createProductCard(product) {
 
 
             /*
-             * Make sure product ID exists.
+             * Validate product ID.
              */
 
-            if (!product.id) {
+            if (
+                !product.id
+            ) {
 
                 console.error(
                     "Product ID missing:",
@@ -871,11 +878,17 @@ function createProductCard(product) {
 
 
             /*
-             * Open product details page.
+             * Open the ACTUAL product details route.
+             *
+             * File:
+             * product_details.html
+             *
+             * Route:
+             * /product_details
              */
 
             window.location.href =
-                `/product-details.html?id=${encodeURIComponent(
+                `/product_details?id=${encodeURIComponent(
                     product.id
                 )}`;
 
@@ -1125,7 +1138,7 @@ function updateCart() {
         if (cartTotal) {
 
             cartTotal.textContent =
-                "$0.00";
+                "Rs. 0.00";
 
         }
 
@@ -1229,7 +1242,7 @@ function updateCart() {
 
                         <div class="cart-item-price">
 
-                            $${Number(
+                            Rs. ${Number(
                                 product.price || 0
                             ).toFixed(2)}
 
@@ -1268,7 +1281,7 @@ function updateCart() {
     if (cartTotal) {
 
         cartTotal.textContent =
-            `$${total.toFixed(2)}`;
+            `Rs. ${total.toFixed(2)}`;
 
     }
 
