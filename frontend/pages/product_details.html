@@ -1,28 +1,24 @@
-
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>Product Details - AR Ecommerce</title>
+<title>Product Details - AR Ecommerce</title>
 
-    <link
-        rel="stylesheet"
-        href="/css/product_details.css"
-    >
+<link
+    rel="stylesheet" href="/css/product_details.css">
 
 </head>
 
-
 <body>
-
 
 <!-- =====================================================
      NAVIGATION
@@ -30,44 +26,43 @@
 
 <nav class="navbar">
 
-    <div class="nav-container">
+<div class="nav-container">
 
-        <a
-            href="/"
-            class="logo"
-        >
-            AR Ecommerce
+    <a
+        href="/"
+        class="logo"
+    >
+        AR Ecommerce
+    </a>
+
+
+    <div class="nav-links">
+
+        <a href="/">
+            Home
         </a>
 
+        <a href="/products">
+            Products
+        </a>
 
-        <div class="nav-links">
+        <a href="/cart">
+            Cart
+        </a>
 
-            <a href="/">
-                Home
-            </a>
-
-            <a href="/products">
-                Products
-            </a>
-
-            <a href="/cart">
-                Cart
-            </a>
-
-            <a
-                href="/login"
-                id="loginNav"
-            >
-                Login
-            </a>
-
-        </div>
+        <a
+            href="/login"
+            id="loginNav"
+        >
+            Login
+        </a>
 
     </div>
 
+</div>
+
+
 </nav>
-
-
 
 <!-- =====================================================
      PRODUCT DETAILS
@@ -75,215 +70,232 @@
 
 <main class="product-page">
 
+<!-- =================================================
+     LOADING
+================================================== -->
 
-    <!-- Loading -->
+<div
+    id="loading"
+    class="loading"
+>
+    Loading product...
+</div>
 
-    <div
-        id="loading"
-        class="loading"
-    >
-        Loading product...
+
+<!-- =================================================
+     ERROR
+================================================== -->
+
+<div
+    id="errorMessage"
+    class="error-message"
+    style="display: none;"
+>
+    Product not found.
+</div>
+
+
+<!-- =================================================
+     PRODUCT
+================================================== -->
+
+<section
+    id="productDetails"
+    class="product-details"
+    style="display: none;"
+>
+
+
+    <!-- =================================================
+         PRODUCT IMAGE
+    ================================================== -->
+
+    <div class="product-image-section">
+
+        <div class="product-image-container">
+
+            <img
+                id="productImage"
+                src=""
+                alt="Product"
+            >
+
+        </div>
+
     </div>
 
 
-    <!-- Error -->
 
-    <div
-        id="errorMessage"
-        class="error-message"
-        style="display: none;"
-    >
-        Product not found.
-    </div>
+    <!-- =================================================
+         PRODUCT INFORMATION
+    ================================================== -->
+
+    <div class="product-info">
 
 
-    <!-- Product -->
+        <!-- Category -->
 
-    <section
-        id="productDetails"
-        class="product-details"
-        style="display: none;"
-    >
+        <span
+            id="productCategory"
+            class="category"
+        >
+            Category
+        </span>
 
 
-        <!-- =================================================
-             IMAGE
-        ================================================== -->
+        <!-- Product Name -->
 
-        <div class="product-image-section">
+        <h1 id="productName">
+            Product Name
+        </h1>
 
-            <div class="product-image-container">
 
-                <img
-                    id="productImage"
-                    src=""
-                    alt="Product"
+        <!-- Rating -->
+
+        <div class="rating">
+
+            <span id="productRating">
+                ★ 0.0
+            </span>
+
+            <span class="rating-label">
+                Rating
+            </span>
+
+        </div>
+
+
+        <!-- Price -->
+
+        <div
+            id="productPrice"
+            class="price"
+        >
+            Rs. 0
+        </div>
+
+
+        <!-- Description -->
+
+        <div class="description">
+
+            <h2>
+                Description
+            </h2>
+
+            <p id="productDescription">
+                No description available.
+            </p>
+
+        </div>
+
+
+        <!-- Availability -->
+
+        <div class="availability">
+
+            <strong>
+                Availability:
+            </strong>
+
+            <span id="productStock">
+                Checking...
+            </span>
+
+        </div>
+
+
+        <!-- Quantity -->
+
+        <div class="quantity-section">
+
+            <label for="quantity">
+                Quantity
+            </label>
+
+
+            <div class="quantity-control">
+
+                <button
+                    type="button"
+                    id="decreaseBtn"
                 >
+                    −
+                </button>
+
+
+                <input
+                    type="number"
+                    id="quantity"
+                    value="1"
+                    min="1"
+                >
+
+
+                <button
+                    type="button"
+                    id="increaseBtn"
+                >
+                    +
+                </button>
 
             </div>
 
         </div>
 
 
-
         <!-- =================================================
-             INFORMATION
+             CART / BUY BUTTONS
         ================================================== -->
 
-        <div class="product-info">
-
-
-            <span
-                id="productCategory"
-                class="category"
-            >
-                Category
-            </span>
-
-
-            <h1 id="productName">
-                Product Name
-            </h1>
-
-
-            <!-- Rating -->
-
-            <div class="rating">
-
-                <span id="productRating">
-                    ★ 0.0
-                </span>
-
-                <span class="rating-label">
-                    Rating
-                </span>
-
-            </div>
-
-
-            <!-- Price -->
-
-            <div
-                id="productPrice"
-                class="price"
-            >
-                Rs. 0
-            </div>
-
-
-            <!-- Description -->
-
-            <div class="description">
-
-                <h2>
-                    Description
-                </h2>
-
-                <p id="productDescription">
-                    No description available.
-                </p>
-
-            </div>
-
-
-            <!-- Stock -->
-
-            <div class="availability">
-
-                <strong>
-                    Availability:
-                </strong>
-
-                <span id="productStock">
-                    Checking...
-                </span>
-
-            </div>
-
-
-            <!-- Quantity -->
-
-            <div class="quantity-section">
-
-                <label>
-                    Quantity
-                </label>
-
-
-                <div class="quantity-control">
-
-                    <button
-                        type="button"
-                        id="decreaseBtn"
-                    >
-                        −
-                    </button>
-
-
-                    <input
-                        type="number"
-                        id="quantity"
-                        value="1"
-                        min="1"
-                    >
-
-
-                    <button
-                        type="button"
-                        id="increaseBtn"
-                    >
-                        +
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <!-- Buttons -->
-
-            <div class="buttons">
-
-                <button
-                    type="button"
-                    id="addToCartBtn"
-                    class="add-cart"
-                >
-                    Add to Cart
-                </button>
-
-
-                <button
-                    type="button"
-                    id="buyNowBtn"
-                    class="buy-now"
-                >
-                    Buy Now
-                </button>
-
-            </div>
-
-
-            <!-- AR -->
+        <div class="buttons">
 
             <button
                 type="button"
-                id="tryOnBtn"
-                class="try-ar"
+                id="addToCartBtn"
+                class="add-cart"
             >
-                Try With AR
+                Add to Cart
             </button>
 
 
+            <button
+                type="button"
+                id="buyNowBtn"
+                class="buy-now"
+            >
+                Buy Now
+            </button>
+
         </div>
 
-    </section>
+
+        <!-- =================================================
+             AR TRY-ON
+        ================================================== -->
+
+        <button
+            type="button"
+            id="tryOnBtn"
+            class="try-ar"
+        >
+            Try With AR
+        </button>
+
+
+    </div>
+
+</section>
 
 </main>
 
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
 
-
-<script src="/js/product_details.js"></script>
+<script
+    src="/js/product_details.js"
+></script>
 
 </body>
 
