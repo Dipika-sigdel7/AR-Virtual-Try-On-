@@ -22,7 +22,6 @@ const uploadDirectory = path.join(
     "../uploads/reviews"
 );
 
-
 if (!fs.existsSync(uploadDirectory)) {
 
     fs.mkdirSync(
@@ -50,20 +49,17 @@ const storage = multer.diskStorage({
 
     },
 
-
     filename: (req, file, cb) => {
 
         const extension =
             path.extname(
                 file.originalname
-            ).toLowerCase();
-
+            );
 
         const filename =
             `review-${Date.now()}-${Math.round(
                 Math.random() * 1E9
             )}${extension}`;
-
 
         cb(
             null,
@@ -74,6 +70,10 @@ const storage = multer.diskStorage({
 
 });
 
+
+// =========================================================
+// MULTER
+// =========================================================
 
 const upload = multer({
 
@@ -98,7 +98,6 @@ const upload = multer({
             "image/png",
             "image/webp"
         ];
-
 
         if (
             allowed.includes(
@@ -154,7 +153,6 @@ function requireLogin(
 
     }
 
-
     next();
 
 }
@@ -162,11 +160,12 @@ function requireLogin(
 
 // =========================================================
 // GET REVIEWS
-// GET /api/reviews/:productId
+//
+// GET /api/reviews/product/:productId
 // =========================================================
 
 router.get(
-    "/:productId",
+    "/product/:productId",
     async (
         req,
         res
@@ -198,10 +197,6 @@ router.get(
 
             }
 
-
-            // =================================================
-            // GET REVIEWS
-            // =================================================
 
             const [rows] =
                 await pool.execute(
@@ -243,7 +238,34 @@ router.get(
 
 
             // =================================================
-            // FORMAT REVIEW DATA FOR FRONTEND
+            // CALCULATE SUMMARY
+            // =================================================
+
+            let averageRating = 0;
+
+            if (rows.length > 0) {
+
+                const total =
+                    rows.reduce(
+                        (
+                            sum,
+                            row
+                        ) =>
+                            sum +
+                            Number(
+                                row.rating || 0
+                            ),
+                        0
+                    );
+
+                averageRating =
+                    total / rows.length;
+
+            }
+
+
+            // =================================================
+            // FORMAT REVIEWS FOR FRONTEND
             // =================================================
 
             const reviews =
@@ -261,6 +283,9 @@ router.get(
                             user_id:
                                 review.user_id,
 
+                            username:
+                                review.username,
+
                             rating:
                                 Number(
                                     review.rating
@@ -271,52 +296,16 @@ router.get(
 
                             image_url:
                                 review.image
-                                    ? `/uploads/reviews/${encodeURIComponent(
-                                        review.image
-                                    )}`
+                                    ? `/uploads/reviews/${review.image}`
                                     : null,
 
                             created_at:
-                                review.created_at,
-
-                            username:
-                                review.username
+                                review.created_at
 
                         };
 
                     }
                 );
-
-
-            // =================================================
-            // CALCULATE SUMMARY
-            // =================================================
-
-            const reviewCount =
-                reviews.length;
-
-
-            const averageRating =
-                reviewCount > 0
-
-                    ? reviews.reduce(
-                        (
-                            total,
-                            item
-                        ) => {
-
-                            return (
-                                total +
-                                Number(
-                                    item.rating
-                                )
-                            );
-
-                        },
-                        0
-                    ) / reviewCount
-
-                    : 0;
 
 
             return res.json({
@@ -330,7 +319,8 @@ router.get(
                         averageRating.toFixed(1)
                     ),
 
-                reviewCount
+                reviewCount:
+                    reviews.length
 
             });
 
@@ -361,11 +351,12 @@ router.get(
 
 // =========================================================
 // ADD REVIEW
-// POST /api/reviews/:productId
+//
+// POST /api/reviews/product/:productId
 // =========================================================
 
 router.post(
-    "/:productId",
+    "/product/:productId",
     requireLogin,
     upload.single("image"),
 
@@ -374,10 +365,13 @@ router.post(
         res
     ) => {
 
-        let uploadedFile = null;
-
+        let uploadedImage = null;
 
         try {
+
+            // =================================================
+            // PRODUCT ID
+            // =================================================
 
             const productId =
                 Number(
@@ -385,17 +379,29 @@ router.post(
                 );
 
 
+            // =================================================
+            // USER ID
+            // =================================================
+
             const userId =
                 Number(
                     req.session.user.id
                 );
 
 
+            // =================================================
+            // RATING
+            // =================================================
+
             const rating =
                 Number(
                     req.body.rating
                 );
 
+
+            // =================================================
+            // SUPPORT BOTH FIELD NAMES
+            // =================================================
 
             const review =
                 String(
@@ -545,19 +551,13 @@ router.post(
 
 
             // =================================================
-            // REVIEW IMAGE
+            // IMAGE
             // =================================================
-
-            let imageName = null;
-
 
             if (req.file) {
 
-                imageName =
+                uploadedImage =
                     req.file.filename;
-
-                uploadedFile =
-                    req.file.path;
 
             }
 
@@ -576,7 +576,6 @@ router.post(
                     review,
                     image
                 )
-
                 VALUES
                 (
                     ?,
@@ -591,7 +590,7 @@ router.post(
                     userId,
                     rating,
                     review,
-                    imageName
+                    uploadedImage
                 ]
             );
 
@@ -603,21 +602,15 @@ router.post(
             await pool.execute(
                 `
                 UPDATE products
-
                 SET rating = (
-
                     SELECT
                         COALESCE(
                             AVG(rating),
                             0
                         )
-
                     FROM reviews
-
                     WHERE product_id = ?
-
                 )
-
                 WHERE id = ?
                 `,
                 [
@@ -627,9 +620,9 @@ router.post(
             );
 
 
-            // File was successfully saved in DB
-            uploadedFile = null;
-
+            // =================================================
+            // SUCCESS
+            // =================================================
 
             return res.status(201).json({
 
@@ -654,25 +647,34 @@ router.post(
             // DELETE UPLOADED IMAGE IF DB INSERT FAILED
             // =================================================
 
-            if (
-                uploadedFile &&
-                fs.existsSync(
-                    uploadedFile
-                )
-            ) {
+            if (uploadedImage) {
+
+                const imagePath =
+                    path.join(
+                        uploadDirectory,
+                        uploadedImage
+                    );
 
                 try {
 
-                    fs.unlinkSync(
-                        uploadedFile
-                    );
+                    if (
+                        fs.existsSync(
+                            imagePath
+                        )
+                    ) {
+
+                        fs.unlinkSync(
+                            imagePath
+                        );
+
+                    }
 
                 }
 
                 catch (deleteError) {
 
                     console.error(
-                        "FAILED TO DELETE REVIEW IMAGE:",
+                        "IMAGE DELETE ERROR:",
                         deleteError
                     );
 
