@@ -1,3 +1,4 @@
+
 // =========================================================
 // AR ECOMMERCE
 // PRODUCTS PAGE
@@ -73,11 +74,6 @@ async function checkUserLogin() {
             window.currentUser =
                 data.user;
 
-
-            /*
-             * Load this user's
-             * database cart.
-             */
 
             await loadCart();
 
@@ -368,11 +364,6 @@ async function addToCart(product) {
         }
 
 
-        /*
-         * IMPORTANT:
-         * Reload database cart.
-         */
-
         await loadCart();
 
 
@@ -498,9 +489,9 @@ async function loadProducts() {
         }
 
 
-        /*
-         * Store products.
-         */
+        /* =================================================
+           STORE PRODUCTS
+        ================================================= */
 
         window.productsById = {};
 
@@ -516,9 +507,9 @@ async function loadProducts() {
         );
 
 
-        /*
-         * Group by category.
-         */
+        /* =================================================
+           GROUP BY CATEGORY
+        ================================================= */
 
         const categories = {};
 
@@ -553,9 +544,9 @@ async function loadProducts() {
             "";
 
 
-        /*
-         * Display categories.
-         */
+        /* =================================================
+           DISPLAY CATEGORIES
+        ================================================= */
 
         Object.keys(
             categories
@@ -578,7 +569,6 @@ async function loadProducts() {
 
                         <div>
 
-                            
                             <h2>
                                 ${escapeHTML(
                                     categoryName
@@ -659,6 +649,7 @@ async function loadProducts() {
 
 /* =========================================================
    CREATE PRODUCT CARD
+   CLICK CARD → PRODUCT DETAILS
 ========================================================= */
 
 function createProductCard(product) {
@@ -673,9 +664,17 @@ function createProductCard(product) {
         "product-card";
 
 
+    /*
+     * Store product ID on card.
+     */
+
     card.dataset.product =
         product.id;
 
+
+    /* =====================================================
+       IMAGE
+    ===================================================== */
 
     let imageHTML =
         "🛍️";
@@ -701,6 +700,10 @@ function createProductCard(product) {
     }
 
 
+    /* =====================================================
+       STOCK
+    ===================================================== */
+
     const stock =
         Number(
             product.stock || 0
@@ -710,6 +713,10 @@ function createProductCard(product) {
     const outOfStock =
         stock <= 0;
 
+
+    /* =====================================================
+       CARD HTML
+    ===================================================== */
 
     card.innerHTML = `
 
@@ -721,6 +728,7 @@ function createProductCard(product) {
 
             </span>
 
+
             <span class="ar-badge">
                 AR
             </span>
@@ -729,6 +737,7 @@ function createProductCard(product) {
 
 
         <div class="product-info">
+
 
             <p class="category">
 
@@ -759,7 +768,18 @@ function createProductCard(product) {
             </p>
 
 
+            <div class="product-rating">
+
+                ★
+                ${Number(
+                    product.rating || 0
+                ).toFixed(1)}
+
+            </div>
+
+
             <div class="product-bottom">
+
 
                 <strong>
 
@@ -802,11 +822,73 @@ function createProductCard(product) {
                     `
                 }
 
+
             </div>
 
         </div>
 
     `;
+
+
+    /* =====================================================
+       CLICK PRODUCT CARD
+    ===================================================== */
+
+    card.addEventListener(
+        "click",
+        event => {
+
+            /*
+             * If user clicked the Add to Cart button,
+             * do NOT open product details.
+             */
+
+            if (
+                event.target.closest(
+                    "[data-product-action='cart']"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+             * Make sure product ID exists.
+             */
+
+            if (!product.id) {
+
+                console.error(
+                    "Product ID missing:",
+                    product
+                );
+
+                return;
+
+            }
+
+
+            /*
+             * Open product details page.
+             */
+
+            window.location.href =
+                `/product-details.html?id=${encodeURIComponent(
+                    product.id
+                )}`;
+
+        }
+    );
+
+
+    /* =====================================================
+       POINTER
+    ===================================================== */
+
+    card.style.cursor =
+        "pointer";
 
 
     return card;

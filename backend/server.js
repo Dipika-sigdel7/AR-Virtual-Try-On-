@@ -97,6 +97,22 @@ app.use(
 );
 
 
+
+
+// PRODUCTS DETAILS
+
+app.get("/product-details.html", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            pagesPath,
+            "product-details.html"
+        )
+    );
+
+});
+
+
 // =========================================================
 // UPLOADED PRODUCT IMAGES
 // =========================================================
