@@ -27,6 +27,7 @@ const frontendPath =
         "../frontend"
     );
 
+
 const pagesPath =
     path.join(
         frontendPath,
@@ -38,14 +39,14 @@ const pagesPath =
 // MIDDLEWARE
 // =========================================================
 
-// Parse JSON
+// Parse JSON requests
 
 app.use(
     express.json()
 );
 
 
-// Parse normal form data
+// Parse form data
 
 app.use(
     express.urlencoded({
@@ -95,22 +96,6 @@ app.use(
         frontendPath
     )
 );
-
-
-
-
-// PRODUCTS DETAILS
-
-app.get("/product-details.html", (req, res) => {
-
-    res.sendFile(
-        path.join(
-            pagesPath,
-            "product-details.html"
-        )
-    );
-
-});
 
 
 // =========================================================
@@ -171,6 +156,7 @@ app.use(
 
 /*
     GET /api/products
+    GET /api/products/:id
 */
 
 app.use(
@@ -295,6 +281,81 @@ app.get(
 
 
 // =========================================================
+// PRODUCT DETAILS
+// =========================================================
+
+app.get(
+    "/product-details.html",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "product-details.html"
+            ),
+            error => {
+
+                if (error) {
+
+                    console.error(
+                        "Product details page error:",
+                        error
+                    );
+
+
+                    res.status(404).send(
+                        "Product details page not found. " +
+                        "Make sure product-details.html exists inside frontend/pages."
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// PRODUCT DETAILS
+// WITHOUT .HTML
+// =========================================================
+
+app.get(
+    "/product-details",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "product-details.html"
+            ),
+            error => {
+
+                if (error) {
+
+                    console.error(
+                        "Product details page error:",
+                        error
+                    );
+
+
+                    res.status(404).send(
+                        "Product details page not found. " +
+                        "Make sure product-details.html exists inside frontend/pages."
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
 // SERVICES
 // =========================================================
 
@@ -411,4 +472,3 @@ app.listen(
 
     }
 );
-
