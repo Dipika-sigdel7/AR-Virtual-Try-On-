@@ -2,7 +2,7 @@
 // =========================================================
 // AR E-COMMERCE
 // PRODUCT DETAILS PAGE
-// PRODUCT + CART + REVIEWS
+// PRODUCT + CART + REVIEWS + AUTOMATIC AR FACE TRACKING
 // =========================================================
 
 
@@ -199,11 +199,10 @@ function escapeAttribute(value) {
 }
 
 
-
+// =========================================================
 // =========================================================
 // AR TRY-ON
-// ADD-ON FEATURE
-// DOES NOT CHANGE EXISTING PRODUCT/CART/REVIEW CODE
+// =========================================================
 // =========================================================
 
 
@@ -243,6 +242,29 @@ const arInstruction =
 
 
 // =========================================================
+// AR CONTROLS
+// =========================================================
+
+const arZoomIn =
+    document.getElementById("arZoomIn");
+
+const arZoomOut =
+    document.getElementById("arZoomOut");
+
+const arMoveUp =
+    document.getElementById("arMoveUp");
+
+const arMoveDown =
+    document.getElementById("arMoveDown");
+
+const arMoveLeft =
+    document.getElementById("arMoveLeft");
+
+const arMoveRight =
+    document.getElementById("arMoveRight");
+
+
+// =========================================================
 // AR STATE
 // =========================================================
 
@@ -262,21 +284,51 @@ let arStartY = 0;
 
 
 // =========================================================
-// GET PRODUCT IMAGE
+// FACE TRACKING STATE
+// =========================================================
+
+let faceLandmarker = null;
+
+let faceTrackingReady = false;
+
+let arAnimationFrame = null;
+
+let lastFaceDetected = false;
+
+let mediaPipeInitializationStarted = false;
+
+let lastVideoTime = -1;
+
+
+// =========================================================
+// FACE TRACKING SMOOTHING
+// =========================================================
+
+let smoothedFaceX = null;
+
+let smoothedFaceY = null;
+
+let smoothedFaceWidth = null;
+
+const FACE_SMOOTHING =
+    0.25;
+
+
+// =========================================================
+// AR MODE
+// =========================================================
+
+let currentARMode =
+    "camera";
+
+
+// =========================================================
+// GET AR PRODUCT IMAGE
 // =========================================================
 
 function getARProductImage() {
 
-    /*
-     * Your existing product details code normally has:
-     *
-     * currentProduct
-     *
-     * Use that product image.
-     */
-
     if (
-        typeof currentProduct !== "undefined" &&
         currentProduct &&
         currentProduct.image
     ) {
@@ -285,12 +337,6 @@ function getARProductImage() {
 
     }
 
-
-    /*
-     * Fallback:
-     * Find the product image already displayed
-     * on the product details page.
-     */
 
     const existingImage =
         document.querySelector(
@@ -309,6 +355,225 @@ function getARProductImage() {
 
 
     return null;
+
+}
+
+
+// =========================================================
+// GET PRODUCT CATEGORY
+// =========================================================
+
+function getARProductType() {
+
+    const category =
+        String(
+            currentProduct?.category_name ||
+            currentProduct?.category ||
+            ""
+        ).toLowerCase();
+
+
+    const name =
+        String(
+            currentProduct?.name ||
+            ""
+        ).toLowerCase();
+
+
+    const combined =
+        `${category} ${name}`;
+
+
+    if (
+        combined.includes("glass") ||
+        combined.includes("eyewear") ||
+        combined.includes("spectacle") ||
+        combined.includes("sunglass")
+    ) {
+
+        return "glasses";
+
+    }
+
+
+    if (
+        combined.includes("hat") ||
+        combined.includes("cap") ||
+        combined.includes("helmet")
+    ) {
+
+        return "head";
+
+    }
+
+
+    if (
+        combined.includes("mask")
+    ) {
+
+        return "mask";
+
+    }
+
+
+    if (
+        combined.includes("earring") ||
+        combined.includes("ear ring")
+    ) {
+
+        return "earrings";
+
+    }
+
+
+    if (
+        combined.includes("necklace") ||
+        combined.includes("chain")
+    ) {
+
+        return "necklace";
+
+    }
+
+
+    return "generic";
+
+}
+
+
+// =========================================================
+// GET AR ANCHOR
+// =========================================================
+
+function getARAnchor(
+    faceX,
+    faceY,
+    faceWidth,
+    faceHeight
+) {
+
+    const type =
+        getARProductType();
+
+
+    switch (type) {
+
+        case "glasses":
+
+            return {
+                x: faceX,
+                y:
+                    faceY -
+                    faceHeight * 0.03,
+                scale:
+                    faceWidth / 170
+            };
+
+
+        case "head":
+
+            return {
+                x: faceX,
+                y:
+                    faceY -
+                    faceHeight * 0.42,
+                scale:
+                    faceWidth / 150
+            };
+
+
+        case "mask":
+
+            return {
+                x: faceX,
+                y:
+                    faceY +
+                    faceHeight * 0.12,
+                scale:
+                    faceWidth / 150
+            };
+
+
+        case "earrings":
+
+            return {
+                x: faceX,
+                y:
+                    faceY +
+                    faceHeight * 0.02,
+                scale:
+                    faceWidth / 180
+            };
+
+
+        case "necklace":
+
+            return {
+                x: faceX,
+                y:
+                    faceY +
+                    faceHeight * 0.48,
+                scale:
+                    faceWidth / 180
+            };
+
+
+        default:
+
+            return {
+                x: faceX,
+                y: faceY,
+                scale:
+                    faceWidth / 170
+            };
+
+    }
+
+}
+
+
+// =========================================================
+// RESET FACE SMOOTHING
+// =========================================================
+
+function resetFaceSmoothing() {
+
+    smoothedFaceX = null;
+
+    smoothedFaceY = null;
+
+    smoothedFaceWidth = null;
+
+}
+
+
+// =========================================================
+// SMOOTH VALUE
+// =========================================================
+
+function smoothValue(
+    previous,
+    next
+) {
+
+    if (
+        previous === null ||
+        !Number.isFinite(previous)
+    ) {
+
+        return next;
+
+    }
+
+
+    return (
+        previous +
+        (
+            next -
+            previous
+        ) *
+        FACE_SMOOTHING
+    );
 
 }
 
@@ -339,21 +604,30 @@ async function openAR() {
         "hidden";
 
 
+    currentARMode =
+        "camera";
+
+
     resetARPosition();
+
+    resetFaceSmoothing();
 
 
     // =====================================================
     // PRODUCT IMAGE
     // =====================================================
 
-    const productImage =
+    const productARImage =
         getARProductImage();
 
 
-    if (productImage) {
+    if (
+        productARImage &&
+        arProductImage
+    ) {
 
         arProductImage.src =
-            productImage;
+            productARImage;
 
         arProductOverlay.style.display =
             "block";
@@ -362,8 +636,12 @@ async function openAR() {
 
     else {
 
-        arProductOverlay.style.display =
-            "none";
+        if (arProductOverlay) {
+
+            arProductOverlay.style.display =
+                "none";
+
+        }
 
         console.warn(
             "Product image not available for AR."
@@ -382,22 +660,43 @@ async function openAR() {
 
 
 // =========================================================
-// START CAMERA
+// START AR CAMERA
 // =========================================================
 
 async function startARCamera() {
 
     stopARCamera();
 
+    stopFaceTracking();
+
+    resetFaceSmoothing();
+
+    currentARMode =
+        "camera";
+
 
     try {
+
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ) {
+
+            throw new Error(
+                "Camera API is not supported by this browser."
+            );
+
+        }
+
 
         arCameraStream =
             await navigator.mediaDevices.getUserMedia({
 
                 video: {
 
-                    facingMode: "user",
+                    facingMode: {
+                        ideal: "user"
+                    },
 
                     width: {
                         ideal: 1280
@@ -405,6 +704,10 @@ async function startARCamera() {
 
                     height: {
                         ideal: 720
+                    },
+
+                    frameRate: {
+                        ideal: 30
                     }
 
                 },
@@ -412,6 +715,15 @@ async function startARCamera() {
                 audio: false
 
             });
+
+
+        if (!arCamera) {
+
+            throw new Error(
+                "AR camera element was not found."
+            );
+
+        }
 
 
         arCamera.srcObject =
@@ -426,8 +738,34 @@ async function startARCamera() {
             "none";
 
 
-        arInstruction.textContent =
-            "Move and resize the product to see how it looks.";
+        arCamera.onloadedmetadata =
+            async () => {
+
+                try {
+
+                    await arCamera.play();
+
+                }
+
+                catch (playError) {
+
+                    console.warn(
+                        "Camera autoplay warning:",
+                        playError
+                    );
+
+                }
+
+
+                arInstruction.textContent =
+                    "Detecting your face...";
+
+
+                await waitForFaceLandmarker();
+
+                startFaceTracking();
+
+            };
 
 
         setActiveARMode(
@@ -444,12 +782,717 @@ async function startARCamera() {
         );
 
 
-        arCamera.style.display =
-            "none";
+        if (arCamera) {
+
+            arCamera.style.display =
+                "none";
+
+        }
 
 
         arInstruction.textContent =
             "Camera access was blocked. You can upload an image instead.";
+
+    }
+
+}
+
+
+// =========================================================
+// WAIT FOR MEDIAPIPE
+// =========================================================
+
+async function waitForFaceLandmarker() {
+
+    if (faceTrackingReady) {
+
+        return true;
+
+    }
+
+
+    if (
+        window.FaceLandmarker &&
+        window.FilesetResolver
+    ) {
+
+        await initializeFaceLandmarker();
+
+        return faceTrackingReady;
+
+    }
+
+
+    return new Promise(
+        resolve => {
+
+            let finished =
+                false;
+
+
+            const finish =
+                async () => {
+
+                    if (finished) {
+
+                        return;
+
+                    }
+
+
+                    finished = true;
+
+
+                    window.removeEventListener(
+                        "mediapipe-ready",
+                        finish
+                    );
+
+
+                    await initializeFaceLandmarker();
+
+
+                    resolve(
+                        faceTrackingReady
+                    );
+
+                };
+
+
+            window.addEventListener(
+                "mediapipe-ready",
+                finish,
+                {
+                    once: true
+                }
+            );
+
+
+            // Safety timeout
+
+            setTimeout(
+                async () => {
+
+                    if (finished) {
+
+                        return;
+
+                    }
+
+
+                    if (
+                        window.FaceLandmarker &&
+                        window.FilesetResolver
+                    ) {
+
+                        await finish();
+
+                    }
+
+                    else {
+
+                        finished = true;
+
+
+                        window.removeEventListener(
+                            "mediapipe-ready",
+                            finish
+                        );
+
+
+                        resolve(false);
+
+                    }
+
+                },
+                10000
+            );
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// INITIALIZE MEDIAPIPE FACE LANDMARKER
+// =========================================================
+
+async function initializeFaceLandmarker() {
+
+    if (faceTrackingReady) {
+
+        return true;
+
+    }
+
+
+    if (mediaPipeInitializationStarted) {
+
+        return faceTrackingReady;
+
+    }
+
+
+    mediaPipeInitializationStarted =
+        true;
+
+
+    try {
+
+        if (
+            !window.FaceLandmarker ||
+            !window.FilesetResolver
+        ) {
+
+            console.error(
+                "MediaPipe has not loaded yet."
+            );
+
+            mediaPipeInitializationStarted =
+                false;
+
+            return false;
+
+        }
+
+
+        const vision =
+            await window.FilesetResolver.forVisionTasks(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+            );
+
+
+        faceLandmarker =
+            await window.FaceLandmarker.createFromOptions(
+                vision,
+                {
+
+                    baseOptions: {
+
+                        modelAssetPath:
+                            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
+
+                    },
+
+
+                    runningMode:
+                        "VIDEO",
+
+
+                    numFaces:
+                        1,
+
+
+                    minFaceDetectionConfidence:
+                        0.5,
+
+
+                    minFacePresenceConfidence:
+                        0.5,
+
+
+                    minTrackingConfidence:
+                        0.5,
+
+
+                    outputFaceBlendshapes:
+                        false,
+
+
+                    outputFacialTransformationMatrixes:
+                        true
+
+                }
+            );
+
+
+        faceTrackingReady =
+            true;
+
+
+        mediaPipeInitializationStarted =
+            false;
+
+
+        console.log(
+            "MediaPipe Face Landmarker initialized successfully."
+        );
+
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        mediaPipeInitializationStarted =
+            false;
+
+        faceTrackingReady =
+            false;
+
+        faceLandmarker =
+            null;
+
+
+        console.error(
+            "Failed to initialize Face Landmarker:",
+            error
+        );
+
+
+        return false;
+
+    }
+
+}
+
+
+// =========================================================
+// START FACE TRACKING
+// =========================================================
+
+function startFaceTracking() {
+
+    if (!faceTrackingReady) {
+
+        console.warn(
+            "Face tracking is not ready."
+        );
+
+        return;
+
+    }
+
+
+    if (!arCamera) {
+
+        return;
+
+    }
+
+
+    if (
+        arCamera.readyState <
+        HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
+
+        setTimeout(
+            startFaceTracking,
+            100
+        );
+
+        return;
+
+    }
+
+
+    stopFaceTracking();
+
+
+    lastVideoTime =
+        -1;
+
+
+    const trackingLoop =
+        () => {
+
+            if (
+                !arModal ||
+                !arModal.classList.contains(
+                    "active"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                currentARMode !==
+                "camera"
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                !arCameraStream ||
+                !arCamera.srcObject
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                arCamera.readyState >=
+                HTMLMediaElement.HAVE_CURRENT_DATA
+            ) {
+
+                try {
+
+                    const currentVideoTime =
+                        arCamera.currentTime;
+
+
+                    if (
+                        currentVideoTime !==
+                        lastVideoTime
+                    ) {
+
+                        const result =
+                            faceLandmarker.detectForVideo(
+                                arCamera,
+                                performance.now()
+                            );
+
+
+                        lastVideoTime =
+                            currentVideoTime;
+
+
+                        processFaceResult(
+                            result
+                        );
+
+                    }
+
+                }
+
+                catch (error) {
+
+                    console.error(
+                        "FACE TRACKING ERROR:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            arAnimationFrame =
+                requestAnimationFrame(
+                    trackingLoop
+                );
+
+        };
+
+
+    arAnimationFrame =
+        requestAnimationFrame(
+            trackingLoop
+        );
+
+}
+
+
+// =========================================================
+// STOP FACE TRACKING
+// =========================================================
+
+function stopFaceTracking() {
+
+    if (
+        arAnimationFrame !== null
+    ) {
+
+        cancelAnimationFrame(
+            arAnimationFrame
+        );
+
+        arAnimationFrame =
+            null;
+
+    }
+
+
+    lastVideoTime =
+        -1;
+
+
+    lastFaceDetected =
+        false;
+
+}
+
+
+// =========================================================
+// PROCESS FACE RESULT
+// =========================================================
+
+function processFaceResult(
+    result
+) {
+
+    if (
+        !result ||
+        !result.faceLandmarks ||
+        result.faceLandmarks.length === 0
+    ) {
+
+        if (lastFaceDetected) {
+
+            lastFaceDetected =
+                false;
+
+
+            if (arInstruction) {
+
+                arInstruction.textContent =
+                    "Face not detected. Move into the camera view.";
+
+            }
+
+        }
+
+
+        return;
+
+    }
+
+
+    const landmarks =
+        result.faceLandmarks[0];
+
+
+    if (
+        !landmarks ||
+        landmarks.length === 0
+    ) {
+
+        return;
+
+    }
+
+
+    lastFaceDetected =
+        true;
+
+
+    // =====================================================
+    // FIND FACE BOUNDING BOX
+    // =====================================================
+
+    let minX = 1;
+
+    let maxX = 0;
+
+    let minY = 1;
+
+    let maxY = 0;
+
+
+    landmarks.forEach(
+        point => {
+
+            if (
+                Number.isFinite(point.x) &&
+                Number.isFinite(point.y)
+            ) {
+
+                minX =
+                    Math.min(
+                        minX,
+                        point.x
+                    );
+
+                maxX =
+                    Math.max(
+                        maxX,
+                        point.x
+                    );
+
+                minY =
+                    Math.min(
+                        minY,
+                        point.y
+                    );
+
+                maxY =
+                    Math.max(
+                        maxY,
+                        point.y
+                    );
+
+            }
+
+        }
+    );
+
+
+    const faceWidthNormalized =
+        maxX -
+        minX;
+
+
+    const faceHeightNormalized =
+        maxY -
+        minY;
+
+
+    if (
+        faceWidthNormalized <= 0 ||
+        faceHeightNormalized <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    // =====================================================
+    // CAMERA VIEW DIMENSIONS
+    // =====================================================
+
+    const viewerWidth =
+        arCamera.clientWidth ||
+        arCamera.videoWidth ||
+        1;
+
+
+    const viewerHeight =
+        arCamera.clientHeight ||
+        arCamera.videoHeight ||
+        1;
+
+
+    // =====================================================
+    // MIRROR THE X COORDINATE
+    // =====================================================
+
+    const faceCenterXNormalized =
+        (
+            minX +
+            maxX
+        ) /
+        2;
+
+
+    const faceCenterYNormalized =
+        (
+            minY +
+            maxY
+        ) /
+        2;
+
+
+    const mirroredX =
+        1 -
+        faceCenterXNormalized;
+
+
+    const rawFaceX =
+        (
+            mirroredX -
+            0.5
+        ) *
+        viewerWidth;
+
+
+    const rawFaceY =
+        (
+            faceCenterYNormalized -
+            0.5
+        ) *
+        viewerHeight;
+
+
+    const rawFaceWidth =
+        faceWidthNormalized *
+        viewerWidth;
+
+
+    const rawFaceHeight =
+        faceHeightNormalized *
+        viewerHeight;
+
+
+    // =====================================================
+    // SMOOTH TRACKING
+    // =====================================================
+
+    smoothedFaceX =
+        smoothValue(
+            smoothedFaceX,
+            rawFaceX
+        );
+
+
+    smoothedFaceY =
+        smoothValue(
+            smoothedFaceY,
+            rawFaceY
+        );
+
+
+    smoothedFaceWidth =
+        smoothValue(
+            smoothedFaceWidth,
+            rawFaceWidth
+        );
+
+
+    // =====================================================
+    // GET PRODUCT ANCHOR
+    // =====================================================
+
+    const anchor =
+        getARAnchor(
+            smoothedFaceX,
+            smoothedFaceY,
+            smoothedFaceWidth,
+            rawFaceHeight
+        );
+
+
+    // =====================================================
+    // AUTOMATIC POSITION
+    // =====================================================
+
+    if (!arDragging) {
+
+        arPositionX =
+            anchor.x;
+
+
+        arPositionY =
+            anchor.y;
+
+
+        // =================================================
+        // AUTOMATIC SCALE
+        // =================================================
+
+        const automaticScale =
+            Math.max(
+                0.3,
+                Math.min(
+                    3,
+                    anchor.scale
+                )
+            );
+
+
+        arScale =
+            automaticScale;
+
+
+        updateARProduct();
+
+    }
+
+
+    if (arInstruction) {
+
+        arInstruction.textContent =
+            "Face detected — product is tracking automatically.";
 
     }
 
@@ -462,7 +1505,17 @@ async function startARCamera() {
 
 function stopARCamera() {
 
+    stopFaceTracking();
+
+
     if (!arCameraStream) {
+
+        if (arCamera) {
+
+            arCamera.srcObject =
+                null;
+
+        }
 
         return;
 
@@ -484,14 +1537,18 @@ function stopARCamera() {
         null;
 
 
-    arCamera.srcObject =
-        null;
+    if (arCamera) {
+
+        arCamera.srcObject =
+            null;
+
+    }
 
 }
 
 
 // =========================================================
-// UPLOAD USER IMAGE
+// UPLOAD IMAGE BUTTON
 // =========================================================
 
 if (uploadImageBtn) {
@@ -544,6 +1601,9 @@ if (arImageInput) {
                     "Please select a valid image."
                 );
 
+                arImageInput.value =
+                    "";
+
                 return;
 
             }
@@ -554,25 +1614,36 @@ if (arImageInput) {
 
 
             reader.onload =
-                function(e) {
+                async function(event) {
 
                     stopARCamera();
 
+                    stopFaceTracking();
 
-                    arCamera.style.display =
-                        "none";
-
-
-                    arUserImage.src =
-                        e.target.result;
+                    resetFaceSmoothing();
 
 
-                    arUserImage.style.display =
-                        "block";
+                    currentARMode =
+                        "image";
 
 
-                    arInstruction.textContent =
-                        "Drag and resize the product to see how it looks.";
+                    if (arCamera) {
+
+                        arCamera.style.display =
+                            "none";
+
+                    }
+
+
+                    if (arUserImage) {
+
+                        arUserImage.src =
+                            event.target.result;
+
+                        arUserImage.style.display =
+                            "block";
+
+                    }
 
 
                     setActiveARMode(
@@ -581,6 +1652,106 @@ if (arImageInput) {
 
 
                     resetARPosition();
+
+
+                    if (arInstruction) {
+
+                        arInstruction.textContent =
+                            "Analyzing image for a face...";
+
+                    }
+
+
+                    // =================================================
+                    // WAIT FOR IMAGE TO LOAD
+                    // =================================================
+
+                    try {
+
+                        await waitForImageLoad(
+                            arUserImage
+                        );
+
+                    }
+
+                    catch (error) {
+
+                        console.error(
+                            "IMAGE LOAD ERROR:",
+                            error
+                        );
+
+                        if (arInstruction) {
+
+                            arInstruction.textContent =
+                                "Unable to load the selected image.";
+
+                        }
+
+                        return;
+
+                    }
+
+
+                    // =================================================
+                    // INITIALIZE MEDIAPIPE
+                    // =================================================
+
+                    const ready =
+                        await waitForFaceLandmarker();
+
+
+                    if (
+                        !ready ||
+                        !faceLandmarker
+                    ) {
+
+                        if (arInstruction) {
+
+                            arInstruction.textContent =
+                                "Face tracking is unavailable. You can position the product manually.";
+
+                        }
+
+                        return;
+
+                    }
+
+
+                    // =================================================
+                    // DETECT FACE FROM IMAGE
+                    // =================================================
+
+                    try {
+
+                        const result =
+                            faceLandmarker.detect(
+                                arUserImage
+                            );
+
+
+                        processUploadedImageFace(
+                            result
+                        );
+
+                    }
+
+                    catch (error) {
+
+                        console.error(
+                            "UPLOADED IMAGE FACE ERROR:",
+                            error
+                        );
+
+
+                        if (arInstruction) {
+
+                            arInstruction.textContent =
+                                "Could not detect a face. You can position the product manually.";
+
+                        }
+
+                    }
 
                 };
 
@@ -596,10 +1767,245 @@ if (arImageInput) {
 
 
 // =========================================================
-// SET ACTIVE MODE
+// WAIT FOR IMAGE LOAD
 // =========================================================
 
-function setActiveARMode(button) {
+function waitForImageLoad(
+    image
+) {
+
+    return new Promise(
+        (
+            resolve,
+            reject
+        ) => {
+
+            if (
+                image.complete &&
+                image.naturalWidth > 0
+            ) {
+
+                resolve();
+
+                return;
+
+            }
+
+
+            image.onload =
+                () => resolve();
+
+
+            image.onerror =
+                () =>
+                    reject(
+                        new Error(
+                            "Image could not be loaded."
+                        )
+                    );
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// PROCESS UPLOADED IMAGE FACE
+// =========================================================
+
+function processUploadedImageFace(
+    result
+) {
+
+    if (
+        !result ||
+        !result.faceLandmarks ||
+        result.faceLandmarks.length === 0
+    ) {
+
+        lastFaceDetected =
+            false;
+
+
+        if (arInstruction) {
+
+            arInstruction.textContent =
+                "No face detected. You can drag and resize the product manually.";
+
+        }
+
+        return;
+
+    }
+
+
+    const landmarks =
+        result.faceLandmarks[0];
+
+
+    let minX = 1;
+
+    let maxX = 0;
+
+    let minY = 1;
+
+    let maxY = 0;
+
+
+    landmarks.forEach(
+        point => {
+
+            if (
+                Number.isFinite(point.x) &&
+                Number.isFinite(point.y)
+            ) {
+
+                minX =
+                    Math.min(
+                        minX,
+                        point.x
+                    );
+
+                maxX =
+                    Math.max(
+                        maxX,
+                        point.x
+                    );
+
+                minY =
+                    Math.min(
+                        minY,
+                        point.y
+                    );
+
+                maxY =
+                    Math.max(
+                        maxY,
+                        point.y
+                    );
+
+            }
+
+        }
+    );
+
+
+    const viewerWidth =
+        arUserImage.clientWidth ||
+        arUserImage.naturalWidth ||
+        1;
+
+
+    const viewerHeight =
+        arUserImage.clientHeight ||
+        arUserImage.naturalHeight ||
+        1;
+
+
+    const faceCenterX =
+        (
+            minX +
+            maxX
+        ) /
+        2;
+
+
+    const faceCenterY =
+        (
+            minY +
+            maxY
+        ) /
+        2;
+
+
+    const faceWidth =
+        (
+            maxX -
+            minX
+        ) *
+        viewerWidth;
+
+
+    const faceHeight =
+        (
+            maxY -
+            minY
+        ) *
+        viewerHeight;
+
+
+    // =====================================================
+    // IMAGE X POSITION
+    // =====================================================
+
+    const imageX =
+        (
+            faceCenterX -
+            0.5
+        ) *
+        viewerWidth;
+
+
+    const imageY =
+        (
+            faceCenterY -
+            0.5
+        ) *
+        viewerHeight;
+
+
+    const anchor =
+        getARAnchor(
+            imageX,
+            imageY,
+            faceWidth,
+            faceHeight
+        );
+
+
+    arPositionX =
+        anchor.x;
+
+
+    arPositionY =
+        anchor.y;
+
+
+    arScale =
+        Math.max(
+            0.3,
+            Math.min(
+                3,
+                anchor.scale
+            )
+        );
+
+
+    lastFaceDetected =
+        true;
+
+
+    updateARProduct();
+
+
+    if (arInstruction) {
+
+        arInstruction.textContent =
+            "Face detected — product positioned automatically.";
+
+    }
+
+}
+
+
+// =========================================================
+// SET ACTIVE AR MODE
+// =========================================================
+
+function setActiveARMode(
+    button
+) {
 
     document
         .querySelectorAll(
@@ -653,6 +2059,8 @@ function closeAR() {
 
     stopARCamera();
 
+    resetFaceSmoothing();
+
 
     if (arModal) {
 
@@ -675,16 +2083,31 @@ function closeAR() {
     }
 
 
-    arUserImage.src =
-        "";
+    if (arUserImage) {
+
+        arUserImage.src =
+            "";
+
+        arUserImage.style.display =
+            "none";
+
+    }
 
 
-    arUserImage.style.display =
-        "none";
+    if (arCamera) {
+
+        arCamera.style.display =
+            "none";
+
+    }
 
 
-    arCamera.style.display =
-        "none";
+    currentARMode =
+        "camera";
+
+
+    lastFaceDetected =
+        false;
 
 }
 
@@ -700,7 +2123,7 @@ if (closeArModal) {
 
 
 // =========================================================
-// CLOSE WHEN CLICKING BACKGROUND
+// CLOSE AR WHEN CLICKING BACKGROUND
 // =========================================================
 
 if (arModal) {
@@ -724,40 +2147,19 @@ if (arModal) {
 
 
 // =========================================================
-// ESCAPE KEY
-// =========================================================
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key === "Escape" &&
-            arModal &&
-            arModal.classList.contains(
-                "active"
-            )
-        ) {
-
-            closeAR();
-
-        }
-
-    }
-);
-
-
-// =========================================================
-// RESET PRODUCT POSITION
+// RESET AR POSITION
 // =========================================================
 
 function resetARPosition() {
 
-    arScale = 1;
+    arScale =
+        1;
 
-    arPositionX = 0;
+    arPositionX =
+        0;
 
-    arPositionY = 0;
+    arPositionY =
+        0;
 
     updateARProduct();
 
@@ -765,7 +2167,7 @@ function resetARPosition() {
 
 
 // =========================================================
-// UPDATE PRODUCT POSITION
+// UPDATE AR PRODUCT
 // =========================================================
 
 function updateARProduct() {
@@ -793,24 +2195,23 @@ function updateARProduct() {
 // ZOOM IN
 // =========================================================
 
-const arZoomIn =
-    document.getElementById(
-        "arZoomIn"
-    );
-
-
 if (arZoomIn) {
 
     arZoomIn.addEventListener(
         "click",
         () => {
 
-            arScale += 0.1;
+            arScale +=
+                0.1;
 
 
-            if (arScale > 3) {
+            if (
+                arScale >
+                3
+            ) {
 
-                arScale = 3;
+                arScale =
+                    3;
 
             }
 
@@ -827,24 +2228,23 @@ if (arZoomIn) {
 // ZOOM OUT
 // =========================================================
 
-const arZoomOut =
-    document.getElementById(
-        "arZoomOut"
-    );
-
-
 if (arZoomOut) {
 
     arZoomOut.addEventListener(
         "click",
         () => {
 
-            arScale -= 0.1;
+            arScale -=
+                0.1;
 
 
-            if (arScale < 0.3) {
+            if (
+                arScale <
+                0.3
+            ) {
 
-                arScale = 0.3;
+                arScale =
+                    0.3;
 
             }
 
@@ -866,38 +2266,20 @@ function moveARProduct(
     y
 ) {
 
-    arPositionX += x;
+    arPositionX +=
+        x;
 
-    arPositionY += y;
+    arPositionY +=
+        y;
 
     updateARProduct();
 
 }
 
 
-const arMoveUp =
-    document.getElementById(
-        "arMoveUp"
-    );
-
-
-const arMoveDown =
-    document.getElementById(
-        "arMoveDown"
-    );
-
-
-const arMoveLeft =
-    document.getElementById(
-        "arMoveLeft"
-    );
-
-
-const arMoveRight =
-    document.getElementById(
-        "arMoveRight"
-    );
-
+// =========================================================
+// MOVE UP
+// =========================================================
 
 if (arMoveUp) {
 
@@ -916,6 +2298,10 @@ if (arMoveUp) {
 }
 
 
+// =========================================================
+// MOVE DOWN
+// =========================================================
+
 if (arMoveDown) {
 
     arMoveDown.addEventListener(
@@ -933,6 +2319,10 @@ if (arMoveDown) {
 }
 
 
+// =========================================================
+// MOVE LEFT
+// =========================================================
+
 if (arMoveLeft) {
 
     arMoveLeft.addEventListener(
@@ -949,6 +2339,10 @@ if (arMoveLeft) {
 
 }
 
+
+// =========================================================
+// MOVE RIGHT
+// =========================================================
 
 if (arMoveRight) {
 
@@ -968,7 +2362,7 @@ if (arMoveRight) {
 
 
 // =========================================================
-// DRAG PRODUCT WITH MOUSE
+// DRAG PRODUCT WITH MOUSE / TOUCH
 // =========================================================
 
 if (arProductOverlay) {
@@ -977,7 +2371,8 @@ if (arProductOverlay) {
         "pointerdown",
         event => {
 
-            arDragging = true;
+            arDragging =
+                true;
 
 
             arProductOverlay.setPointerCapture(
@@ -1033,7 +2428,8 @@ if (arProductOverlay) {
         "pointerup",
         event => {
 
-            arDragging = false;
+            arDragging =
+                false;
 
 
             try {
@@ -1062,7 +2458,9 @@ if (arProductOverlay) {
         "pointercancel",
         () => {
 
-            arDragging = false;
+            arDragging =
+                false;
+
 
             arProductOverlay.style.cursor =
                 "grab";
@@ -1074,42 +2472,54 @@ if (arProductOverlay) {
 
 
 // =========================================================
-// CONNECT EXISTING TRY AR BUTTON
+// TRY AR BUTTON
+// =========================================================
+// IMPORTANT:
+// There is ONLY ONE handler now.
 // =========================================================
 
-/*
- * IMPORTANT:
- *
- * Your existing product-details page already has
- * a Try AR button.
- *
- * We find it without changing the existing button.
- */
+if (tryOnBtn) {
 
-
-const existingTryARButton =
-    document.getElementById(
-        "tryOnBtn"
-    );
-
-
-if (existingTryARButton) {
-
-    existingTryARButton.addEventListener(
+    tryOnBtn.addEventListener(
         "click",
-        event => {
+        async event => {
 
             event.preventDefault();
 
-            event.stopPropagation();
 
-            openAR();
+            const loggedIn =
+                await checkUserLogin();
+
+
+            if (!loggedIn) {
+
+                sessionStorage.setItem(
+                    "loginRedirect",
+                    window.location.href
+                );
+
+
+                showLoginModal();
+
+
+                return;
+
+            }
+
+
+            await openAR();
 
         }
     );
 
 }
 
+
+// =========================================================
+// =========================================================
+// LOGIN
+// =========================================================
+// =========================================================
 
 
 // =========================================================
@@ -1148,15 +2558,21 @@ async function checkUserLogin() {
             data.user
         ) {
 
-            userLoggedIn = true;
-            currentUser = data.user;
+            userLoggedIn =
+                true;
+
+            currentUser =
+                data.user;
 
         }
 
         else {
 
-            userLoggedIn = false;
-            currentUser = null;
+            userLoggedIn =
+                false;
+
+            currentUser =
+                null;
 
         }
 
@@ -1169,13 +2585,15 @@ async function checkUserLogin() {
             error
         );
 
-        userLoggedIn = false;
-        currentUser = null;
+
+        userLoggedIn =
+            false;
+
+        currentUser =
+            null;
 
     }
 
-
-    // Login button should always remain Login
 
     if (loginNav) {
 
@@ -1186,6 +2604,7 @@ async function checkUserLogin() {
 
 
     updateReviewLoginUI();
+
 
     return userLoggedIn;
 
@@ -1213,6 +2632,7 @@ function updateReviewLoginUI() {
         reviewLoginMessage.style.display =
             "none";
 
+
         reviewForm.style.display =
             "block";
 
@@ -1222,6 +2642,7 @@ function updateReviewLoginUI() {
 
         reviewLoginMessage.style.display =
             "flex";
+
 
         reviewForm.style.display =
             "none";
@@ -1246,6 +2667,7 @@ if (reviewLoginBtn) {
                 window.location.href
             );
 
+
             window.location.href =
                 "/login";
 
@@ -1253,6 +2675,13 @@ if (reviewLoginBtn) {
     );
 
 }
+
+
+// =========================================================
+// =========================================================
+// PRODUCT
+// =========================================================
+// =========================================================
 
 
 // =========================================================
@@ -1279,11 +2708,14 @@ async function loadProduct() {
         loading.style.display =
             "block";
 
+
         errorMessage.style.display =
             "none";
 
+
         productDetails.style.display =
             "none";
+
 
         reviewsSection.style.display =
             "none";
@@ -1291,7 +2723,9 @@ async function loadProduct() {
 
         const response =
             await fetch(
-                `/api/products/${encodeURIComponent(productId)}`,
+                `/api/products/${encodeURIComponent(
+                    productId
+                )}`,
                 {
                     method: "GET",
                     credentials: "include",
@@ -1326,6 +2760,7 @@ async function loadProduct() {
         currentProduct =
             data.product;
 
+
         window.currentProduct =
             currentProduct;
 
@@ -1348,6 +2783,7 @@ async function loadProduct() {
             error
         );
 
+
         showError();
 
     }
@@ -1359,7 +2795,9 @@ async function loadProduct() {
 // DISPLAY PRODUCT
 // =========================================================
 
-function displayProduct(product) {
+function displayProduct(
+    product
+) {
 
     if (!product) {
 
@@ -1373,11 +2811,14 @@ function displayProduct(product) {
     loading.style.display =
         "none";
 
+
     errorMessage.style.display =
         "none";
 
+
     productDetails.style.display =
         "grid";
+
 
     reviewsSection.style.display =
         "block";
@@ -1411,13 +2852,16 @@ function displayProduct(product) {
 
 
     const stock =
-        Number(product.stock || 0);
+        Number(
+            product.stock || 0
+        );
 
 
     if (stock > 0) {
 
         productStock.textContent =
             `${stock} available`;
+
 
         productStock.className =
             "stock-available";
@@ -1429,6 +2873,7 @@ function displayProduct(product) {
         productStock.textContent =
             "Out of stock";
 
+
         productStock.className =
             "stock-unavailable";
 
@@ -1438,10 +2883,12 @@ function displayProduct(product) {
     quantityInput.min =
         "1";
 
+
     quantityInput.max =
         stock > 0
             ? stock
             : 1;
+
 
     quantityInput.value =
         "1";
@@ -1449,6 +2896,7 @@ function displayProduct(product) {
 
     addToCartBtn.disabled =
         stock <= 0;
+
 
     buyNowBtn.disabled =
         stock <= 0;
@@ -1459,8 +2907,10 @@ function displayProduct(product) {
         productImage.src =
             product.image;
 
+
         productImage.style.display =
             "block";
+
 
         imageFallback.style.display =
             "none";
@@ -1471,6 +2921,7 @@ function displayProduct(product) {
 
         productImage.style.display =
             "none";
+
 
         imageFallback.style.display =
             "flex";
@@ -1615,9 +3066,12 @@ if (quantityInput) {
                 );
 
 
-            if (quantity < 1) {
+            if (
+                quantity < 1
+            ) {
 
-                quantity = 1;
+                quantity =
+                    1;
 
             }
 
@@ -1627,7 +3081,8 @@ if (quantityInput) {
                 quantity > stock
             ) {
 
-                quantity = stock;
+                quantity =
+                    stock;
 
             }
 
@@ -1642,8 +3097,11 @@ if (quantityInput) {
 
 
 // =========================================================
+// =========================================================
 // LOGIN MODAL
 // =========================================================
+// =========================================================
+
 
 function showLoginModal() {
 
@@ -1656,6 +3114,7 @@ function showLoginModal() {
 
     loginModal.style.display =
         "flex";
+
 
     document.body.style.overflow =
         "hidden";
@@ -1674,6 +3133,7 @@ function hideLoginModal() {
 
     loginModal.style.display =
         "none";
+
 
     document.body.style.overflow =
         "";
@@ -1712,6 +3172,7 @@ if (goToLoginBtn) {
                 window.location.href
             );
 
+
             window.location.href =
                 "/login";
 
@@ -1719,6 +3180,13 @@ if (goToLoginBtn) {
     );
 
 }
+
+
+// =========================================================
+// =========================================================
+// CART
+// =========================================================
+// =========================================================
 
 
 // =========================================================
@@ -1742,7 +3210,9 @@ if (addToCartBtn) {
                     window.location.href
                 );
 
+
                 showLoginModal();
+
 
                 return;
 
@@ -1754,6 +3224,7 @@ if (addToCartBtn) {
                 alert(
                     "Product is not loaded yet."
                 );
+
 
                 return;
 
@@ -1778,6 +3249,7 @@ if (addToCartBtn) {
                     "This product is out of stock."
                 );
 
+
                 return;
 
             }
@@ -1788,6 +3260,7 @@ if (addToCartBtn) {
                 alert(
                     "Requested quantity is not available."
                 );
+
 
                 return;
 
@@ -1800,6 +3273,7 @@ if (addToCartBtn) {
 
             addToCartBtn.disabled =
                 true;
+
 
             addToCartBtn.textContent =
                 "Adding...";
@@ -1846,9 +3320,12 @@ if (addToCartBtn) {
                     userLoggedIn =
                         false;
 
+
                     updateReviewLoginUI();
 
+
                     showLoginModal();
+
 
                     return;
 
@@ -1865,6 +3342,7 @@ if (addToCartBtn) {
                         "Failed to add product to cart."
                     );
 
+
                     return;
 
                 }
@@ -1879,6 +3357,7 @@ if (addToCartBtn) {
 
                         addToCartBtn.textContent =
                             oldText;
+
 
                         addToCartBtn.disabled =
                             false;
@@ -1896,12 +3375,15 @@ if (addToCartBtn) {
                     error
                 );
 
+
                 alert(
                     "Unable to add product to cart."
                 );
 
+
                 addToCartBtn.textContent =
                     oldText;
+
 
                 addToCartBtn.disabled =
                     false;
@@ -1935,7 +3417,9 @@ if (buyNowBtn) {
                     window.location.href
                 );
 
+
                 showLoginModal();
+
 
                 return;
 
@@ -1953,6 +3437,27 @@ if (buyNowBtn) {
                 Number(
                     quantityInput.value
                 ) || 1;
+
+
+            const stock =
+                Number(
+                    currentProduct.stock || 0
+                );
+
+
+            if (
+                stock <= 0 ||
+                quantity > stock
+            ) {
+
+                alert(
+                    "Requested quantity is not available."
+                );
+
+
+                return;
+
+            }
 
 
             try {
@@ -1996,9 +3501,12 @@ if (buyNowBtn) {
                     userLoggedIn =
                         false;
 
+
                     updateReviewLoginUI();
 
+
                     showLoginModal();
+
 
                     return;
 
@@ -2014,6 +3522,7 @@ if (buyNowBtn) {
                         data.message ||
                         "Unable to continue."
                     );
+
 
                     return;
 
@@ -2032,6 +3541,7 @@ if (buyNowBtn) {
                     error
                 );
 
+
                 alert(
                     "Unable to continue."
                 );
@@ -2045,41 +3555,10 @@ if (buyNowBtn) {
 
 
 // =========================================================
-// TRY AR
 // =========================================================
-
-if (tryOnBtn) {
-
-    tryOnBtn.addEventListener(
-        "click",
-        async () => {
-
-            const loggedIn =
-                await checkUserLogin();
-
-
-            if (!loggedIn) {
-
-                sessionStorage.setItem(
-                    "loginRedirect",
-                    window.location.href
-                );
-
-                showLoginModal();
-
-                return;
-
-            }
-
-
-            alert(
-                "AR Try-On will open here."
-            );
-
-        }
-    );
-
-}
+// REVIEWS
+// =========================================================
+// =========================================================
 
 
 // =========================================================
@@ -2113,11 +3592,22 @@ stars.forEach(
 
 
                 const ratingLabels = {
-                    1: "Poor",
-                    2: "Fair",
-                    3: "Good",
-                    4: "Very Good",
-                    5: "Excellent"
+
+                    1:
+                        "Poor",
+
+                    2:
+                        "Fair",
+
+                    3:
+                        "Good",
+
+                    4:
+                        "Very Good",
+
+                    5:
+                        "Excellent"
+
                 };
 
 
@@ -2215,10 +3705,13 @@ if (reviewImage) {
                     "Please select a valid image."
                 );
 
+
                 reviewImage.value =
                     "";
 
+
                 clearReviewImage();
+
 
                 return;
 
@@ -2234,10 +3727,13 @@ if (reviewImage) {
                     "Image must be smaller than 5MB."
                 );
 
+
                 reviewImage.value =
                     "";
 
+
                 clearReviewImage();
+
 
                 return;
 
@@ -2269,7 +3765,9 @@ if (reviewImage) {
                 };
 
 
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(
+                file
+            );
 
         }
     );
@@ -2336,10 +3834,6 @@ if (reviewForm) {
             event.preventDefault();
 
 
-            // =================================================
-            // CHECK LOGIN
-            // =================================================
-
             const loggedIn =
                 await checkUserLogin();
 
@@ -2351,16 +3845,14 @@ if (reviewForm) {
                     window.location.href
                 );
 
+
                 showLoginModal();
+
 
                 return;
 
             }
 
-
-            // =================================================
-            // CHECK PRODUCT
-            // =================================================
 
             if (!currentProduct) {
 
@@ -2368,14 +3860,11 @@ if (reviewForm) {
                     "Product is not loaded yet."
                 );
 
+
                 return;
 
             }
 
-
-            // =================================================
-            // PRODUCT ID
-            // =================================================
 
             const productId =
                 Number(
@@ -2384,7 +3873,9 @@ if (reviewForm) {
 
 
             if (
-                !Number.isInteger(productId) ||
+                !Number.isInteger(
+                    productId
+                ) ||
                 productId <= 0
             ) {
 
@@ -2392,14 +3883,11 @@ if (reviewForm) {
                     "Invalid product ID."
                 );
 
+
                 return;
 
             }
 
-
-            // =================================================
-            // RATING
-            // =================================================
 
             const rating =
                 Number(
@@ -2408,7 +3896,9 @@ if (reviewForm) {
 
 
             if (
-                !Number.isInteger(rating) ||
+                !Number.isInteger(
+                    rating
+                ) ||
                 rating < 1 ||
                 rating > 5
             ) {
@@ -2417,14 +3907,11 @@ if (reviewForm) {
                     "Please select a rating."
                 );
 
+
                 return;
 
             }
 
-
-            // =================================================
-            // REVIEW TEXT
-            // =================================================
 
             const text =
                 reviewText.value.trim();
@@ -2436,25 +3923,26 @@ if (reviewForm) {
                     "Please write your review."
                 );
 
+
                 return;
 
             }
 
 
-            if (text.length > 1000) {
+            if (
+                text.length >
+                1000
+            ) {
 
                 alert(
                     "Review must be 1000 characters or less."
                 );
 
+
                 return;
 
             }
 
-
-            // =================================================
-            // FORM DATA
-            // =================================================
 
             const formData =
                 new FormData();
@@ -2486,10 +3974,6 @@ if (reviewForm) {
             }
 
 
-            // =================================================
-            // BUTTON STATE
-            // =================================================
-
             const oldButtonText =
                 submitReviewBtn
                     ? submitReviewBtn.textContent
@@ -2500,6 +3984,7 @@ if (reviewForm) {
 
                 submitReviewBtn.disabled =
                     true;
+
 
                 submitReviewBtn.textContent =
                     "Submitting...";
@@ -2517,25 +4002,10 @@ if (reviewForm) {
 
             try {
 
-                // =================================================
-                // IMPORTANT:
-                //
-                // BACKEND ROUTE IS:
-                //
-                // POST /api/reviews/product/:productId
-                //
-                // =================================================
-
                 const reviewUrl =
                     `/api/reviews/product/${encodeURIComponent(
                         productId
                     )}`;
-
-
-                console.log(
-                    "SUBMIT REVIEW URL:",
-                    reviewUrl
-                );
 
 
                 const response =
@@ -2553,11 +4023,9 @@ if (reviewForm) {
                     );
 
 
-                // =================================================
-                // READ RESPONSE SAFELY
-                // =================================================
+                let data =
+                    null;
 
-                let data = null;
 
                 try {
 
@@ -2576,21 +4044,6 @@ if (reviewForm) {
                 }
 
 
-                console.log(
-                    "REVIEW SUBMIT STATUS:",
-                    response.status
-                );
-
-                console.log(
-                    "REVIEW SUBMIT RESPONSE:",
-                    data
-                );
-
-
-                // =================================================
-                // NOT LOGGED IN
-                // =================================================
-
                 if (
                     response.status === 401
                 ) {
@@ -2598,26 +4051,27 @@ if (reviewForm) {
                     userLoggedIn =
                         false;
 
+
                     currentUser =
                         null;
 
+
                     updateReviewLoginUI();
+
 
                     sessionStorage.setItem(
                         "loginRedirect",
                         window.location.href
                     );
 
+
                     showLoginModal();
+
 
                     return;
 
                 }
 
-
-                // =================================================
-                // NOT FOUND
-                // =================================================
 
                 if (
                     response.status === 404
@@ -2627,23 +4081,16 @@ if (reviewForm) {
                         data?.message ||
                         "Review endpoint was not found. Check the server route.";
 
-                    console.error(
-                        "REVIEW 404:",
-                        message
-                    );
 
                     alert(
                         `Failed to submit review.\n\nServer returned 404.\n${message}`
                     );
 
+
                     return;
 
                 }
 
-
-                // =================================================
-                // OTHER ERROR
-                // =================================================
 
                 if (
                     !response.ok ||
@@ -2655,42 +4102,29 @@ if (reviewForm) {
                         data?.message ||
                         `Server returned ${response.status}.`;
 
-                    console.error(
-                        "REVIEW SUBMIT ERROR:",
-                        message
-                    );
 
                     alert(
                         `Failed to submit review.\n\n${message}`
                     );
+
 
                     return;
 
                 }
 
 
-                // =================================================
-                // SUCCESS
-                // =================================================
-
                 alert(
                     "Review submitted successfully! ⭐"
                 );
 
 
-                // Clear form
-
                 resetReviewForm();
 
-
-                // Reload reviews
 
                 await loadReviews(
                     productId
                 );
 
-
-                // Refresh product rating
 
                 await refreshProduct();
 
@@ -2702,6 +4136,7 @@ if (reviewForm) {
                     "SUBMIT REVIEW ERROR:",
                     error
                 );
+
 
                 alert(
                     "Unable to submit review. Please check that the server is running."
@@ -2715,6 +4150,7 @@ if (reviewForm) {
 
                     submitReviewBtn.disabled =
                         false;
+
 
                     submitReviewBtn.textContent =
                         oldButtonText;
@@ -2782,7 +4218,9 @@ function resetReviewForm() {
 // LOAD REVIEWS
 // =========================================================
 
-async function loadReviews(productId) {
+async function loadReviews(
+    productId
+) {
 
     if (!reviewsList) {
 
@@ -2812,12 +4250,6 @@ async function loadReviews(productId) {
             )}`;
 
 
-        console.log(
-            "LOADING REVIEWS:",
-            reviewUrl
-        );
-
-
         const response =
             await fetch(
                 reviewUrl,
@@ -2829,7 +4261,8 @@ async function loadReviews(productId) {
             );
 
 
-        let data = null;
+        let data =
+            null;
 
 
         try {
@@ -2847,18 +4280,6 @@ async function loadReviews(productId) {
             );
 
         }
-
-
-        console.log(
-            "REVIEWS STATUS:",
-            response.status
-        );
-
-
-        console.log(
-            "REVIEWS RESPONSE:",
-            data
-        );
 
 
         if (
@@ -2888,13 +4309,16 @@ async function loadReviews(productId) {
 
             `;
 
+
             return;
 
         }
 
 
         const reviews =
-            Array.isArray(data.reviews)
+            Array.isArray(
+                data.reviews
+            )
                 ? data.reviews
                 : [];
 
@@ -2930,6 +4354,7 @@ async function loadReviews(productId) {
                 </div>
 
             `;
+
 
             return;
 
@@ -2994,18 +4419,26 @@ function updateReviewSummary(
 ) {
 
     let average =
-        Number(apiAverage);
+        Number(
+            apiAverage
+        );
 
 
     let count =
-        Number(apiCount);
+        Number(
+            apiCount
+        );
 
 
     if (
-        !Number.isFinite(average)
+        !Number.isFinite(
+            average
+        )
     ) {
 
-        if (reviews.length > 0) {
+        if (
+            reviews.length > 0
+        ) {
 
             const total =
                 reviews.reduce(
@@ -3038,7 +4471,9 @@ function updateReviewSummary(
 
 
     if (
-        !Number.isFinite(count)
+        !Number.isFinite(
+            count
+        )
     ) {
 
         count =
@@ -3050,7 +4485,9 @@ function updateReviewSummary(
     if (reviewAverage) {
 
         reviewAverage.textContent =
-            average.toFixed(1);
+            average.toFixed(
+                1
+            );
 
     }
 
@@ -3073,7 +4510,9 @@ function updateReviewSummary(
 // CREATE REVIEW CARD
 // =========================================================
 
-function createReviewCard(review) {
+function createReviewCard(
+    review
+) {
 
     const card =
         document.createElement(
@@ -3100,9 +4539,12 @@ function createReviewCard(review) {
 
 
     const starsHTML =
-        "★".repeat(rating) +
+        "★".repeat(
+            rating
+        ) +
         "☆".repeat(
-            5 - rating
+            5 -
+            rating
         );
 
 
@@ -3110,7 +4552,9 @@ function createReviewCard(review) {
         "";
 
 
-    if (review.created_at) {
+    if (
+        review.created_at
+    ) {
 
         const date =
             new Date(
@@ -3128,9 +4572,14 @@ function createReviewCard(review) {
                 date.toLocaleDateString(
                     undefined,
                     {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric"
+                        year:
+                            "numeric",
+
+                        month:
+                            "short",
+
+                        day:
+                            "numeric"
                     }
                 );
 
@@ -3277,6 +4726,7 @@ async function refreshProduct() {
         currentProduct =
             data.product;
 
+
         window.currentProduct =
             currentProduct;
 
@@ -3303,7 +4753,9 @@ async function refreshProduct() {
 // UPDATE PRODUCT INFORMATION
 // =========================================================
 
-function updateProductInformation(product) {
+function updateProductInformation(
+    product
+) {
 
     productCategory.textContent =
         product.category_name ||
@@ -3333,7 +4785,9 @@ function updateProductInformation(product) {
 
 
     const stock =
-        Number(product.stock || 0);
+        Number(
+            product.stock || 0
+        );
 
 
     productStock.textContent =
@@ -3376,6 +4830,18 @@ document.addEventListener(
             event.key === "Escape"
         ) {
 
+            if (
+                arModal &&
+                arModal.classList.contains(
+                    "active"
+                )
+            ) {
+
+                closeAR();
+
+            }
+
+
             hideLoginModal();
 
         }
@@ -3385,7 +4851,7 @@ document.addEventListener(
 
 
 // =========================================================
-// CLOSE MODAL WHEN CLICKING OUTSIDE
+// CLOSE LOGIN MODAL OUTSIDE
 // =========================================================
 
 if (loginModal) {
@@ -3395,7 +4861,8 @@ if (loginModal) {
         event => {
 
             if (
-                event.target === loginModal
+                event.target ===
+                loginModal
             ) {
 
                 hideLoginModal();
@@ -3409,7 +4876,43 @@ if (loginModal) {
 
 
 // =========================================================
-// INITIALIZE
+// MEDIAPIPE READY EVENT
+// =========================================================
+
+window.addEventListener(
+    "mediapipe-ready",
+    async () => {
+
+        console.log(
+            "MediaPipe library is ready."
+        );
+
+
+        // Initialize in the background.
+        // AR does not have to wait for page load.
+
+        await initializeFaceLandmarker();
+
+    }
+);
+
+
+// =========================================================
+// IF MEDIAPIPE IS ALREADY AVAILABLE
+// =========================================================
+
+if (
+    window.FaceLandmarker &&
+    window.FilesetResolver
+) {
+
+    initializeFaceLandmarker();
+
+}
+
+
+// =========================================================
+// INITIALIZE APPLICATION
 // =========================================================
 
 async function initialize() {
@@ -3418,9 +4921,11 @@ async function initialize() {
         "========================================"
     );
 
+
     console.log(
         "PRODUCT DETAILS INITIALIZING"
     );
+
 
     console.log(
         "========================================"
@@ -3446,12 +4951,16 @@ async function initialize() {
     }
 
 
-    // Check login first
+    // =====================================================
+    // CHECK LOGIN
+    // =====================================================
 
     await checkUserLogin();
 
 
-    // Load product and reviews
+    // =====================================================
+    // LOAD PRODUCT + REVIEWS
+    // =====================================================
 
     await loadProduct();
 
@@ -3459,7 +4968,7 @@ async function initialize() {
 
 
 // =========================================================
-// START
+// START APPLICATION
 // =========================================================
 
 initialize();
