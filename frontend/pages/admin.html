@@ -1,553 +1,333 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>AR E-Commerce Admin</title>
 
-    <link
-        rel="stylesheet"
-        href="/css/admin.css"
-    >
+    <link rel="stylesheet" href="/css/admin.css" />
+  </head>
 
-</head>
-
-<body>
-
+  <body>
     <div class="admin-container">
-
-
-        <!-- =====================================================
+      <!-- =====================================================
              HEADER
         ====================================================== -->
 
-        <header class="admin-header">
+      <header class="admin-header">
+        <div class="admin-title">
+          <h1>AR E-Commerce</h1>
 
-            <div class="admin-title">
+          <p>Admin Dashboard</p>
+        </div>
 
-                <h1>
-                    AR E-Commerce
-                </h1>
+        <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
+      </header>
 
-                <p>
-                    Admin Dashboard
-                </p>
-
-            </div>
-
-
-            <button
-                id="logoutBtn"
-                class="logout-btn"
-                type="button"
-            >
-                Logout
-            </button>
-
-        </header>
-
-
-
-        <!-- =====================================================
+      <!-- =====================================================
              LOGIN SECTION
         ====================================================== -->
 
-        <section
-            id="loginSection"
-            class="card login-card"
-        >
+      <section id="loginSection" class="card login-card">
+        <h2>Admin Login</h2>
 
-            <h2>
-                Admin Login
-            </h2>
+        <p>Enter your admin token to continue.</p>
 
-            <p>
-                Enter your admin token to continue.
-            </p>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="adminToken"> Admin Token </label>
 
+            <div class="token-input-wrapper">
+              <input
+                type="password"
+                id="adminToken"
+                name="adminToken"
+                placeholder="Enter admin token"
+                autocomplete="off"
+                required
+              />
 
-            <form id="loginForm">
+              <button
+                type="button"
+                id="toggleToken"
+                class="token-toggle"
+                aria-label="Show or hide token"
+                title="Show or hide token"
+              >
+                👁
+              </button>
+            </div>
+          </div>
 
-                <div class="form-group">
+          <button type="submit" class="primary-btn">Login</button>
+        </form>
 
-                    <label for="adminToken">
-                        Admin Token
-                    </label>
+        <p id="loginMessage" class="message"></p>
+      </section>
 
-
-                    <div class="token-input-wrapper">
-
-                        <input
-                            type="password"
-                            id="adminToken"
-                            name="adminToken"
-                            placeholder="Enter admin token"
-                            autocomplete="off"
-                            required
-                        >
-
-
-                        <button
-                            type="button"
-                            id="toggleToken"
-                            class="token-toggle"
-                            aria-label="Show or hide token"
-                            title="Show or hide token"
-                        >
-                            👁
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <button
-                    type="submit"
-                    class="primary-btn"
-                >
-                    Login
-                </button>
-
-            </form>
-
-
-            <p
-                id="loginMessage"
-                class="message"
-            ></p>
-
-        </section>
-
-
-
-        <!-- =====================================================
+      <!-- =====================================================
              ADMIN DASHBOARD
         ====================================================== -->
 
-        <section
-            id="dashboardSection"
-            class="hidden"
-        >
-
-
-            <!-- =================================================
+      <section id="dashboardSection" class="hidden">
+        <!-- =================================================
                  PRODUCT MANAGEMENT
             ================================================== -->
 
-            <div class="card product-form-card">
+        <div class="card product-form-card">
+          <h2 id="formTitle">Add Product</h2>
 
-                <h2 id="formTitle">
-                    Add Product
-                </h2>
+          <p>Add a new product to your store.</p>
 
-                <p>
-                    Add a new product to your store.
-                </p>
+          <form id="productForm" enctype="multipart/form-data">
+            <!-- PRODUCT ID -->
 
+            <input type="hidden" id="productId" name="productId" />
 
-                <form
-                    id="productForm"
-                    enctype="multipart/form-data"
-                >
+            <!-- PRODUCT NAME -->
 
+            <div class="form-group">
+              <label for="name"> Product Name </label>
 
-                    <!-- PRODUCT ID -->
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Enter product name"
+                maxlength="150"
+                autocomplete="off"
+                required
+              />
+            </div>
 
-                    <input
-                        type="hidden"
-                        id="productId"
-                        name="productId"
-                    >
+            <!-- PRODUCT DESCRIPTION -->
 
+            <div class="form-group">
+              <label for="description"> Product Description </label>
 
+              <textarea
+                id="description"
+                name="description"
+                rows="4"
+                maxlength="1000"
+                placeholder="Enter product description"
+              ></textarea>
+            </div>
 
-                    <!-- PRODUCT NAME -->
-
-                    <div class="form-group">
-
-                        <label for="name">
-                            Product Name
-                        </label>
-
-                        <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            placeholder="Enter product name"
-                            maxlength="150"
-                            autocomplete="off"
-                            required
-                        >
-
-                    </div>
-
-
-
-                    <!-- PRODUCT DESCRIPTION -->
-
-                    <div class="form-group">
-
-                        <label for="description">
-                            Product Description
-                        </label>
-
-                        <textarea
-                            id="description"
-                            name="description"
-                            rows="4"
-                            maxlength="1000"
-                            placeholder="Enter product description"
-                        ></textarea>
-
-                    </div>
-
-
-
-                    <!-- =================================================
+            <!-- =================================================
                          PRODUCT CATEGORY
                     ================================================== -->
 
-                    <div class="form-group category-product-group">
+            <div class="form-group category-product-group">
+              <label for="category"> Category </label>
 
-                        <label for="category">
-                            Category
-                        </label>
+              <select id="category" name="category" required>
+                <option value="">Select Category</option>
 
-
-                        <select
-                            id="category"
-                            name="category"
-                            required
-                        >
-
-                            <option value="">
-                                Select Category
-                            </option>
-
-                            <!--
+                <!--
                                 Categories will be loaded
                                 automatically by JavaScript.
                             -->
+              </select>
 
-                        </select>
+              <small> Select a category for this product. </small>
 
-
-                        <small>
-                            Select a category for this product.
-                        </small>
-
-
-
-                        <!-- =================================================
+              <!-- =================================================
                              INLINE ADD CATEGORY FORM
 
                              This appears directly below
                              the category dropdown.
                         ================================================== -->
 
-                        <div
-                            id="inlineCategoryForm"
-                            class="inline-category-form hidden"
-                        >
+              <div id="inlineCategoryForm" class="inline-category-form hidden">
+                <!-- INLINE CATEGORY HEADER -->
 
+                <div class="inline-category-header">
+                  <div>
+                    <h3>Add New Category</h3>
 
-                            <!-- INLINE CATEGORY HEADER -->
+                    <p>Create a new product category.</p>
+                  </div>
 
-                            <div class="inline-category-header">
+                  <button
+                    type="button"
+                    id="closeInlineCategoryBtn"
+                    class="inline-close-btn"
+                    aria-label="Close"
+                    title="Close"
+                  >
+                    ×
+                  </button>
+                </div>
 
-                                <div>
+                <!-- CATEGORY NAME -->
 
-                                    <h3>
-                                        Add New Category
-                                    </h3>
+                <div class="form-group">
+                  <label for="inlineCategoryName"> Category Name </label>
 
-                                    <p>
-                                        Create a new product category.
-                                    </p>
+                  <input
+                    type="text"
+                    id="inlineCategoryName"
+                    placeholder="Enter category name"
+                    maxlength="100"
+                    autocomplete="off"
+                  />
+                </div>
 
-                                </div>
+                <!-- CATEGORY DESCRIPTION -->
 
+                <div class="form-group">
+                  <label for="inlineCategoryDescription">
+                    Category Description
+                  </label>
 
-                                <button
-                                    type="button"
-                                    id="closeInlineCategoryBtn"
-                                    class="inline-close-btn"
-                                    aria-label="Close"
-                                    title="Close"
-                                >
-                                    ×
-                                </button>
+                  <textarea
+                    id="inlineCategoryDescription"
+                    rows="3"
+                    maxlength="500"
+                    placeholder="Enter category description"
+                  ></textarea>
+                </div>
 
-                            </div>
+                <!-- CATEGORY BUTTONS -->
 
+                <div class="form-buttons">
+                  <button
+                    type="button"
+                    id="saveInlineCategoryBtn"
+                    class="primary-btn"
+                  >
+                    + Add Category
+                  </button>
 
+                  <button
+                    type="button"
+                    id="cancelInlineCategoryBtn"
+                    class="secondary-btn"
+                  >
+                    Cancel
+                  </button>
+                </div>
 
-                            <!-- CATEGORY NAME -->
+                <!-- CATEGORY MESSAGE -->
 
-                            <div class="form-group">
+                <p id="inlineCategoryMessage" class="message"></p>
+              </div>
+            </div>
 
-                                <label for="inlineCategoryName">
-                                    Category Name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="inlineCategoryName"
-                                    placeholder="Enter category name"
-                                    maxlength="100"
-                                    autocomplete="off"
-                                >
-
-                            </div>
-
-
-
-                            <!-- CATEGORY DESCRIPTION -->
-
-                            <div class="form-group">
-
-                                <label for="inlineCategoryDescription">
-                                    Category Description
-                                </label>
-
-                                <textarea
-                                    id="inlineCategoryDescription"
-                                    rows="3"
-                                    maxlength="500"
-                                    placeholder="Enter category description"
-                                ></textarea>
-
-                            </div>
-
-
-
-                            <!-- CATEGORY BUTTONS -->
-
-                            <div class="form-buttons">
-
-                                <button
-                                    type="button"
-                                    id="saveInlineCategoryBtn"
-                                    class="primary-btn"
-                                >
-                                    + Add Category
-                                </button>
-
-
-                                <button
-                                    type="button"
-                                    id="cancelInlineCategoryBtn"
-                                    class="secondary-btn"
-                                >
-                                    Cancel
-                                </button>
-
-                            </div>
-
-
-
-                            <!-- CATEGORY MESSAGE -->
-
-                            <p
-                                id="inlineCategoryMessage"
-                                class="message"
-                            ></p>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- =================================================
+            <!-- =================================================
                          PRODUCT PRICE
                     ================================================== -->
 
-                    <div class="form-group">
+            <div class="form-group">
+              <label for="price"> Price </label>
 
-                        <label for="price">
-                            Price
-                        </label>
+              <input
+                type="number"
+                id="price"
+                name="price"
+                placeholder="Enter price"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </div>
 
-                        <input
-                            type="number"
-                            id="price"
-                            name="price"
-                            placeholder="Enter price"
-                            min="0.01"
-                            step="0.01"
-                            required
-                        >
-
-                    </div>
-
-
-
-                    <!-- =================================================
+            <!-- =================================================
                          PRODUCT STOCK
                     ================================================== -->
 
-                    <div class="form-group">
+            <div class="form-group">
+              <label for="stock"> Stock Quantity </label>
 
-                        <label for="stock">
-                            Stock Quantity
-                        </label>
+              <input
+                type="number"
+                id="stock"
+                name="stock"
+                placeholder="Enter stock quantity"
+                min="0"
+                step="1"
+                value="0"
+                required
+              />
 
-                        <input
-                            type="number"
-                            id="stock"
-                            name="stock"
-                            placeholder="Enter stock quantity"
-                            min="0"
-                            step="1"
-                            value="0"
-                            required
-                        >
+              <small>
+                Stock automatically decreases when customers purchase the
+                product.
+              </small>
+            </div>
 
-                        <small>
-                            Stock automatically decreases when
-                            customers purchase the product.
-                        </small>
+            <!-- =================================================
+     PRODUCT IMAGES
+================================================== -->
 
-                    </div>
+            <div class="form-group">
+              <label for="images"> Product Images </label>
 
+              <input
+                type="file"
+                id="images"
+                name="images"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+              />
 
+              <small>
+                Select multiple images. JPG, PNG, WEBP or GIF — maximum 5 MB per
+                image.
+              </small>
+            </div>
 
-                    <!-- =================================================
-                         PRODUCT IMAGE
-                    ================================================== -->
+            <!-- IMAGE PREVIEW -->
 
-                    <div class="form-group">
+            <div id="imagePreview" class="image-preview"></div>
 
-                        <label for="image">
-                            Product Image
-                        </label>
-
-                        <input
-                            type="file"
-                            id="image"
-                            name="image"
-                            accept="image/jpeg,image/png,image/webp,image/gif"
-                        >
-
-                        <small>
-                            JPG, PNG, WEBP or GIF — maximum 5 MB.
-                        </small>
-
-                    </div>
-
-
-
-                    <!-- IMAGE PREVIEW -->
-
-                    <div
-                        id="imagePreview"
-                        class="image-preview"
-                    ></div>
-
-
-
-                    <!-- =================================================
+            <!-- =================================================
                          FORM BUTTONS
                     ================================================== -->
 
-                    <div class="form-buttons">
+            <div class="form-buttons">
+              <button type="submit" class="primary-btn">Save Product</button>
 
-                        <button
-                            type="submit"
-                            class="primary-btn"
-                        >
-                            Save Product
-                        </button>
-
-
-                        <button
-                            type="button"
-                            id="cancelBtn"
-                            class="secondary-btn"
-                        >
-                            Cancel
-                        </button>
-
-                    </div>
-
-                </form>
-
-
-                <p
-                    id="productMessage"
-                    class="message"
-                ></p>
-
+              <button type="button" id="cancelBtn" class="secondary-btn">
+                Cancel
+              </button>
             </div>
+          </form>
 
+          <p id="productMessage" class="message"></p>
+        </div>
 
-
-            <!-- =====================================================
+        <!-- =====================================================
                  EXISTING PRODUCTS
             ====================================================== -->
 
-            <div class="card">
+        <div class="card">
+          <div class="products-header">
+            <div>
+              <h2>Existing Products</h2>
 
-                <div class="products-header">
-
-                    <div>
-
-                        <h2>
-                            Existing Products
-                        </h2>
-
-                        <p>
-                            View, edit and manage your products.
-                        </p>
-
-                    </div>
-
-
-                    <button
-                        type="button"
-                        id="refreshBtn"
-                        class="secondary-btn"
-                    >
-                        ↻ Refresh
-                    </button>
-
-                </div>
-
-
-                <div
-                    id="productsContainer"
-                    class="products-container"
-                >
-
-                    <div class="loading-message">
-                        Loading products...
-                    </div>
-
-                </div>
-
+              <p>View, edit and manage your products.</p>
             </div>
 
-        </section>
+            <button type="button" id="refreshBtn" class="secondary-btn">
+              ↻ Refresh
+            </button>
+          </div>
 
+          <div id="productsContainer" class="products-container">
+            <div class="loading-message">Loading products...</div>
+          </div>
+        </div>
+      </section>
     </div>
-
-
 
     <!-- =====================================================
          ADMIN JAVASCRIPT
     ====================================================== -->
 
     <script src="/js/admin.js"></script>
-
-</body>
-
+  </body>
 </html>
