@@ -1,21 +1,23 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>Product Details - AR Ecommerce</title>
+<title>Product Details | AR E-Commerce</title>
 
-    <link
-        rel="stylesheet"
-        href="/css/product_details.css"
-    >
+<link
+    rel="stylesheet"
+    href="/css/product_details.css"
+>
+
 
 </head>
 
@@ -25,651 +27,698 @@
      NAVIGATION
 ===================================================== -->
 
-<nav class="navbar">
+<header class="navbar">
 
-    <div class="nav-container">
 
-        <a
-            href="/"
-            class="logo"
-        >
-            AR Ecommerce
+<div class="nav-container">
+
+    <a
+        href="/"
+        class="logo"
+    >
+        AR<span>E-Commerce</span>
+    </a>
+
+
+    <nav class="nav-links">
+
+        <a href="/">
+            Home
         </a>
 
+        <a href="/products.html">
+            Products
+        </a>
 
-        <div class="nav-links">
+        <button
+            type="button"
+            id="cart-btn"
+            class="nav-cart"
+        >
+            🛒 Cart
 
-            <a href="/">
-                Home
-            </a>
+            <span id="cart-count">
+                0
+            </span>
+        </button>
 
-            <a href="/products">
-                Products
-            </a>
+        <a
+            href="/login"
+            id="login-nav"
+        >
+            Login
+        </a>
 
-            <a href="/cart">
-                Cart
-            </a>
+    </nav>
 
-            <a
-                href="/login"
-                id="loginNav"
-            >
-                Login
-            </a>
+</div>
 
-        </div>
-
-    </div>
-
-</nav>
-
+</header>
 
 <!-- =====================================================
-     MAIN PRODUCT PAGE
+     PRODUCT DETAILS
 ===================================================== -->
 
-<main class="product-page">
+<main class="product-details-page">
+
+<div
+    id="product-loading"
+    class="product-loading"
+>
+    Loading product...
+</div>
 
 
-    <!-- =================================================
-         LOADING
-    ================================================== -->
-
-    <div
-        id="loading"
-        class="loading"
-    >
-
-        <div class="loader"></div>
-
-        <p>
-            Loading product...
-        </p>
-
-    </div>
+<section
+    id="product-details"
+    class="product-details"
+    style="display:none;"
+>
 
 
-    <!-- =================================================
-         ERROR
-    ================================================== -->
+    <!-- PRODUCT IMAGE -->
 
-    <div
-        id="errorMessage"
-        class="error-message"
-        style="display: none;"
-    >
+    <div class="product-gallery">
 
-        <div class="error-icon">
-            ⚠
-        </div>
+        <div class="main-product-image">
 
-        <h2>
-            Product Not Found
-        </h2>
-
-        <p>
-            We could not find this product.
-        </p>
-
-        <a
-            href="/products"
-            class="back-products-btn"
-        >
-            Back to Products
-        </a>
-
-    </div>
-
-
-    <!-- =================================================
-         PRODUCT DETAILS
-    ================================================== -->
-
-    <section
-        id="productDetails"
-        class="product-details"
-        style="display: none;"
-    >
-
-
-        <!-- =================================================
-             PRODUCT IMAGE
-        ================================================== -->
-
-        <div class="product-image-section">
-
-            <div class="product-image-container">
-
-                <div class="image-glow"></div>
-
-                <img
-                    id="productImage"
-                    src=""
-                    alt="Product"
-                >
-
-                <div
-                    id="imageFallback"
-                    class="image-fallback"
-                    style="display: none;"
-                >
-                    🛍️
-                </div>
-
-                <span class="ar-image-badge">
-                    AR READY
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             PRODUCT INFORMATION
-        ================================================== -->
-
-        <div class="product-info">
-
-
-            <!-- CATEGORY -->
-
-            <span
-                id="productCategory"
-                class="category"
+            <img
+                id="product-image"
+                src=""
+                alt="Product"
             >
-                CATEGORY
+
+        </div>
+
+    </div>
+
+
+
+    <!-- PRODUCT INFORMATION -->
+
+    <div class="product-information">
+
+        <p
+            id="product-category"
+            class="product-category"
+        >
+            Category
+        </p>
+
+
+        <h1 id="product-name">
+            Product Name
+        </h1>
+
+
+        <div
+            id="product-rating"
+            class="product-rating"
+        >
+            ⭐ 0.0
+        </div>
+
+
+        <div
+            id="product-price"
+            class="product-price"
+        >
+            Rs. 0.00
+        </div>
+
+
+        <p
+            id="product-description"
+            class="product-description"
+        >
+            Product description
+        </p>
+
+
+        <div
+            id="product-stock"
+            class="product-stock"
+        >
+            In Stock
+        </div>
+
+
+        <!-- QUANTITY -->
+
+        <div class="quantity-section">
+
+            <span>
+                Quantity
             </span>
 
-
-            <!-- PRODUCT NAME -->
-
-            <h1 id="productName">
-                Product Name
-            </h1>
-
-
-            <!-- RATING -->
-
-            <div class="rating">
-
-                <span
-                    id="productRating"
-                    class="stars"
-                >
-                    ★ 0.0
-                </span>
-
-                <span class="rating-label">
-                    Rating
-                </span>
-
-            </div>
-
-
-            <!-- PRICE -->
-
-            <div
-                id="productPrice"
-                class="price"
-            >
-                Rs. 0
-            </div>
-
-
-            <!-- DESCRIPTION -->
-
-            <div class="description">
-
-                <h2>
-                    Description
-                </h2>
-
-                <p id="productDescription">
-                    No description available.
-                </p>
-
-            </div>
-
-
-            <!-- AVAILABILITY -->
-
-            <div class="availability">
-
-                <strong>
-                    Availability:
-                </strong>
-
-                <span id="productStock">
-                    Checking...
-                </span>
-
-            </div>
-
-
-            <!-- QUANTITY -->
-
-            <div class="quantity-section">
-
-                <label for="quantity">
-                    Quantity
-                </label>
-
-
-                <div class="quantity-control">
-
-                    <button
-                        type="button"
-                        id="decreaseBtn"
-                    >
-                        −
-                    </button>
-
-
-                    <input
-                        type="number"
-                        id="quantity"
-                        value="1"
-                        min="1"
-                    >
-
-
-                    <button
-                        type="button"
-                        id="increaseBtn"
-                    >
-                        +
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <!-- =================================================
-                 CART / BUY
-            ================================================== -->
-
-            <div class="buttons">
+            <div class="quantity-control">
 
                 <button
                     type="button"
-                    id="addToCartBtn"
-                    class="add-cart"
+                    id="decrease-btn"
                 >
-                    Add to Cart
+                    −
                 </button>
 
+                <input
+                    type="number"
+                    id="quantity-input"
+                    value="1"
+                    min="1"
+                >
 
                 <button
                     type="button"
-                    id="buyNowBtn"
-                    class="buy-now"
+                    id="increase-btn"
                 >
-                    Buy Now
+                    +
                 </button>
 
             </div>
 
+        </div>
 
-            <!-- =================================================
-                 AR
-            ================================================== -->
+
+        <!-- ACTIONS -->
+
+        <div class="product-actions">
 
             <button
                 type="button"
-                id="tryOnBtn"
-                class="try-ar"
+                id="add-to-cart-btn"
+                class="primary-btn"
             >
-                ✨ Try With AR
+                Add to Cart
             </button>
 
 
+            <button
+                type="button"
+                id="buy-now-btn"
+                class="secondary-btn"
+            >
+                Buy Now
+            </button>
+
+
+            <button
+                type="button"
+                id="try-on-btn"
+                class="ar-btn"
+            >
+                ✨ Try with AR
+            </button>
+
         </div>
 
-    </section>
+    </div>
+
+</section>
 
 
-    <!-- =====================================================
-         REVIEWS SECTION
-    ===================================================== -->
 
-    <section
-        id="reviewsSection"
-        class="reviews-section"
-        style="display: none;"
+<!-- =================================================
+     REVIEWS
+================================================= -->
+
+<section
+    id="reviews-section"
+    class="reviews-section"
+>
+
+    <div class="reviews-header">
+
+        <div>
+
+            <p class="section-label">
+                CUSTOMER FEEDBACK
+            </p>
+
+            <h2>
+                Customer Reviews
+            </h2>
+
+        </div>
+
+
+        <button
+            type="button"
+            id="write-review-btn"
+            class="write-review-btn"
+        >
+            ✍ Write a Review
+        </button>
+
+    </div>
+
+
+    <!-- REVIEW FORM -->
+
+    <div
+        id="review-form-container"
+        class="review-form-container"
+        style="display:none;"
     >
 
-        <div class="reviews-header">
+        <form
+            id="review-form"
+            enctype="multipart/form-data"
+        >
 
-            <div>
-
-                <span class="section-label">
-                    CUSTOMER FEEDBACK
-                </span>
-
-                <h2>
-                    Reviews & Ratings
-                </h2>
-
-                <p>
-                    See what other customers think about this product.
-                </p>
-
-            </div>
+            <h3>
+                Share your experience
+            </h3>
 
 
-            <div class="overall-rating">
-
-                <span
-                    id="reviewAverage"
-                    class="average-number"
-                >
-                    0.0
-                </span>
-
-                <span class="average-stars">
-                    ★
-                </span>
-
-                <span
-                    id="reviewCount"
-                    class="review-count"
-                >
-                    0 reviews
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             WRITE REVIEW
-        ================================================== -->
-
-        <div class="review-form-card">
-
-            <div class="review-form-header">
-
-                <div>
-
-                    <h3>
-                        Write a Review
-                    </h3>
-
-                    <p>
-                        Share your experience with this product.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <!-- LOGIN MESSAGE -->
-
-            <div
-                id="reviewLoginMessage"
-                class="review-login-message"
-                style="display: none;"
-            >
-
-                <div class="login-message-icon">
-                    🔐
-                </div>
-
-                <div>
-
-                    <strong>
-                        Login required
-                    </strong>
-
-                    <p>
-                        Please login to write a review.
-                    </p>
-
-                </div>
+            <div class="star-rating">
 
                 <button
                     type="button"
-                    id="reviewLoginBtn"
-                    class="review-login-btn"
+                    data-rating="1"
                 >
-                    Login
+                    ★
+                </button>
+
+                <button
+                    type="button"
+                    data-rating="2"
+                >
+                    ★
+                </button>
+
+                <button
+                    type="button"
+                    data-rating="3"
+                >
+                    ★
+                </button>
+
+                <button
+                    type="button"
+                    data-rating="4"
+                >
+                    ★
+                </button>
+
+                <button
+                    type="button"
+                    data-rating="5"
+                >
+                    ★
                 </button>
 
             </div>
 
 
-            <!-- REVIEW FORM -->
-
-            <form
-                id="reviewForm"
-                enctype="multipart/form-data"
-                style="display: none;"
+            <input
+                type="hidden"
+                id="review-rating"
+                value="0"
             >
 
 
-                <!-- RATING -->
-
-                <div class="review-field">
-
-                    <label>
-                        Your Rating
-                    </label>
-
-
-                    <div
-                        id="starRating"
-                        class="star-rating"
-                    >
-
-                        <button
-                            type="button"
-                            data-rating="1"
-                        >
-                            ★
-                        </button>
-
-                        <button
-                            type="button"
-                            data-rating="2"
-                        >
-                            ★
-                        </button>
-
-                        <button
-                            type="button"
-                            data-rating="3"
-                        >
-                            ★
-                        </button>
-
-                        <button
-                            type="button"
-                            data-rating="4"
-                        >
-                            ★
-                        </button>
-
-                        <button
-                            type="button"
-                            data-rating="5"
-                        >
-                            ★
-                        </button>
-
-                    </div>
-
-                    <input
-                        type="hidden"
-                        id="reviewRating"
-                        name="rating"
-                        value="0"
-                    >
-
-                    <span
-                        id="ratingText"
-                        class="rating-text"
-                    >
-                        Select a rating
-                    </span>
-
-                </div>
+            <textarea
+                id="review-text"
+                placeholder="Write your review..."
+                maxlength="1000"
+                required
+            ></textarea>
 
 
-                <!-- REVIEW TEXT -->
+            <label class="image-upload-label">
 
-                <div class="review-field">
+                📷 Add a photo
 
-                    <label for="reviewText">
-                        Your Review
-                    </label>
+                <input
+                    type="file"
+                    id="review-image"
+                    accept="image/jpeg,image/png,image/webp"
+                >
 
-                    <textarea
-                        id="reviewText"
-                        name="review"
-                        rows="5"
-                        maxlength="1000"
-                        placeholder="Tell us about your experience..."
-                        required
-                    ></textarea>
-
-                    <div class="character-count">
-                        <span id="characterCount">
-                            0
-                        </span>
-                        / 1000
-                    </div>
-
-                </div>
+            </label>
 
 
-                <!-- IMAGE -->
-
-                <div class="review-field">
-
-                    <label for="reviewImage">
-                        Add Image
-                        <span>
-                            (Optional)
-                        </span>
-                    </label>
-
-                    <div class="image-upload-box">
-
-                        <input
-                            type="file"
-                            id="reviewImage"
-                            name="image"
-                            accept="image/png,image/jpeg,image/jpg,image/webp"
-                        >
-
-                        <label
-                            for="reviewImage"
-                            class="upload-label"
-                        >
-
-                            <span class="upload-icon">
-                                📷
-                            </span>
-
-                            <strong>
-                                Upload Product Image
-                            </strong>
-
-                            <small>
-                                JPG, PNG or WEBP
-                            </small>
-
-                        </label>
-
-                    </div>
+            <div
+                id="image-preview"
+                class="image-preview"
+            ></div>
 
 
-                    <div
-                        id="reviewImagePreview"
-                        class="review-image-preview"
-                        style="display: none;"
-                    >
+            <div class="review-form-actions">
 
-                        <img
-                            id="previewImage"
-                            src=""
-                            alt="Review preview"
-                        >
-
-                        <button
-                            type="button"
-                            id="removeReviewImage"
-                        >
-                            ×
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <!-- SUBMIT -->
+                <button
+                    type="button"
+                    id="cancel-review-btn"
+                    class="cancel-btn"
+                >
+                    Cancel
+                </button>
 
                 <button
                     type="submit"
-                    id="submitReviewBtn"
-                    class="submit-review-btn"
+                    id="submit-review-btn"
+                    class="primary-btn"
                 >
                     Submit Review
                 </button>
 
+            </div>
 
-                <div
-                    id="reviewFormMessage"
-                    class="review-form-message"
-                ></div>
+        </form>
 
-            </form>
+    </div>
+
+
+    <!-- REVIEWS LIST -->
+
+    <div
+        id="reviews-list"
+        class="reviews-list"
+    >
+
+        <div class="reviews-loading">
+            Loading reviews...
+        </div>
+
+    </div>
+
+</section>
+
+
+</main>
+
+<!-- =====================================================
+     CART MODAL
+===================================================== -->
+
+<div
+    id="cart-modal"
+    class="cart-modal"
+>
+
+
+<div class="cart-overlay"></div>
+
+<div class="cart-panel">
+
+    <button
+        type="button"
+        id="cart-close"
+        class="cart-close"
+    >
+        ×
+    </button>
+
+
+    <h2>
+        Your Cart
+    </h2>
+
+
+    <div
+        id="cart-items"
+        class="cart-items"
+    ></div>
+
+
+    <div class="cart-footer">
+
+        <strong>
+            Total
+        </strong>
+
+        <span id="cart-total">
+            Rs. 0.00
+        </span>
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =====================================================
+     LOGIN MODAL
+===================================================== -->
+
+<div
+    id="login-modal"
+    class="login-modal"
+>
+
+
+<div class="login-overlay"></div>
+
+<div class="login-box">
+
+    <button
+        type="button"
+        id="close-login-modal"
+        class="modal-close"
+    >
+        ×
+    </button>
+
+    <div class="modal-icon">
+        🔐
+    </div>
+
+    <h2>
+        Login Required
+    </h2>
+
+    <p>
+        Please login to continue.
+    </p>
+
+    <button
+        type="button"
+        id="go-to-login-btn"
+        class="primary-btn"
+    >
+        Login
+    </button>
+
+    <button
+        type="button"
+        id="continue-shopping-btn"
+        class="cancel-btn"
+    >
+        Continue Shopping
+    </button>
+
+</div>
+
+
+</div>
+
+<!-- =====================================================
+     AR TRY-ON MODAL
+===================================================== -->
+
+<div
+    id="ar-modal"
+    class="ar-modal"
+>
+
+<div class="ar-overlay"></div>
+
+
+<div class="ar-container">
+
+
+    <!-- AR HEADER -->
+
+    <div class="ar-header">
+
+        <div>
+
+            <span class="ar-small-label">
+                AUGMENTED REALITY
+            </span>
+
+            <h2>
+                Try with AR
+            </h2>
 
         </div>
 
 
-        <!-- =================================================
-             REVIEWS LIST
-        ================================================== -->
+        <button
+            type="button"
+            id="ar-close-btn"
+            class="ar-close-btn"
+        >
+            ×
+        </button>
 
-        <div class="reviews-list-header">
+    </div>
 
-            <h3>
-                Customer Reviews
-            </h3>
+
+
+    <!-- AR PREVIEW -->
+
+    <div
+        id="ar-preview"
+        class="ar-preview"
+    >
+
+        <video
+            id="ar-camera"
+            autoplay
+            playsinline
+            muted
+        ></video>
+
+
+        <img
+            id="ar-uploaded-image"
+            class="ar-uploaded-image"
+            alt="Your uploaded image"
+        >
+
+
+        <!-- PRODUCT OVERLAY -->
+
+        <div
+            id="ar-product-overlay"
+            class="ar-product-overlay"
+        >
+
+            <img
+                id="ar-product-image"
+                src=""
+                alt="Product"
+            >
 
         </div>
 
 
         <div
-            id="reviewsList"
-            class="reviews-list"
+            id="ar-camera-message"
+            class="ar-camera-message"
         >
 
-            <div class="reviews-loading">
-
-                <div class="small-loader"></div>
-
-                Loading reviews...
-
+            <div class="camera-icon">
+                📷
             </div>
+
+            <h3>
+                Start your AR experience
+            </h3>
+
+            <p>
+                Use your camera or upload a photo
+                to preview this product.
+            </p>
 
         </div>
 
-    </section>
-
-</main>
+    </div>
 
 
-<!-- =====================================================
-     JAVASCRIPT
-===================================================== -->
+
+    <!-- AR CONTROLS -->
+
+    <div class="ar-controls">
+
+
+        <div class="ar-source-buttons">
+
+            <button
+                type="button"
+                id="start-camera-btn"
+                class="ar-control-btn active"
+            >
+                📷 Camera
+            </button>
+
+
+            <label
+                for="ar-image-input"
+                class="ar-control-btn"
+            >
+                🖼️ Upload Photo
+            </label>
+
+            <input
+                type="file"
+                id="ar-image-input"
+                accept="image/*"
+                hidden
+            >
+
+        </div>
+
+
+
+        <!-- PRODUCT SIZE -->
+
+        <div class="ar-slider-row">
+
+            <label for="ar-size">
+                Product Size
+            </label>
+
+            <input
+                type="range"
+                id="ar-size"
+                min="30"
+                max="150"
+                value="80"
+            >
+
+        </div>
+
+
+
+        <!-- PRODUCT POSITION -->
+
+        <div class="ar-slider-row">
+
+            <label for="ar-position-x">
+                Horizontal Position
+            </label>
+
+            <input
+                type="range"
+                id="ar-position-x"
+                min="-40"
+                max="40"
+                value="0"
+            >
+
+        </div>
+
+
+        <div class="ar-slider-row">
+
+            <label for="ar-position-y">
+                Vertical Position
+            </label>
+
+            <input
+                type="range"
+                id="ar-position-y"
+                min="-40"
+                max="40"
+                value="0"
+            >
+
+        </div>
+
+
+        <p class="ar-info">
+            For the best preview, position yourself
+            clearly in front of the camera.
+        </p>
+
+    </div>
+
+</div>
+
+</div>
 
 <script src="/js/product_details.js"></script>
 
