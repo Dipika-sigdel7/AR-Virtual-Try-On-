@@ -326,6 +326,7 @@ function escapeAttribute(value) {
 
 // =========================================================
 // GET PRODUCT IMAGE
+// IMPORTANT IMAGE FIX
 // =========================================================
 
 function getProductImage(product) {
@@ -334,13 +335,291 @@ function getProductImage(product) {
         return null;
     }
 
-    return (
-        product.image ||
+    /*
+     * Different APIs/databases may return
+     * the product image using different fields.
+     */
+    let image =
         product.image_url ||
+        product.image ||
         product.image_path ||
         product.product_image ||
-        null
+        product.imageUrl ||
+        product.imagePath ||
+        null;
+
+    if (!image) {
+
+        console.warn(
+            "Product has no image field:",
+            product
+        );
+
+        return null;
+    }
+
+    image =
+        String(image).trim();
+
+    if (!image) {
+        return null;
+    }
+
+    /*
+     * Complete external URL.
+     *
+     * Example:
+     * https://example.com/image.jpg
+     */
+    if (
+        image.startsWith("http://") ||
+        image.startsWith("https://")
+    ) {
+
+        return image;
+    }
+
+    /*
+     * Base64 image.
+     */
+    if (
+        image.startsWith("data:image/")
+    ) {
+
+        return image;
+    }
+
+    /*
+     * Convert Windows path to URL path.
+     *
+     * uploads\products\watch.jpg
+     *
+     * becomes:
+     *
+     * uploads/products/watch.jpg
+     */
+    image =
+        image.replace(/\\/g, "/");
+
+    /*
+     * Remove ./ from beginning.
+     */
+    image =
+        image.replace(/^\.\/+/, "");
+
+    /*
+     * If the backend already returned
+     * an absolute website path:
+     *
+     * /uploads/products/watch.jpg
+     */
+    if (
+        image.startsWith("/")
+    ) {
+
+        return image;
+    }
+
+    /*
+     * Remove unnecessary "frontend/"
+     * if your database accidentally stores it.
+     */
+    if (
+        image.startsWith("frontend/")
+    ) {
+
+        image =
+            image.substring(
+                "frontend/".length
+            );
+    }
+
+    /*
+     * Convert relative path to
+     * browser URL.
+     *
+     * uploads/products/watch.jpg
+     *
+     * becomes:
+     *
+     * /uploads/products/watch.jpg
+     */
+    return `/${image}`;
+}
+
+
+// =========================================================
+// SET PRODUCT IMAGE
+// CENTRAL IMAGE FUNCTION
+// =========================================================
+
+function setProductImage(
+    product
+) {
+
+    if (!productImage) {
+        return null;
+    }
+
+    const image =
+        getProductImage(product);
+
+    console.log(
+        "========================================"
     );
+
+    console.log(
+        "PRODUCT IMAGE"
+    );
+
+    console.log(
+        "Database/API image:",
+        product?.image
+    );
+
+    console.log(
+        "image_url:",
+        product?.image_url
+    );
+
+    console.log(
+        "image_path:",
+        product?.image_path
+    );
+
+    console.log(
+        "product_image:",
+        product?.product_image
+    );
+
+    console.log(
+        "Final browser image URL:",
+        image
+    );
+
+    console.log(
+        "========================================"
+    );
+
+
+    if (!image) {
+
+        productImage.style.display =
+            "none";
+
+        productImage.removeAttribute(
+            "src"
+        );
+
+        if (imageFallback) {
+
+            imageFallback.style.display =
+                "flex";
+        }
+
+        return null;
+    }
+
+
+    /*
+     * Prevent previous handlers from
+     * affecting the new image.
+     */
+    productImage.onerror =
+        null;
+
+    productImage.onload =
+        null;
+
+
+    /*
+     * Show image.
+     */
+    productImage.style.display =
+        "block";
+
+
+    /*
+     * Show fallback until image
+     * successfully loads.
+     */
+    if (imageFallback) {
+
+        imageFallback.style.display =
+            "none";
+    }
+
+
+    /*
+     * Handle successful loading.
+     */
+    productImage.onload =
+        function () {
+
+            console.log(
+                "PRODUCT IMAGE LOADED:",
+                image
+            );
+
+            productImage.style.display =
+                "block";
+
+            if (imageFallback) {
+
+                imageFallback.style.display =
+                    "none";
+            }
+        };
+
+
+    /*
+     * Handle failed loading.
+     */
+    productImage.onerror =
+        function () {
+
+            console.error(
+                "========================================"
+            );
+
+            console.error(
+                "PRODUCT IMAGE FAILED TO LOAD"
+            );
+
+            console.error(
+                "Requested URL:",
+                image
+            );
+
+            console.error(
+                "Product:",
+                product
+            );
+
+            console.error(
+                "========================================"
+            );
+
+
+            productImage.style.display =
+                "none";
+
+            if (imageFallback) {
+
+                imageFallback.style.display =
+                    "flex";
+            }
+        };
+
+
+    /*
+     * Finally set the source.
+     */
+    productImage.src =
+        image;
+
+
+    return image;
 }
 
 
@@ -350,6 +629,9 @@ function getProductImage(product) {
 
 function getARProductImage() {
 
+    /*
+     * First use the product object.
+     */
     const productImageURL =
         getProductImage(
             currentProduct
@@ -360,21 +642,29 @@ function getARProductImage() {
         return productImageURL;
     }
 
+
+    /*
+     * If product object doesn't contain
+     * image, use the already displayed
+     * product image.
+     */
     if (
         productImage &&
         productImage.src &&
-        !productImage.src.endsWith("/")
+        productImage.src !==
+            window.location.href
     ) {
 
         return productImage.src;
     }
+
 
     return null;
 }
 
 
 // =========================================================
-// GET PRODUCT TYPE
+// GET AR PRODUCT TYPE
 // =========================================================
 
 function getARProductType() {
@@ -476,7 +766,6 @@ function getARAnchor(
 
                 scale:
                     faceWidth / 170
-
             };
 
 
@@ -492,7 +781,6 @@ function getARAnchor(
 
                 scale:
                     faceWidth / 150
-
             };
 
 
@@ -508,7 +796,6 @@ function getARAnchor(
 
                 scale:
                     faceWidth / 150
-
             };
 
 
@@ -524,7 +811,6 @@ function getARAnchor(
 
                 scale:
                     faceWidth / 180
-
             };
 
 
@@ -540,7 +826,6 @@ function getARAnchor(
 
                 scale:
                     faceWidth / 180
-
             };
 
 
@@ -554,7 +839,6 @@ function getARAnchor(
 
                 scale:
                     faceWidth / 170
-
             };
     }
 }
@@ -592,6 +876,7 @@ function smoothValue(
 
         return next;
     }
+
 
     return (
         previous +
@@ -634,6 +919,12 @@ async function openAR() {
     }
 
 
+    console.log(
+        "Opening AR with image:",
+        image
+    );
+
+
     arModal.classList.add(
         "active"
     );
@@ -661,6 +952,26 @@ async function openAR() {
 
 
     if (arProductImage) {
+
+        arProductImage.onerror =
+            function () {
+
+                console.error(
+                    "AR PRODUCT IMAGE FAILED:",
+                    image
+                );
+            };
+
+
+        arProductImage.onload =
+            function () {
+
+                console.log(
+                    "AR PRODUCT IMAGE LOADED:",
+                    image
+                );
+            };
+
 
         arProductImage.src =
             image;
@@ -745,7 +1056,6 @@ async function startARCamera() {
                 },
 
                 audio: false
-
             });
 
 
@@ -818,7 +1128,6 @@ async function startARCamera() {
 
                         arInstruction.textContent =
                             "Face tracking is unavailable. You can position the product manually.";
-
                     }
                 }
             };
@@ -1025,7 +1334,6 @@ async function initializeFaceLandmarker() {
 
                         modelAssetPath:
                             "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
-
                     },
 
                     runningMode:
@@ -1048,7 +1356,6 @@ async function initializeFaceLandmarker() {
 
                     outputFacialTransformationMatrixes:
                         true
-
                 }
             );
 
@@ -1077,7 +1384,6 @@ async function initializeFaceLandmarker() {
         faceTrackingReady =
             false;
 
-
         faceLandmarker =
             null;
 
@@ -1101,19 +1407,14 @@ async function initializeFaceLandmarker() {
 function startFaceTracking() {
 
     if (!faceTrackingReady) {
-
         return;
     }
-
 
     if (!faceLandmarker) {
-
         return;
     }
 
-
     if (!arCamera) {
-
         return;
     }
 
@@ -1251,7 +1552,6 @@ function stopFaceTracking() {
 function getVideoDisplayRect() {
 
     if (!arCamera) {
-
         return null;
     }
 
@@ -1280,10 +1580,6 @@ function getVideoDisplayRect() {
     }
 
 
-    /*
-     * Handles object-fit: cover correctly.
-     */
-
     const scale =
         Math.max(
             displayWidth / videoWidth,
@@ -1294,7 +1590,6 @@ function getVideoDisplayRect() {
     const renderedWidth =
         videoWidth *
         scale;
-
 
     const renderedHeight =
         videoHeight *
@@ -1353,10 +1648,6 @@ function landmarkToDisplay(
         };
     }
 
-
-    /*
-     * Front camera is mirrored visually.
-     */
 
     const mirroredX =
         1 -
@@ -1517,7 +1808,6 @@ function processFaceResult(
         maxX -
         minX;
 
-
     const faceHeight =
         maxY -
         minY;
@@ -1547,11 +1837,6 @@ function processFaceResult(
         ) /
         2;
 
-
-    /*
-     * Convert screen coordinates
-     * into overlay coordinates.
-     */
 
     const rawFaceX =
         faceCenterX -
@@ -1688,7 +1973,7 @@ function stopARCamera() {
 
 
 // =========================================================
-// UPLOAD IMAGE
+// UPLOAD IMAGE BUTTON
 // =========================================================
 
 if (uploadImageBtn) {
@@ -1721,7 +2006,6 @@ if (arImageInput) {
 
 
             if (!file) {
-
                 return;
             }
 
@@ -1970,7 +2254,6 @@ function processUploadedImageFace(
 
 
     if (!landmarks) {
-
         return;
     }
 
@@ -2298,7 +2581,6 @@ function resetARPosition() {
 function updateARProduct() {
 
     if (!arProductOverlay) {
-
         return;
     }
 
@@ -2477,7 +2759,6 @@ if (arProductOverlay) {
     arProductOverlay.style.cursor =
         "grab";
 
-
     arProductOverlay.style.touchAction =
         "none";
 
@@ -2520,7 +2801,6 @@ if (arProductOverlay) {
         event => {
 
             if (!arDragging) {
-
                 return;
             }
 
@@ -2691,11 +2971,6 @@ async function checkUserLogin() {
     }
 
 
-    /*
-     * Your requirement:
-     * Login button remains "Login".
-     */
-
     if (loginNav) {
 
         loginNav.textContent =
@@ -2717,7 +2992,6 @@ async function checkUserLogin() {
 function updateReviewLoginUI() {
 
     if (!reviewLoginMessage) {
-
         return;
     }
 
@@ -2844,11 +3118,22 @@ async function loadProduct() {
             await response.json();
 
 
+        console.log(
+            "PRODUCT API RESPONSE:",
+            data
+        );
+
+
         if (
             !response.ok ||
             data.success !== true ||
             !data.product
         ) {
+
+            console.error(
+                "Invalid product response:",
+                data
+            );
 
             showError();
 
@@ -2932,10 +3217,15 @@ function displayProduct(
     }
 
 
+    // =====================================================
+    // PRODUCT INFORMATION
+    // =====================================================
+
     if (productCategory) {
 
         productCategory.textContent =
             product.category_name ||
+            product.category ||
             "Uncategorized";
     }
 
@@ -2974,6 +3264,10 @@ function displayProduct(
     }
 
 
+    // =====================================================
+    // STOCK
+    // =====================================================
+
     const stock =
         Number(
             product.stock || 0
@@ -2995,6 +3289,10 @@ function displayProduct(
     }
 
 
+    // =====================================================
+    // QUANTITY
+    // =====================================================
+
     if (quantityInput) {
 
         quantityInput.min =
@@ -3002,13 +3300,17 @@ function displayProduct(
 
         quantityInput.max =
             stock > 0
-                ? stock
-                : 1;
+                ? String(stock)
+                : "1";
 
         quantityInput.value =
             "1";
     }
 
+
+    // =====================================================
+    // CART BUTTONS
+    // =====================================================
 
     if (addToCartBtn) {
 
@@ -3024,47 +3326,13 @@ function displayProduct(
     }
 
 
-    const image =
-        getProductImage(
-            product
-        );
+    // =====================================================
+    // PRODUCT IMAGE
+    // =====================================================
 
-
-    if (
-        image &&
-        productImage
-    ) {
-
-        productImage.src =
-            image;
-
-        productImage.style.display =
-            "block";
-
-
-        if (imageFallback) {
-
-            imageFallback.style.display =
-                "none";
-        }
-
-    }
-
-    else {
-
-        if (productImage) {
-
-            productImage.style.display =
-                "none";
-        }
-
-
-        if (imageFallback) {
-
-            imageFallback.style.display =
-                "flex";
-        }
-    }
+    setProductImage(
+        product
+    );
 }
 
 
@@ -3114,7 +3382,6 @@ if (decreaseBtn) {
         () => {
 
             if (!quantityInput) {
-
                 return;
             }
 
@@ -3150,7 +3417,6 @@ if (increaseBtn) {
         () => {
 
             if (!quantityInput) {
-
                 return;
             }
 
@@ -3260,7 +3526,6 @@ function showLoginModal() {
 function hideLoginModal() {
 
     if (!loginModal) {
-
         return;
     }
 
@@ -3268,10 +3533,6 @@ function hideLoginModal() {
     loginModal.style.display =
         "none";
 
-
-    /*
-     * Do not close AR if it is open.
-     */
 
     if (
         !arModal ||
@@ -3426,7 +3687,6 @@ if (addToCartBtn) {
 
                                 "Content-Type":
                                     "application/json"
-
                             },
 
                             body:
@@ -3439,7 +3699,6 @@ if (addToCartBtn) {
 
                                     quantity:
                                         quantity
-
                                 })
                         }
                     );
@@ -3557,7 +3816,6 @@ if (buyNowBtn) {
 
 
             if (!currentProduct) {
-
                 return;
             }
 
@@ -3605,7 +3863,6 @@ if (buyNowBtn) {
 
                                 "Content-Type":
                                     "application/json"
-
                             },
 
                             body:
@@ -3618,7 +3875,6 @@ if (buyNowBtn) {
 
                                     quantity:
                                         quantity
-
                                 })
                         }
                     );
@@ -3734,7 +3990,6 @@ stars.forEach(
 
                     5:
                         "Excellent"
-
                 };
 
 
@@ -4066,18 +4321,6 @@ if (reviewForm) {
             );
 
 
-            /*
-             * IMPORTANT:
-             *
-             * This uses:
-             * /api/reviews/product/:id
-             *
-             * If your server instead has:
-             * POST /api/reviews
-             *
-             * change REVIEW_SUBMIT_URL below.
-             */
-
             const REVIEW_SUBMIT_URL =
                 `/api/reviews/product/${encodeURIComponent(
                     productId
@@ -4306,7 +4549,6 @@ async function loadReviews(
 ) {
 
     if (!reviewsList) {
-
         return;
     }
 
@@ -4675,14 +4917,44 @@ function createReviewCard(
         "";
 
 
-    const reviewImageURL =
+    let reviewImageURL =
         review.image_url ||
         review.image ||
         review.review_image ||
         null;
 
 
+    /*
+     * Fix review image paths too.
+     */
     if (reviewImageURL) {
+
+        reviewImageURL =
+            String(
+                reviewImageURL
+            ).replace(
+                /\\/g,
+                "/"
+            );
+
+
+        if (
+            !reviewImageURL.startsWith(
+                "http://"
+            ) &&
+            !reviewImageURL.startsWith(
+                "https://"
+            ) &&
+            !reviewImageURL.startsWith(
+                "data:image/"
+            ) &&
+            !reviewImageURL.startsWith("/")
+        ) {
+
+            reviewImageURL =
+                `/${reviewImageURL}`;
+        }
+
 
         imageHTML = `
 
@@ -4694,6 +4966,7 @@ function createReviewCard(
                     )}"
                     alt="Customer review image"
                     loading="lazy"
+                    onerror="this.parentElement.style.display='none';"
                 >
 
             </div>
@@ -4759,7 +5032,6 @@ async function refreshProduct() {
 
 
     if (!productId) {
-
         return;
     }
 
@@ -4831,7 +5103,6 @@ function updateProductInformation(
 ) {
 
     if (!product) {
-
         return;
     }
 
@@ -4840,6 +5111,7 @@ function updateProductInformation(
 
         productCategory.textContent =
             product.category_name ||
+            product.category ||
             "Uncategorized";
     }
 
@@ -4903,8 +5175,9 @@ function updateProductInformation(
 
         quantityInput.max =
             stock > 0
-                ? stock
-                : 1;
+                ? String(stock)
+                : "1";
+
 
         if (
             Number(quantityInput.value) >
@@ -4930,6 +5203,16 @@ function updateProductInformation(
         buyNowBtn.disabled =
             stock <= 0;
     }
+
+
+    // =====================================================
+    // IMPORTANT:
+    // UPDATE IMAGE AFTER PRODUCT REFRESH
+    // =====================================================
+
+    setProductImage(
+        product
+    );
 }
 
 
