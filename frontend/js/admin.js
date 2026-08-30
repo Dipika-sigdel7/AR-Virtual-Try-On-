@@ -1,6 +1,8 @@
+
 /* =========================================================
    AR E-COMMERCE ADMIN DASHBOARD
    ADMIN.JS
+   MULTIPLE PRODUCT IMAGE UPLOAD
 ========================================================= */
 
 
@@ -35,8 +37,12 @@ const categorySelect =
 const productsContainer =
     document.getElementById("productsContainer");
 
-const imageInput =
-    document.getElementById("image");
+/* =========================================================
+   MULTIPLE IMAGE INPUT
+========================================================= */
+
+const imagesInput =
+    document.getElementById("images");
 
 const imagePreview =
     document.getElementById("imagePreview");
@@ -173,7 +179,6 @@ if (loginForm) {
         async function (event) {
 
             event.preventDefault();
-
 
             const token =
                 adminTokenInput.value.trim();
@@ -1029,6 +1034,7 @@ function displayProducts(products) {
 
 /* =========================================================
    ADD / UPDATE PRODUCT
+   MULTIPLE IMAGE UPLOAD
 ========================================================= */
 
 if (productForm) {
@@ -1088,7 +1094,9 @@ if (productForm) {
                 stockInput.value;
 
 
-            /* Validate name */
+            /* =====================================================
+               VALIDATION
+            ===================================================== */
 
             if (!name) {
 
@@ -1101,8 +1109,6 @@ if (productForm) {
 
             }
 
-
-            /* Validate category */
 
             if (
                 !categoryId ||
@@ -1120,8 +1126,6 @@ if (productForm) {
             }
 
 
-            /* Validate price */
-
             if (
                 !price ||
                 Number(price) <= 0
@@ -1136,8 +1140,6 @@ if (productForm) {
 
             }
 
-
-            /* Validate stock */
 
             if (
                 stock === "" ||
@@ -1154,24 +1156,67 @@ if (productForm) {
             }
 
 
-            const productData = {
+            /* =====================================================
+               CREATE FORMDATA
+            ===================================================== */
 
-                name:
-                    name,
+            const formData =
+                new FormData();
 
-                description:
-                    description || null,
 
-                category_id:
-                    Number(categoryId),
+            formData.append(
+                "name",
+                name
+            );
 
-                price:
-                    Number(price),
 
-                stock:
-                    Number(stock)
+            formData.append(
+                "description",
+                description || ""
+            );
 
-            };
+
+            formData.append(
+                "category_id",
+                Number(categoryId)
+            );
+
+
+            formData.append(
+                "price",
+                Number(price)
+            );
+
+
+            formData.append(
+                "stock",
+                Number(stock)
+            );
+
+
+            /* =====================================================
+               ADD MULTIPLE IMAGES
+            ===================================================== */
+
+            if (
+                imagesInput &&
+                imagesInput.files.length > 0
+            ) {
+
+                Array.from(
+                    imagesInput.files
+                ).forEach(
+                    function (file) {
+
+                        formData.append(
+                            "images",
+                            file
+                        );
+
+                    }
+                );
+
+            }
 
 
             try {
@@ -1194,6 +1239,10 @@ if (productForm) {
                         : "POST";
 
 
+                /* =================================================
+                   SEND PRODUCT + IMAGES
+                ================================================== */
+
                 const response =
                     await fetch(
                         url,
@@ -1203,18 +1252,13 @@ if (productForm) {
 
                             headers: {
 
-                                "Content-Type":
-                                    "application/json",
-
                                 "x-admin-token":
                                     adminToken
 
                             },
 
                             body:
-                                JSON.stringify(
-                                    productData
-                                )
+                                formData
 
                         }
                     );
@@ -1341,8 +1385,20 @@ async function editProduct(id) {
             "Edit Product";
 
 
-        imagePreview.innerHTML =
-            "";
+        if (imagePreview) {
+
+            imagePreview.innerHTML =
+                "";
+
+        }
+
+
+        if (imagesInput) {
+
+            imagesInput.value =
+                "";
+
+        }
 
 
         productForm.scrollIntoView({
@@ -1442,26 +1498,27 @@ async function deleteProduct(id) {
 
 
 /* =========================================================
-   IMAGE PREVIEW
+   MULTIPLE IMAGE PREVIEW
 ========================================================= */
 
-if (imageInput) {
+if (imagesInput) {
 
-    imageInput.addEventListener(
+    imagesInput.addEventListener(
         "change",
         function () {
 
-            const file =
-                imageInput.files[0];
+            imagePreview.innerHTML =
+                "";
 
 
-            if (!file) {
+            const files =
+                Array.from(
+                    imagesInput.files
+                );
 
-                imagePreview.innerHTML =
-                    "";
 
+            if (files.length === 0) {
                 return;
-
             }
 
 
@@ -1475,71 +1532,112 @@ if (imageInput) {
             ];
 
 
-            if (
-                !allowedTypes.includes(
-                    file.type
-                )
+            /* =================================================
+               CHECK ALL FILES FIRST
+            ================================================== */
+
+            for (
+                const file of files
             ) {
 
-                alert(
-                    "Only JPG, PNG, WEBP and GIF images are allowed."
-                );
+                if (
+                    !allowedTypes.includes(
+                        file.type
+                    )
+                ) {
+
+                    alert(
+                        `${file.name}: Only JPG, PNG, WEBP and GIF images are allowed.`
+                    );
 
 
-                imageInput.value =
-                    "";
+                    imagesInput.value =
+                        "";
+
+                    imagePreview.innerHTML =
+                        "";
+
+                    return;
+
+                }
 
 
-                imagePreview.innerHTML =
-                    "";
+                if (
+                    file.size >
+                    5 * 1024 * 1024
+                ) {
 
-                return;
+                    alert(
+                        `${file.name}: Image must be smaller than 5 MB.`
+                    );
+
+
+                    imagesInput.value =
+                        "";
+
+                    imagePreview.innerHTML =
+                        "";
+
+                    return;
+
+                }
 
             }
 
 
-            if (
-                file.size >
-                5 * 1024 * 1024
-            ) {
+            /* =================================================
+               CREATE PREVIEWS
+            ================================================== */
 
-                alert(
-                    "Image must be smaller than 5 MB."
-                );
+            files.forEach(
+                function (file) {
 
-
-                imageInput.value =
-                    "";
+                    const reader =
+                        new FileReader();
 
 
-                imagePreview.innerHTML =
-                    "";
+                    reader.onload =
+                        function (event) {
 
-                return;
-
-            }
-
-
-            const reader =
-                new FileReader();
+                            const preview =
+                                document.createElement(
+                                    "div"
+                                );
 
 
-            reader.onload =
-                function (event) {
-
-                    imagePreview.innerHTML = `
-
-                        <img
-                            src="${event.target.result}"
-                            alt="Image Preview"
-                        >
-
-                    `;
-
-                };
+                            preview.className =
+                                "image-preview-item";
 
 
-            reader.readAsDataURL(file);
+                            preview.innerHTML = `
+
+                                <img
+                                    src="${event.target.result}"
+                                    alt="Image Preview"
+                                >
+
+                                <span>
+                                    ${escapeHTML(
+                                        file.name
+                                    )}
+                                </span>
+
+                            `;
+
+
+                            imagePreview.appendChild(
+                                preview
+                            );
+
+                        };
+
+
+                    reader.readAsDataURL(
+                        file
+                    );
+
+                }
+            );
 
         }
     );
@@ -1593,6 +1691,14 @@ function resetForm() {
     if (imagePreview) {
 
         imagePreview.innerHTML =
+            "";
+
+    }
+
+
+    if (imagesInput) {
+
+        imagesInput.value =
             "";
 
     }
