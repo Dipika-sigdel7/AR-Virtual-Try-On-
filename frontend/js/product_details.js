@@ -199,6 +199,919 @@ function escapeAttribute(value) {
 }
 
 
+
+// =========================================================
+// AR TRY-ON
+// ADD-ON FEATURE
+// DOES NOT CHANGE EXISTING PRODUCT/CART/REVIEW CODE
+// =========================================================
+
+
+// =========================================================
+// AR ELEMENTS
+// =========================================================
+
+const arModal =
+    document.getElementById("arModal");
+
+const closeArModal =
+    document.getElementById("closeArModal");
+
+const startCameraBtn =
+    document.getElementById("startCameraBtn");
+
+const uploadImageBtn =
+    document.getElementById("uploadImageBtn");
+
+const arImageInput =
+    document.getElementById("arImageInput");
+
+const arCamera =
+    document.getElementById("arCamera");
+
+const arUserImage =
+    document.getElementById("arUserImage");
+
+const arProductImage =
+    document.getElementById("arProductImage");
+
+const arProductOverlay =
+    document.getElementById("arProductOverlay");
+
+const arInstruction =
+    document.getElementById("arInstruction");
+
+
+// =========================================================
+// AR STATE
+// =========================================================
+
+let arCameraStream = null;
+
+let arScale = 1;
+
+let arPositionX = 0;
+
+let arPositionY = 0;
+
+let arDragging = false;
+
+let arStartX = 0;
+
+let arStartY = 0;
+
+
+// =========================================================
+// GET PRODUCT IMAGE
+// =========================================================
+
+function getARProductImage() {
+
+    /*
+     * Your existing product details code normally has:
+     *
+     * currentProduct
+     *
+     * Use that product image.
+     */
+
+    if (
+        typeof currentProduct !== "undefined" &&
+        currentProduct &&
+        currentProduct.image
+    ) {
+
+        return currentProduct.image;
+
+    }
+
+
+    /*
+     * Fallback:
+     * Find the product image already displayed
+     * on the product details page.
+     */
+
+    const existingImage =
+        document.querySelector(
+            "#productImage"
+        );
+
+
+    if (
+        existingImage &&
+        existingImage.src
+    ) {
+
+        return existingImage.src;
+
+    }
+
+
+    return null;
+
+}
+
+
+// =========================================================
+// OPEN AR
+// =========================================================
+
+async function openAR() {
+
+    if (!arModal) {
+
+        console.error(
+            "AR modal not found."
+        );
+
+        return;
+
+    }
+
+
+    arModal.classList.add(
+        "active"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
+
+
+    resetARPosition();
+
+
+    // =====================================================
+    // PRODUCT IMAGE
+    // =====================================================
+
+    const productImage =
+        getARProductImage();
+
+
+    if (productImage) {
+
+        arProductImage.src =
+            productImage;
+
+        arProductOverlay.style.display =
+            "block";
+
+    }
+
+    else {
+
+        arProductOverlay.style.display =
+            "none";
+
+        console.warn(
+            "Product image not available for AR."
+        );
+
+    }
+
+
+    // =====================================================
+    // START CAMERA
+    // =====================================================
+
+    await startARCamera();
+
+}
+
+
+// =========================================================
+// START CAMERA
+// =========================================================
+
+async function startARCamera() {
+
+    stopARCamera();
+
+
+    try {
+
+        arCameraStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+
+                    facingMode: "user",
+
+                    width: {
+                        ideal: 1280
+                    },
+
+                    height: {
+                        ideal: 720
+                    }
+
+                },
+
+                audio: false
+
+            });
+
+
+        arCamera.srcObject =
+            arCameraStream;
+
+
+        arCamera.style.display =
+            "block";
+
+
+        arUserImage.style.display =
+            "none";
+
+
+        arInstruction.textContent =
+            "Move and resize the product to see how it looks.";
+
+
+        setActiveARMode(
+            startCameraBtn
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "AR CAMERA ERROR:",
+            error
+        );
+
+
+        arCamera.style.display =
+            "none";
+
+
+        arInstruction.textContent =
+            "Camera access was blocked. You can upload an image instead.";
+
+    }
+
+}
+
+
+// =========================================================
+// STOP CAMERA
+// =========================================================
+
+function stopARCamera() {
+
+    if (!arCameraStream) {
+
+        return;
+
+    }
+
+
+    arCameraStream
+        .getTracks()
+        .forEach(
+            track => {
+
+                track.stop();
+
+            }
+        );
+
+
+    arCameraStream =
+        null;
+
+
+    arCamera.srcObject =
+        null;
+
+}
+
+
+// =========================================================
+// UPLOAD USER IMAGE
+// =========================================================
+
+if (uploadImageBtn) {
+
+    uploadImageBtn.addEventListener(
+        "click",
+        () => {
+
+            if (arImageInput) {
+
+                arImageInput.click();
+
+            }
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// HANDLE UPLOADED IMAGE
+// =========================================================
+
+if (arImageInput) {
+
+    arImageInput.addEventListener(
+        "change",
+        event => {
+
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+
+            if (!file) {
+
+                return;
+
+            }
+
+
+            if (
+                !file.type.startsWith(
+                    "image/"
+                )
+            ) {
+
+                alert(
+                    "Please select a valid image."
+                );
+
+                return;
+
+            }
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function(e) {
+
+                    stopARCamera();
+
+
+                    arCamera.style.display =
+                        "none";
+
+
+                    arUserImage.src =
+                        e.target.result;
+
+
+                    arUserImage.style.display =
+                        "block";
+
+
+                    arInstruction.textContent =
+                        "Drag and resize the product to see how it looks.";
+
+
+                    setActiveARMode(
+                        uploadImageBtn
+                    );
+
+
+                    resetARPosition();
+
+                };
+
+
+            reader.readAsDataURL(
+                file
+            );
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// SET ACTIVE MODE
+// =========================================================
+
+function setActiveARMode(button) {
+
+    document
+        .querySelectorAll(
+            ".ar-mode-btn"
+        )
+        .forEach(
+            item => {
+
+                item.classList.remove(
+                    "active"
+                );
+
+            }
+        );
+
+
+    if (button) {
+
+        button.classList.add(
+            "active"
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// CAMERA BUTTON
+// =========================================================
+
+if (startCameraBtn) {
+
+    startCameraBtn.addEventListener(
+        "click",
+        async () => {
+
+            await startARCamera();
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// CLOSE AR
+// =========================================================
+
+function closeAR() {
+
+    stopARCamera();
+
+
+    if (arModal) {
+
+        arModal.classList.remove(
+            "active"
+        );
+
+    }
+
+
+    document.body.style.overflow =
+        "";
+
+
+    if (arImageInput) {
+
+        arImageInput.value =
+            "";
+
+    }
+
+
+    arUserImage.src =
+        "";
+
+
+    arUserImage.style.display =
+        "none";
+
+
+    arCamera.style.display =
+        "none";
+
+}
+
+
+if (closeArModal) {
+
+    closeArModal.addEventListener(
+        "click",
+        closeAR
+    );
+
+}
+
+
+// =========================================================
+// CLOSE WHEN CLICKING BACKGROUND
+// =========================================================
+
+if (arModal) {
+
+    arModal.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target === arModal
+            ) {
+
+                closeAR();
+
+            }
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// ESCAPE KEY
+// =========================================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape" &&
+            arModal &&
+            arModal.classList.contains(
+                "active"
+            )
+        ) {
+
+            closeAR();
+
+        }
+
+    }
+);
+
+
+// =========================================================
+// RESET PRODUCT POSITION
+// =========================================================
+
+function resetARPosition() {
+
+    arScale = 1;
+
+    arPositionX = 0;
+
+    arPositionY = 0;
+
+    updateARProduct();
+
+}
+
+
+// =========================================================
+// UPDATE PRODUCT POSITION
+// =========================================================
+
+function updateARProduct() {
+
+    if (!arProductOverlay) {
+
+        return;
+
+    }
+
+
+    arProductOverlay.style.transform =
+        `
+        translate(
+            calc(-50% + ${arPositionX}px),
+            calc(-50% + ${arPositionY}px)
+        )
+        scale(${arScale})
+        `;
+
+}
+
+
+// =========================================================
+// ZOOM IN
+// =========================================================
+
+const arZoomIn =
+    document.getElementById(
+        "arZoomIn"
+    );
+
+
+if (arZoomIn) {
+
+    arZoomIn.addEventListener(
+        "click",
+        () => {
+
+            arScale += 0.1;
+
+
+            if (arScale > 3) {
+
+                arScale = 3;
+
+            }
+
+
+            updateARProduct();
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// ZOOM OUT
+// =========================================================
+
+const arZoomOut =
+    document.getElementById(
+        "arZoomOut"
+    );
+
+
+if (arZoomOut) {
+
+    arZoomOut.addEventListener(
+        "click",
+        () => {
+
+            arScale -= 0.1;
+
+
+            if (arScale < 0.3) {
+
+                arScale = 0.3;
+
+            }
+
+
+            updateARProduct();
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// MOVE PRODUCT
+// =========================================================
+
+function moveARProduct(
+    x,
+    y
+) {
+
+    arPositionX += x;
+
+    arPositionY += y;
+
+    updateARProduct();
+
+}
+
+
+const arMoveUp =
+    document.getElementById(
+        "arMoveUp"
+    );
+
+
+const arMoveDown =
+    document.getElementById(
+        "arMoveDown"
+    );
+
+
+const arMoveLeft =
+    document.getElementById(
+        "arMoveLeft"
+    );
+
+
+const arMoveRight =
+    document.getElementById(
+        "arMoveRight"
+    );
+
+
+if (arMoveUp) {
+
+    arMoveUp.addEventListener(
+        "click",
+        () => {
+
+            moveARProduct(
+                0,
+                -15
+            );
+
+        }
+    );
+
+}
+
+
+if (arMoveDown) {
+
+    arMoveDown.addEventListener(
+        "click",
+        () => {
+
+            moveARProduct(
+                0,
+                15
+            );
+
+        }
+    );
+
+}
+
+
+if (arMoveLeft) {
+
+    arMoveLeft.addEventListener(
+        "click",
+        () => {
+
+            moveARProduct(
+                -15,
+                0
+            );
+
+        }
+    );
+
+}
+
+
+if (arMoveRight) {
+
+    arMoveRight.addEventListener(
+        "click",
+        () => {
+
+            moveARProduct(
+                15,
+                0
+            );
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// DRAG PRODUCT WITH MOUSE
+// =========================================================
+
+if (arProductOverlay) {
+
+    arProductOverlay.addEventListener(
+        "pointerdown",
+        event => {
+
+            arDragging = true;
+
+
+            arProductOverlay.setPointerCapture(
+                event.pointerId
+            );
+
+
+            arStartX =
+                event.clientX -
+                arPositionX;
+
+
+            arStartY =
+                event.clientY -
+                arPositionY;
+
+
+            arProductOverlay.style.cursor =
+                "grabbing";
+
+        }
+    );
+
+
+    arProductOverlay.addEventListener(
+        "pointermove",
+        event => {
+
+            if (!arDragging) {
+
+                return;
+
+            }
+
+
+            arPositionX =
+                event.clientX -
+                arStartX;
+
+
+            arPositionY =
+                event.clientY -
+                arStartY;
+
+
+            updateARProduct();
+
+        }
+    );
+
+
+    arProductOverlay.addEventListener(
+        "pointerup",
+        event => {
+
+            arDragging = false;
+
+
+            try {
+
+                arProductOverlay.releasePointerCapture(
+                    event.pointerId
+                );
+
+            }
+
+            catch (error) {
+
+                // Ignore pointer release errors.
+
+            }
+
+
+            arProductOverlay.style.cursor =
+                "grab";
+
+        }
+    );
+
+
+    arProductOverlay.addEventListener(
+        "pointercancel",
+        () => {
+
+            arDragging = false;
+
+            arProductOverlay.style.cursor =
+                "grab";
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// CONNECT EXISTING TRY AR BUTTON
+// =========================================================
+
+/*
+ * IMPORTANT:
+ *
+ * Your existing product-details page already has
+ * a Try AR button.
+ *
+ * We find it without changing the existing button.
+ */
+
+
+const existingTryARButton =
+    document.getElementById(
+        "tryOnBtn"
+    );
+
+
+if (existingTryARButton) {
+
+    existingTryARButton.addEventListener(
+        "click",
+        event => {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            openAR();
+
+        }
+    );
+
+}
+
+
+
 // =========================================================
 // CHECK LOGIN
 // =========================================================
