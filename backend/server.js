@@ -1,3 +1,4 @@
+
 // =========================================================
 // AR E-COMMERCE
 // EXPRESS SERVER
@@ -12,44 +13,49 @@ const session = require("express-session");
 
 const app = express();
 
-const PORT =
-    process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 
 // =========================================================
 // PATHS
 // =========================================================
 
-const frontendPath =
-    path.join(
-        __dirname,
-        "../frontend"
-    );
+// backend/server.js
+// frontend is outside backend
+const frontendPath = path.join(
+    __dirname,
+    "../frontend"
+);
 
-const pagesPath =
-    path.join(
-        frontendPath,
-        "pages"
-    );
+const pagesPath = path.join(
+    frontendPath,
+    "pages"
+);
 
-const uploadsPath =
-    path.join(
-        __dirname,
-        "uploads"
-    );
+// Project root /uploads
+// AR-Ecommerce/uploads
+const uploadsPath = path.join(
+    __dirname,
+    "../uploads"
+);
 
 
 // =========================================================
 // MIDDLEWARE
 // =========================================================
 
+// JSON requests
 app.use(
-    express.json()
+    express.json({
+        limit: "10mb"
+    })
 );
 
+// Form requests
 app.use(
     express.urlencoded({
-        extended: true
+        extended: true,
+        limit: "10mb"
     })
 );
 
@@ -104,11 +110,21 @@ app.use(
 // PRODUCT UPLOADS
 // =========================================================
 //
-// backend/uploads
+// Project structure:
+//
+// AR-Ecommerce/
+// │
+// ├── backend/
+// │   └── server.js
+// │
+// ├── frontend/
+// │
+// └── uploads/
+//     └── products/
 //
 // Browser URL:
 //
-// /uploads/filename.jpg
+// /uploads/products/example.jpg
 //
 // =========================================================
 
@@ -192,6 +208,7 @@ app.use(
 
 // =========================================================
 // HOME
+// GET /
 // =========================================================
 
 app.get(
@@ -202,7 +219,27 @@ app.get(
             path.join(
                 pagesPath,
                 "index.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "HOME PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Home page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -211,6 +248,7 @@ app.get(
 
 // =========================================================
 // LOGIN
+// GET /login
 // =========================================================
 
 app.get(
@@ -221,7 +259,27 @@ app.get(
             path.join(
                 pagesPath,
                 "login.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "LOGIN PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Login page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -230,6 +288,7 @@ app.get(
 
 // =========================================================
 // REGISTER
+// GET /register
 // =========================================================
 
 app.get(
@@ -240,7 +299,27 @@ app.get(
             path.join(
                 pagesPath,
                 "register.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "REGISTER PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Register page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -249,6 +328,7 @@ app.get(
 
 // =========================================================
 // PRODUCTS
+// GET /products
 // =========================================================
 
 app.get(
@@ -259,7 +339,27 @@ app.get(
             path.join(
                 pagesPath,
                 "products.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "PRODUCTS PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Products page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -268,6 +368,7 @@ app.get(
 
 // =========================================================
 // PRODUCT DETAILS
+// GET /product_details.html
 // =========================================================
 
 app.get(
@@ -288,9 +389,7 @@ app.get(
                         error
                     );
 
-                    if (
-                        !res.headersSent
-                    ) {
+                    if (!res.headersSent) {
 
                         res.status(404).send(
                             "Product details page not found."
@@ -309,6 +408,7 @@ app.get(
 
 // =========================================================
 // PRODUCT DETAILS WITHOUT .HTML
+// GET /product_details
 // =========================================================
 
 app.get(
@@ -319,7 +419,27 @@ app.get(
             path.join(
                 pagesPath,
                 "product_details.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "PRODUCT DETAILS ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Product details page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -328,6 +448,7 @@ app.get(
 
 // =========================================================
 // HYPHEN PRODUCT DETAILS URL
+// GET /product-details.html
 // =========================================================
 
 app.get(
@@ -353,7 +474,8 @@ app.get(
 
 
 // =========================================================
-// HYPHEN PRODUCT DETAILS WITHOUT HTML
+// HYPHEN PRODUCT DETAILS
+// GET /product-details
 // =========================================================
 
 app.get(
@@ -380,6 +502,7 @@ app.get(
 
 // =========================================================
 // CART
+// GET /cart
 // =========================================================
 
 app.get(
@@ -390,7 +513,27 @@ app.get(
             path.join(
                 pagesPath,
                 "cart.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "CART PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Cart page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -399,6 +542,7 @@ app.get(
 
 // =========================================================
 // SERVICES
+// GET /services
 // =========================================================
 
 app.get(
@@ -409,7 +553,27 @@ app.get(
             path.join(
                 pagesPath,
                 "services.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "SERVICES PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Services page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -418,6 +582,7 @@ app.get(
 
 // =========================================================
 // ABOUT
+// GET /about
 // =========================================================
 
 app.get(
@@ -428,7 +593,27 @@ app.get(
             path.join(
                 pagesPath,
                 "about.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "ABOUT PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "About page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -437,6 +622,7 @@ app.get(
 
 // =========================================================
 // PROFILE
+// GET /profile
 // =========================================================
 
 app.get(
@@ -447,7 +633,27 @@ app.get(
             path.join(
                 pagesPath,
                 "profile.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "PROFILE PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Profile page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -456,6 +662,7 @@ app.get(
 
 // =========================================================
 // ADMIN
+// GET /admin
 // =========================================================
 
 app.get(
@@ -466,7 +673,27 @@ app.get(
             path.join(
                 pagesPath,
                 "admin.html"
-            )
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "ADMIN PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Admin page not found."
+                        );
+
+                    }
+
+                }
+
+            }
         );
 
     }
@@ -474,7 +701,28 @@ app.get(
 
 
 // =========================================================
-// 404
+// API 404
+// =========================================================
+
+app.use(
+    "/api",
+    (req, res) => {
+
+        res.status(404).json({
+
+            success: false,
+
+            message:
+                "API endpoint not found."
+
+        });
+
+    }
+);
+
+
+// =========================================================
+// GENERAL 404
 // =========================================================
 
 app.use(
@@ -501,19 +749,21 @@ app.use(
         );
 
         if (
-            !res.headersSent
+            res.headersSent
         ) {
 
-            res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Internal server error."
-
-            });
+            return next(err);
 
         }
+
+        res.status(500).json({
+
+            success: false,
+
+            message:
+                "Internal server error."
+
+        });
 
     }
 );
@@ -549,9 +799,19 @@ app.listen(
         );
 
         console.log(
+            "Pages:",
+            pagesPath
+        );
+
+        console.log(
             "Uploads:",
             uploadsPath
         );
 
+        console.log(
+            "========================================"
+        );
+
     }
 );
+
