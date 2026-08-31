@@ -1,7 +1,7 @@
 // =========================================================
 // AR E-COMMERCE
 // PUBLIC PRODUCTS ROUTES
-// PRODUCT + IMAGE
+// PRODUCTS + IMAGES + CATEGORIES
 // =========================================================
 
 const express = require("express");
@@ -25,27 +25,25 @@ router.get("/", async (req, res) => {
                 p.name,
                 p.description,
                 p.price,
-
-                /* GET IMAGE FROM product_images TABLE */
-                (
-                    SELECT pi.image
-                    FROM product_images pi
-                    WHERE pi.product_id = p.id
-                    ORDER BY pi.id ASC
-                    LIMIT 1
-                ) AS image,
-
                 p.stock,
                 p.rating,
                 p.is_available,
                 p.created_at,
 
                 c.id AS category_id,
-                c.name AS category_name
+                c.name AS category_name,
+
+                (
+                    SELECT pi.image
+                    FROM product_images pi
+                    WHERE pi.product_id = p.id
+                    ORDER BY pi.id ASC
+                    LIMIT 1
+                ) AS image
 
             FROM products p
 
-            INNER JOIN categories c
+            LEFT JOIN categories c
                 ON p.category_id = c.id
 
             WHERE p.is_available = 1
@@ -54,37 +52,69 @@ router.get("/", async (req, res) => {
         `);
 
 
-        // -------------------------------------------------
-        // FIX IMAGE FORMAT
-        // -------------------------------------------------
+        // =====================================================
+        // FORMAT PRODUCTS
+        // =====================================================
 
-        const formattedProducts = products.map(product => {
+        const formattedProducts = products.map((product) => {
 
-            let image = product.image;
+            let image = product.image || null;
 
 
-            // If no image exists
-            if (!image) {
+            // -------------------------------------------------
+            // CLEAN IMAGE VALUE
+            // -------------------------------------------------
 
-                image = null;
+            if (image) {
+
+                image = String(image).trim();
 
             }
 
 
-            // If database already stores complete URL
-            // keep it unchanged.
-            //
-            // Otherwise frontend can use the returned path.
-
             return {
-                ...product,
-                image: image
+
+                id: product.id,
+
+                name: product.name,
+
+                description:
+                    product.description || "",
+
+                price:
+                    Number(product.price || 0),
+
+                stock:
+                    Number(product.stock || 0),
+
+                rating:
+                    Number(product.rating || 0),
+
+                is_available:
+                    Number(product.is_available || 0),
+
+                created_at:
+                    product.created_at,
+
+                category_id:
+                    product.category_id,
+
+                category_name:
+                    product.category_name || "",
+
+                image:
+                    image
+
             };
 
         });
 
 
-        res.json({
+        // =====================================================
+        // SEND RESPONSE
+        // =====================================================
+
+        return res.json({
 
             success: true,
 
@@ -97,17 +127,33 @@ router.get("/", async (req, res) => {
     catch (error) {
 
         console.error(
-            "GET PRODUCTS ERROR:",
+            "================================================="
+        );
+
+        console.error(
+            "GET ALL PRODUCTS ERROR"
+        );
+
+        console.error(
             error
         );
 
+        console.error(
+            "================================================="
+        );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             success: false,
 
             message:
-                "Failed to load products."
+                "Failed to load products.",
+
+            error:
+                process.env.NODE_ENV === "development"
+                    ? error.message
+                    : undefined
 
         });
 
@@ -117,60 +163,54 @@ router.get("/", async (req, res) => {
 
 
 // =========================================================
-// GET CATEGORIES
+// GET ALL CATEGORIES
 // GET /api/products/categories
 // =========================================================
 
-router.get(
-    "/categories",
-    async (req, res) => {
+router.get("/categories", async (req, res) => {
 
-        try {
+    try {
 
-            const [categories] =
-                await db.execute(`
-                    SELECT
-                        id,
-                        name,
-                        description
-
-                    FROM categories
-
-                    ORDER BY name ASC
-                `);
+        const [categories] = await db.execute(`
+            SELECT
+                id,
+                name,
+                description
+            FROM categories
+            ORDER BY name ASC
+        `);
 
 
-            res.json({
+        return res.json({
 
-                success: true,
+            success: true,
 
-                categories: categories
+            categories: categories || []
 
-            });
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "GET CATEGORIES ERROR:",
-                error
-            );
-
-
-            res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Failed to load categories."
-
-            });
-
-        }
+        });
 
     }
-);
+
+    catch (error) {
+
+        console.error(
+            "GET CATEGORIES ERROR:",
+            error
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to load categories."
+
+        });
+
+    }
+
+});
 
 
 // =========================================================
@@ -178,143 +218,210 @@ router.get(
 // GET /api/products/:id
 // =========================================================
 
-router.get(
-    "/:id",
-    async (req, res) => {
+router.get("/:id", async (req, res) => {
 
-        try {
+    try {
 
-            const productId =
-                Number(
-                    req.params.id
-                );
+        const productId =
+            Number(req.params.id);
 
 
-            // -------------------------------------------------
-            // VALIDATE ID
-            // -------------------------------------------------
+        // =====================================================
+        // VALIDATE PRODUCT ID
+        // =====================================================
 
-            if (
-                !Number.isInteger(productId) ||
-                productId <= 0
-            ) {
+        if (
+            !Number.isInteger(productId) ||
+            productId <= 0
+        ) {
 
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Invalid product ID."
-
-                });
-
-            }
-
-
-            // -------------------------------------------------
-            // GET PRODUCT
-            // -------------------------------------------------
-
-            const [products] =
-                await db.execute(
-                    `
-                    SELECT
-                        p.id,
-                        p.name,
-                        p.description,
-                        p.price,
-
-                        /* GET IMAGE FROM product_images */
-                        (
-                            SELECT pi.image
-                            FROM product_images pi
-                            WHERE pi.product_id = p.id
-                            ORDER BY pi.id ASC
-                            LIMIT 1
-                        ) AS image,
-
-                        p.stock,
-                        p.rating,
-                        p.is_available,
-                        p.created_at,
-
-                        c.id AS category_id,
-                        c.name AS category_name
-
-                    FROM products p
-
-                    INNER JOIN categories c
-                        ON p.category_id = c.id
-
-                    WHERE p.id = ?
-                    `,
-                    [productId]
-                );
-
-
-            // -------------------------------------------------
-            // PRODUCT NOT FOUND
-            // -------------------------------------------------
-
-            if (
-                products.length === 0
-            ) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "Product not found."
-
-                });
-
-            }
-
-
-            // -------------------------------------------------
-            // PRODUCT
-            // -------------------------------------------------
-
-            const product =
-                products[0];
-
-
-            // -------------------------------------------------
-            // RESPONSE
-            // -------------------------------------------------
-
-            res.json({
-
-                success: true,
-
-                product: product
-
-            });
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "GET PRODUCT ERROR:",
-                error
-            );
-
-
-            res.status(500).json({
+            return res.status(400).json({
 
                 success: false,
 
                 message:
-                    "Failed to load product."
+                    "Invalid product ID."
 
             });
 
         }
 
-    }
-);
 
+        // =====================================================
+        // GET PRODUCT
+        // =====================================================
+
+        const [products] =
+            await db.execute(
+                `
+                SELECT
+                    p.id,
+                    p.name,
+                    p.description,
+                    p.price,
+                    p.stock,
+                    p.rating,
+                    p.is_available,
+                    p.created_at,
+
+                    c.id AS category_id,
+                    c.name AS category_name,
+
+                    (
+                        SELECT pi.image
+                        FROM product_images pi
+                        WHERE pi.product_id = p.id
+                        ORDER BY pi.id ASC
+                        LIMIT 1
+                    ) AS image
+
+                FROM products p
+
+                LEFT JOIN categories c
+                    ON p.category_id = c.id
+
+                WHERE p.id = ?
+
+                LIMIT 1
+                `,
+                [productId]
+            );
+
+
+        // =====================================================
+        // PRODUCT NOT FOUND
+        // =====================================================
+
+        if (
+            !products ||
+            products.length === 0
+        ) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Product not found."
+
+            });
+
+        }
+
+
+        // =====================================================
+        // FORMAT PRODUCT
+        // =====================================================
+
+        const product =
+            products[0];
+
+
+        let image =
+            product.image || null;
+
+
+        if (image) {
+
+            image =
+                String(image).trim();
+
+        }
+
+
+        const formattedProduct = {
+
+            id:
+                product.id,
+
+            name:
+                product.name,
+
+            description:
+                product.description || "",
+
+            price:
+                Number(product.price || 0),
+
+            stock:
+                Number(product.stock || 0),
+
+            rating:
+                Number(product.rating || 0),
+
+            is_available:
+                Number(product.is_available || 0),
+
+            created_at:
+                product.created_at,
+
+            category_id:
+                product.category_id,
+
+            category_name:
+                product.category_name || "",
+
+            image:
+                image
+
+        };
+
+
+        // =====================================================
+        // SEND PRODUCT
+        // =====================================================
+
+        return res.json({
+
+            success: true,
+
+            product:
+                formattedProduct
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "================================================="
+        );
+
+        console.error(
+            "GET SINGLE PRODUCT ERROR"
+        );
+
+        console.error(
+            error
+        );
+
+        console.error(
+            "================================================="
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to load product.",
+
+            error:
+                process.env.NODE_ENV === "development"
+                    ? error.message
+                    : undefined
+
+        });
+
+    }
+
+});
+
+
+// =========================================================
+// EXPORT ROUTER
+// =========================================================
 
 module.exports = router;
