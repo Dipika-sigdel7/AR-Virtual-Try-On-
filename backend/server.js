@@ -17,7 +17,7 @@ const PORT =
 
 
 // =========================================================
-// FRONTEND PATHS
+// PATHS
 // =========================================================
 
 const frontendPath =
@@ -26,11 +26,16 @@ const frontendPath =
         "../frontend"
     );
 
-
 const pagesPath =
     path.join(
         frontendPath,
         "pages"
+    );
+
+const uploadsPath =
+    path.join(
+        __dirname,
+        "uploads"
     );
 
 
@@ -41,7 +46,6 @@ const pagesPath =
 app.use(
     express.json()
 );
-
 
 app.use(
     express.urlencoded({
@@ -99,14 +103,19 @@ app.use(
 // =========================================================
 // PRODUCT UPLOADS
 // =========================================================
+//
+// backend/uploads
+//
+// Browser URL:
+//
+// /uploads/filename.jpg
+//
+// =========================================================
 
 app.use(
     "/uploads",
     express.static(
-        path.join(
-            __dirname,
-            "uploads"
-        )
+        uploadsPath
     )
 );
 
@@ -118,18 +127,14 @@ app.use(
 const userRoutes =
     require("./routes/userRoutes");
 
-
 const productRoutes =
     require("./routes/productRoutes");
-
 
 const adminProductRoutes =
     require("./routes/adminProductRoutes");
 
-
 const cartRoutes =
     require("./routes/cartRoutes");
-
 
 const reviewRoutes =
     require("./routes/reviewRoutes");
@@ -146,7 +151,7 @@ app.use(
 
 
 // =========================================================
-// PRODUCT API
+// PUBLIC PRODUCT API
 // =========================================================
 
 app.use(
@@ -264,16 +269,6 @@ app.get(
 // =========================================================
 // PRODUCT DETAILS
 // =========================================================
-//
-// ACTUAL FILE:
-//
-// frontend/pages/product_details.html
-//
-// URL:
-//
-// /product_details.html?id=1
-//
-// =========================================================
 
 app.get(
     "/product_details.html",
@@ -284,7 +279,7 @@ app.get(
                 pagesPath,
                 "product_details.html"
             ),
-            error => {
+            (error) => {
 
                 if (error) {
 
@@ -292,7 +287,6 @@ app.get(
                         "PRODUCT DETAILS ERROR:",
                         error
                     );
-
 
                     if (
                         !res.headersSent
@@ -316,10 +310,6 @@ app.get(
 // =========================================================
 // PRODUCT DETAILS WITHOUT .HTML
 // =========================================================
-//
-// /product_details?id=1
-//
-// =========================================================
 
 app.get(
     "/product_details",
@@ -337,13 +327,7 @@ app.get(
 
 
 // =========================================================
-// ALSO SUPPORT HYPHEN URL
-// =========================================================
-//
-// /product-details.html?id=1
-//
-// This redirects to the real underscore URL.
-//
+// HYPHEN PRODUCT DETAILS URL
 // =========================================================
 
 app.get(
@@ -355,12 +339,10 @@ app.get(
                 req.query
             ).toString();
 
-
         const redirectUrl =
             queryString
                 ? `/product_details.html?${queryString}`
                 : "/product_details.html";
-
 
         res.redirect(
             redirectUrl
@@ -371,7 +353,7 @@ app.get(
 
 
 // =========================================================
-// ALSO SUPPORT HYPHEN URL WITHOUT HTML
+// HYPHEN PRODUCT DETAILS WITHOUT HTML
 // =========================================================
 
 app.get(
@@ -383,12 +365,10 @@ app.get(
                 req.query
             ).toString();
 
-
         const redirectUrl =
             queryString
                 ? `/product_details.html?${queryString}`
                 : "/product_details.html";
-
 
         res.redirect(
             redirectUrl
@@ -520,14 +500,18 @@ app.use(
             err
         );
 
-
         if (
             !res.headersSent
         ) {
 
-            res.status(500).send(
-                "Internal server error"
-            );
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Internal server error."
+
+            });
 
         }
 
@@ -557,6 +541,16 @@ app.listen(
 
         console.log(
             "========================================"
+        );
+
+        console.log(
+            "Frontend:",
+            frontendPath
+        );
+
+        console.log(
+            "Uploads:",
+            uploadsPath
         );
 
     }
