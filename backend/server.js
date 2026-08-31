@@ -20,8 +20,19 @@ const PORT = process.env.PORT || 3000;
 // PATHS
 // =========================================================
 
-// backend/server.js
-// frontend is outside backend
+// Project structure:
+//
+// AR-Ecommerce/
+// ├── backend/
+// │   └── server.js
+// ├── frontend/
+// │   ├── images/
+// │   │   └── products/
+// │   └── pages/
+// └── uploads/
+//
+// =========================================================
+
 const frontendPath = path.join(
     __dirname,
     "../frontend"
@@ -32,11 +43,14 @@ const pagesPath = path.join(
     "pages"
 );
 
-// Project root /uploads
-// AR-Ecommerce/uploads
+const frontendImagesPath = path.join(
+    frontendPath,
+    "images"
+);
+
 const uploadsPath = path.join(
     __dirname,
-    "../uploads"
+    "uploads"
 );
 
 
@@ -44,14 +58,15 @@ const uploadsPath = path.join(
 // MIDDLEWARE
 // =========================================================
 
-// JSON requests
+// JSON body
 app.use(
     express.json({
         limit: "10mb"
     })
 );
 
-// Form requests
+
+// Form body
 app.use(
     express.urlencoded({
         extended: true,
@@ -98,6 +113,22 @@ app.use(
 // =========================================================
 // STATIC FRONTEND
 // =========================================================
+//
+// This serves:
+//
+// frontend/css/...
+// frontend/js/...
+// frontend/images/...
+//
+// Example:
+//
+// frontend/images/products/glasses.jpg
+//
+// Browser:
+//
+// http://localhost:3000/images/products/glasses.jpg
+//
+// =========================================================
 
 app.use(
     express.static(
@@ -107,22 +138,36 @@ app.use(
 
 
 // =========================================================
-// PRODUCT UPLOADS
+// EXPLICIT IMAGE ROUTE
 // =========================================================
 //
-// Project structure:
+// This guarantees that:
 //
-// AR-Ecommerce/
-// │
-// ├── backend/
-// │   └── server.js
-// │
-// ├── frontend/
-// │
-// └── uploads/
-//     └── products/
+// /images/products/filename.jpg
 //
-// Browser URL:
+// maps to:
+//
+// frontend/images/products/filename.jpg
+//
+// =========================================================
+
+app.use(
+    "/images",
+    express.static(
+        frontendImagesPath
+    )
+);
+
+
+// =========================================================
+// BACKEND UPLOADS
+// =========================================================
+//
+// If you later use backend/uploads:
+//
+// backend/uploads/products/example.jpg
+//
+// Browser:
 //
 // /uploads/products/example.jpg
 //
@@ -407,7 +452,7 @@ app.get(
 
 
 // =========================================================
-// PRODUCT DETAILS WITHOUT .HTML
+// PRODUCT DETAILS
 // GET /product_details
 // =========================================================
 
@@ -447,7 +492,7 @@ app.get(
 
 
 // =========================================================
-// HYPHEN PRODUCT DETAILS URL
+// HYPHEN PRODUCT DETAILS
 // GET /product-details.html
 // =========================================================
 
@@ -748,9 +793,7 @@ app.use(
             err
         );
 
-        if (
-            res.headersSent
-        ) {
+        if (res.headersSent) {
 
             return next(err);
 
@@ -804,6 +847,11 @@ app.listen(
         );
 
         console.log(
+            "Images:",
+            frontendImagesPath
+        );
+
+        console.log(
             "Uploads:",
             uploadsPath
         );
@@ -814,4 +862,3 @@ app.listen(
 
     }
 );
-
