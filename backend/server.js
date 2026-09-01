@@ -20,18 +20,7 @@ const PORT = process.env.PORT || 3000;
 // PATHS
 // =========================================================
 
-// Project structure:
-//
-// AR-Ecommerce/
-// ├── backend/
-// │   └── server.js
-// ├── frontend/
-// │   ├── images/
-// │   │   └── products/
-// │   └── pages/
-// └── uploads/
-//
-// =========================================================
+
 
 const frontendPath = path.join(
     __dirname,
