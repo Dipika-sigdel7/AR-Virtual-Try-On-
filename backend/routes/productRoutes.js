@@ -1,4 +1,3 @@
-
 // =========================================================
 // AR E-COMMERCE
 // PUBLIC PRODUCTS ROUTES
@@ -14,17 +13,26 @@ const router = express.Router();
 // =========================================================
 // IMAGE URL HELPER
 // =========================================================
-// Actual image location:
 //
-// frontend/images/products/filename.jpg
+// Uploaded product images are physically stored in:
 //
-// Browser URL:
+// backend/uploads/products/
 //
-// /images/products/filename.jpg
+// server.js should expose that folder as:
+//
+// /uploads
+//
+// Therefore the browser URL is:
+//
+// /uploads/products/filename.jpg
 //
 // =========================================================
 
 function formatImageUrl(image) {
+
+    // -----------------------------------------------------
+    // No image
+    // -----------------------------------------------------
 
     if (
         image === null ||
@@ -33,104 +41,204 @@ function formatImageUrl(image) {
         return null;
     }
 
+
     image = String(image).trim();
+
 
     if (image === "") {
         return null;
     }
 
 
-    // =====================================================
+    // -----------------------------------------------------
     // FULL HTTP / HTTPS URL
-    // =====================================================
+    // -----------------------------------------------------
 
     if (
         image.startsWith("http://") ||
         image.startsWith("https://")
     ) {
+
         return image;
+
+    }
+
+
+    // -----------------------------------------------------
+    // NORMALIZE WINDOWS PATH
+    // -----------------------------------------------------
+
+    image =
+        image.replace(/\\/g, "/");
+
+
+    // =====================================================
+    // IMPORTANT:
+    // UPLOADED IMAGE PATH
+    //
+    // Example database values:
+    //
+    // uploads/products/product-123.jpg
+    //
+    // /uploads/products/product-123.jpg
+    //
+    // backend/uploads/products/product-123.jpg
+    //
+    // C:\project\backend\uploads\products\product-123.jpg
+    //
+    // All of these become:
+    //
+    // /uploads/products/product-123.jpg
+    // =====================================================
+
+
+    // -----------------------------------------------------
+    // backend/uploads/products/filename.jpg
+    // -----------------------------------------------------
+
+    const backendUploadsIndex =
+        image.indexOf("backend/uploads/products/");
+
+
+    if (
+        backendUploadsIndex !== -1
+    ) {
+
+        const filename =
+            image.substring(
+                backendUploadsIndex +
+                "backend/uploads/products/".length
+            );
+
+
+        return `/uploads/products/${filename}`;
+
+    }
+
+
+    // -----------------------------------------------------
+    // /backend/uploads/products/filename.jpg
+    // -----------------------------------------------------
+
+    const backendUploadsSlashIndex =
+        image.indexOf(
+            "/backend/uploads/products/"
+        );
+
+
+    if (
+        backendUploadsSlashIndex !== -1
+    ) {
+
+        const filename =
+            image.substring(
+                backendUploadsSlashIndex +
+                "/backend/uploads/products/".length
+            );
+
+
+        return `/uploads/products/${filename}`;
+
+    }
+
+
+    // -----------------------------------------------------
+    // uploads/products/filename.jpg
+    // -----------------------------------------------------
+
+    if (
+        image.startsWith(
+            "uploads/products/"
+        )
+    ) {
+
+        return "/" + image;
+
+    }
+
+
+    // -----------------------------------------------------
+    // /uploads/products/filename.jpg
+    // -----------------------------------------------------
+
+    if (
+        image.startsWith(
+            "/uploads/products/"
+        )
+    ) {
+
+        return image;
+
     }
 
 
     // =====================================================
-    // NORMALIZE WINDOWS PATH
-    // =====================================================
-
-    image = image.replace(/\\/g, "/");
-
-
-    // =====================================================
-    // DATABASE PATH:
+    // OLD FRONTEND IMAGE PATHS
     //
-    // frontend/images/products/example.jpg
+    // These are supported so old products do not break.
     // =====================================================
+
+
+    // -----------------------------------------------------
+    // frontend/images/products/filename.jpg
+    // -----------------------------------------------------
 
     const frontendImagesIndex =
-        image.indexOf("frontend/images/");
+        image.indexOf(
+            "frontend/images/products/"
+        );
+
 
     if (
         frontendImagesIndex !== -1
     ) {
 
-        return "/" +
+        const filename =
             image.substring(
                 frontendImagesIndex +
-                "frontend/".length
+                "frontend/images/products/".length
             );
+
+
+        return `/images/products/${filename}`;
 
     }
 
 
-    // =====================================================
-    // DATABASE PATH:
-    //
-    // /frontend/images/products/example.jpg
-    // =====================================================
+    // -----------------------------------------------------
+    // /frontend/images/products/filename.jpg
+    // -----------------------------------------------------
 
     const frontendImagesSlashIndex =
-        image.indexOf("/frontend/images/");
+        image.indexOf(
+            "/frontend/images/products/"
+        );
+
 
     if (
         frontendImagesSlashIndex !== -1
     ) {
 
-        return image.substring(
-            frontendImagesSlashIndex +
-            "/frontend".length
-        );
-
-    }
-
-
-    // =====================================================
-    // DATABASE PATH:
-    //
-    // images/products/example.jpg
-    // =====================================================
-
-    const imagesIndex =
-        image.indexOf("images/");
-
-    if (
-        imagesIndex !== -1
-    ) {
-
-        return "/" +
+        const filename =
             image.substring(
-                imagesIndex
+                frontendImagesSlashIndex +
+                "/frontend/images/products/".length
             );
 
+
+        return `/images/products/${filename}`;
+
     }
 
 
-    // =====================================================
-    // ALREADY CORRECT:
-    //
-    // /images/products/example.jpg
-    // =====================================================
+    // -----------------------------------------------------
+    // /images/products/filename.jpg
+    // -----------------------------------------------------
 
     if (
-        image.startsWith("/images/")
+        image.startsWith(
+            "/images/products/"
+        )
     ) {
 
         return image;
@@ -138,59 +246,39 @@ function formatImageUrl(image) {
     }
 
 
-    // =====================================================
-    // OLD UPLOAD PATH
-    //
-    // /uploads/products/example.jpg
-    //
-    // Convert it to the actual frontend location.
-    // =====================================================
+    // -----------------------------------------------------
+    // images/products/filename.jpg
+    // -----------------------------------------------------
 
     if (
-        image.startsWith("/uploads/products/")
+        image.startsWith(
+            "images/products/"
+        )
     ) {
 
-        const filename =
-            image.substring(
-                "/uploads/products/".length
-            );
-
-        return `/images/products/${filename}`;
+        return "/" + image;
 
     }
 
 
     // =====================================================
-    // OLD UPLOAD PATH WITHOUT /
+    // ONLY FILENAME
     //
-    // uploads/products/example.jpg
+    // Example:
+    //
+    // product-123.jpg
+    //
+    // NEW uploaded images are stored in:
+    //
+    // backend/uploads/products/
+    //
+    // Therefore use:
+    //
+    // /uploads/products/product-123.jpg
     // =====================================================
 
-    if (
-        image.startsWith("uploads/products/")
-    ) {
+    return `/uploads/products/${image}`;
 
-        const filename =
-            image.substring(
-                "uploads/products/".length
-            );
-
-        return `/images/products/${filename}`;
-
-    }
-
-
-    // =====================================================
-    // ONLY FILENAME IN DATABASE
-    //
-    // example.jpg
-    //
-    // Actual location:
-    //
-    // frontend/images/products/example.jpg
-    // =====================================================
-
-    return `/images/products/${image}`;
 }
 
 
@@ -320,6 +408,10 @@ router.get(
                 );
 
 
+            // =================================================
+            // DEBUG
+            // =================================================
+
             console.log(
                 "========================================"
             );
@@ -358,6 +450,7 @@ router.get(
                 "GET PRODUCTS ERROR:",
                 error
             );
+
 
             return res.status(500).json({
 
@@ -421,6 +514,7 @@ router.get(
                 "GET CATEGORIES ERROR:",
                 error
             );
+
 
             return res.status(500).json({
 
@@ -562,12 +656,16 @@ router.get(
 
 
             // =================================================
-            // PRODUCT DATA
+            // DATABASE PRODUCT
             // =================================================
 
             const databaseProduct =
                 products[0];
 
+
+            // =================================================
+            // FORMAT PRODUCT
+            // =================================================
 
             const product = {
 
@@ -724,6 +822,7 @@ router.get(
                 "GET SINGLE PRODUCT ERROR:",
                 error
             );
+
 
             return res.status(500).json({
 
