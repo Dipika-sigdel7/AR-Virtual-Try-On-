@@ -1,127 +1,21 @@
+// =========================================================
+// AR E-COMMERCE
+// ADMIN PRODUCT ROUTES
+// PRODUCT + MULTIPLE IMAGE UPLOAD
+// =========================================================
+
 const express = require("express");
 const router = express.Router();
 
-const path = require("path");
-const multer = require("multer");
-
 const db = require("../config/db");
 const adminAuth = require("../middleware/adminAuth");
+const upload = require("../middleware/uploadProduct");
 
 
-// =====================================================
-// MULTER CONFIGURATION
-// =====================================================
-
-const uploadDirectory = path.join(
-    __dirname,
-    "../uploads/products"
-);
-
-
-// =====================================================
-// STORAGE
-// =====================================================
-
-const storage = multer.diskStorage({
-
-    destination: function (req, file, cb) {
-
-        cb(null, uploadDirectory);
-
-    },
-
-    filename: function (req, file, cb) {
-
-        const extension =
-            path.extname(file.originalname);
-
-        const originalName =
-            path
-                .basename(
-                    file.originalname,
-                    extension
-                )
-                .replace(
-                    /[^a-zA-Z0-9_-]/g,
-                    "_"
-                );
-
-        const uniqueName =
-            `${Date.now()}-${originalName}${extension}`;
-
-        cb(
-            null,
-            uniqueName
-        );
-
-    }
-
-});
-
-
-// =====================================================
-// FILE FILTER
-// =====================================================
-
-const fileFilter =
-    function (req, file, cb) {
-
-        const allowedTypes = [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/gif"
-        ];
-
-
-        if (
-            allowedTypes.includes(
-                file.mimetype
-            )
-        ) {
-
-            cb(null, true);
-
-        } else {
-
-            cb(
-                new Error(
-                    "Only JPG, PNG, WEBP and GIF images are allowed."
-                ),
-                false
-            );
-
-        }
-
-    };
-
-
-// =====================================================
-// UPLOAD
-// =====================================================
-
-const upload = multer({
-
-    storage: storage,
-
-    fileFilter: fileFilter,
-
-    limits: {
-
-        fileSize:
-            5 * 1024 * 1024,
-
-        files: 10
-
-    }
-
-});
-
-
-// =====================================================
+// =========================================================
 // ADD PRODUCT
 // POST /api/admin/products
-// =====================================================
+// =========================================================
 
 router.post(
     "/",
@@ -130,6 +24,14 @@ router.post(
     async (req, res) => {
 
         try {
+
+            console.log("=================================");
+            console.log("ADD PRODUCT REQUEST");
+            console.log("CONTENT TYPE:", req.headers["content-type"]);
+            console.log("BODY:", req.body);
+            console.log("FILES:", req.files);
+            console.log("=================================");
+
 
             // =================================================
             // GET FORM DATA
@@ -155,12 +57,8 @@ router.post(
             ) {
 
                 return res.status(400).json({
-
                     success: false,
-
-                    message:
-                        "Product name is required"
-
+                    message: "Product name is required"
                 });
 
             }
@@ -174,19 +72,13 @@ router.post(
                 price === undefined ||
                 price === null ||
                 price === "" ||
-                !Number.isFinite(
-                    Number(price)
-                ) ||
+                !Number.isFinite(Number(price)) ||
                 Number(price) <= 0
             ) {
 
                 return res.status(400).json({
-
                     success: false,
-
-                    message:
-                        "Price must be greater than 0"
-
+                    message: "Price must be greater than 0"
                 });
 
             }
@@ -200,52 +92,37 @@ router.post(
                 category_id === undefined ||
                 category_id === null ||
                 category_id === "" ||
-                !Number.isInteger(
-                    Number(category_id)
-                ) ||
+                !Number.isInteger(Number(category_id)) ||
                 Number(category_id) <= 0
             ) {
 
                 return res.status(400).json({
-
                     success: false,
-
-                    message:
-                        "Valid category is required"
-
+                    message: "Valid category is required"
                 });
 
             }
 
 
             // =================================================
-            // CHECK CATEGORY
+            // CHECK CATEGORY EXISTS
             // =================================================
 
-            const [category] =
-                await db.execute(
-                    `
-                    SELECT id
-                    FROM categories
-                    WHERE id = ?
-                    `,
-                    [
-                        Number(category_id)
-                    ]
-                );
+            const [category] = await db.execute(
+                `
+                SELECT id
+                FROM categories
+                WHERE id = ?
+                `,
+                [Number(category_id)]
+            );
 
 
-            if (
-                category.length === 0
-            ) {
+            if (category.length === 0) {
 
                 return res.status(400).json({
-
                     success: false,
-
-                    message:
-                        "Category does not exist"
-
+                    message: "Category does not exist"
                 });
 
             }
@@ -264,19 +141,14 @@ router.post(
 
 
             if (
-                !Number.isInteger(
-                    productStock
-                ) ||
+                !Number.isInteger(productStock) ||
                 productStock < 0
             ) {
 
                 return res.status(400).json({
-
                     success: false,
-
                     message:
                         "Stock must be a non-negative integer"
-
                 });
 
             }
@@ -286,80 +158,76 @@ router.post(
             // INSERT PRODUCT
             // =================================================
 
-            const [result] =
-                await db.execute(
-                    `
-                    INSERT INTO products
-                    (
-                        name,
-                        description,
-                        price,
-                        category_id,
-                        stock
-                    )
-                    VALUES (?, ?, ?, ?, ?)
-                    `,
-                    [
+            const [result] = await db.execute(
+                `
+                INSERT INTO products
+                (
+                    name,
+                    description,
+                    price,
+                    category_id,
+                    stock
+                )
+                VALUES (?, ?, ?, ?, ?)
+                `,
+                [
+                    name.trim(),
 
-                        name.trim(),
+                    description
+                        ? String(description).trim()
+                        : null,
 
-                        description
-                            ? String(
-                                description
-                              ).trim()
-                            : null,
+                    Number(price),
 
-                        Number(price),
+                    Number(category_id),
 
-                        Number(category_id),
+                    productStock
+                ]
+            );
 
-                        productStock
 
-                    ]
-                );
+            const productId = result.insertId;
 
 
             // =================================================
-            // PRODUCT ID
+            // UPLOADED IMAGES
             // =================================================
 
-            const productId =
-                result.insertId;
+            const uploadedImages = req.files || [];
 
 
-            // =================================================
-            // IMAGE INFORMATION
-            // =================================================
+            const images = uploadedImages.map(
+                function (file) {
 
-            const uploadedImages =
-                req.files || [];
+                    return {
+                        filename: file.filename,
+
+                        url:
+                            `/uploads/products/${file.filename}`,
+
+                        originalName:
+                            file.originalname,
+
+                        mimeType:
+                            file.mimetype,
+
+                        size:
+                            file.size
+                    };
+
+                }
+            );
 
 
-            const imageList =
-                uploadedImages.map(
-                    function (file) {
+            console.log(
+                "Product created:",
+                productId
+            );
 
-                        return {
-
-                            filename:
-                                file.filename,
-
-                            path:
-                                `/uploads/products/${file.filename}`,
-
-                            originalname:
-                                file.originalname,
-
-                            mimetype:
-                                file.mimetype,
-
-                            size:
-                                file.size
-
-                        };
-
-                    }
-                );
+            console.log(
+                "Images uploaded:",
+                images.length
+            );
 
 
             // =================================================
@@ -377,7 +245,7 @@ router.post(
                     productId,
 
                 images:
-                    imageList
+                    images
 
             });
 
@@ -406,10 +274,10 @@ router.post(
 );
 
 
-// =====================================================
+// =========================================================
 // GET ALL PRODUCTS
 // GET /api/admin/products
-// =====================================================
+// =========================================================
 
 router.get(
     "/",
@@ -418,26 +286,25 @@ router.get(
 
         try {
 
-            const [products] =
-                await db.execute(
-                    `
-                    SELECT
-                        p.id,
-                        p.name,
-                        p.description,
-                        p.price,
-                        p.stock,
-                        p.rating,
-                        p.is_available,
-                        p.created_at,
-                        p.category_id,
-                        c.name AS category_name
-                    FROM products p
-                    INNER JOIN categories c
-                        ON p.category_id = c.id
-                    ORDER BY p.id DESC
-                    `
-                );
+            const [products] = await db.execute(
+                `
+                SELECT
+                    p.id,
+                    p.name,
+                    p.description,
+                    p.price,
+                    p.stock,
+                    p.rating,
+                    p.is_available,
+                    p.created_at,
+                    p.category_id,
+                    c.name AS category_name
+                FROM products p
+                INNER JOIN categories c
+                    ON p.category_id = c.id
+                ORDER BY p.id DESC
+                `
+            );
 
 
             return res.json({
@@ -474,10 +341,10 @@ router.get(
 );
 
 
-// =====================================================
+// =========================================================
 // GET SINGLE PRODUCT
 // GET /api/admin/products/:id
-// =====================================================
+// =========================================================
 
 router.get(
     "/:id",
@@ -490,10 +357,12 @@ router.get(
                 Number(req.params.id);
 
 
+            // =================================================
+            // VALIDATE ID
+            // =================================================
+
             if (
-                !Number.isInteger(
-                    productId
-                ) ||
+                !Number.isInteger(productId) ||
                 productId <= 0
             ) {
 
@@ -509,34 +378,37 @@ router.get(
             }
 
 
-            const [products] =
-                await db.execute(
-                    `
-                    SELECT
-                        p.id,
-                        p.name,
-                        p.description,
-                        p.price,
-                        p.stock,
-                        p.rating,
-                        p.is_available,
-                        p.created_at,
-                        p.category_id,
-                        c.name AS category_name
-                    FROM products p
-                    INNER JOIN categories c
-                        ON p.category_id = c.id
-                    WHERE p.id = ?
-                    `,
-                    [
-                        productId
-                    ]
-                );
+            // =================================================
+            // GET PRODUCT
+            // =================================================
+
+            const [products] = await db.execute(
+                `
+                SELECT
+                    p.id,
+                    p.name,
+                    p.description,
+                    p.price,
+                    p.stock,
+                    p.rating,
+                    p.is_available,
+                    p.created_at,
+                    p.category_id,
+                    c.name AS category_name
+                FROM products p
+                INNER JOIN categories c
+                    ON p.category_id = c.id
+                WHERE p.id = ?
+                `,
+                [productId]
+            );
 
 
-            if (
-                products.length === 0
-            ) {
+            // =================================================
+            // NOT FOUND
+            // =================================================
+
+            if (products.length === 0) {
 
                 return res.status(404).json({
 
@@ -549,6 +421,10 @@ router.get(
 
             }
 
+
+            // =================================================
+            // SUCCESS
+            // =================================================
 
             return res.json({
 
@@ -584,14 +460,19 @@ router.get(
 );
 
 
-// =====================================================
+// =========================================================
 // UPDATE PRODUCT
 // PUT /api/admin/products/:id
-// =====================================================
+//
+// IMPORTANT:
+// admin.js also sends FormData when updating.
+// Therefore upload.array() is required here too.
+// =========================================================
 
 router.put(
     "/:id",
     adminAuth,
+    upload.array("images", 10),
     async (req, res) => {
 
         try {
@@ -600,10 +481,12 @@ router.put(
                 Number(req.params.id);
 
 
+            // =================================================
+            // VALIDATE ID
+            // =================================================
+
             if (
-                !Number.isInteger(
-                    productId
-                ) ||
+                !Number.isInteger(productId) ||
                 productId <= 0
             ) {
 
@@ -619,6 +502,10 @@ router.put(
             }
 
 
+            // =================================================
+            // GET FORM DATA
+            // =================================================
+
             const {
                 name,
                 description,
@@ -628,6 +515,10 @@ router.put(
                 is_available
             } = req.body || {};
 
+
+            // =================================================
+            // VALIDATE NAME
+            // =================================================
 
             if (
                 !name ||
@@ -647,13 +538,15 @@ router.put(
             }
 
 
+            // =================================================
+            // VALIDATE PRICE
+            // =================================================
+
             if (
                 price === undefined ||
                 price === null ||
                 price === "" ||
-                !Number.isFinite(
-                    Number(price)
-                ) ||
+                !Number.isFinite(Number(price)) ||
                 Number(price) <= 0
             ) {
 
@@ -669,13 +562,15 @@ router.put(
             }
 
 
+            // =================================================
+            // VALIDATE CATEGORY
+            // =================================================
+
             if (
                 category_id === undefined ||
                 category_id === null ||
                 category_id === "" ||
-                !Number.isInteger(
-                    Number(category_id)
-                ) ||
+                !Number.isInteger(Number(category_id)) ||
                 Number(category_id) <= 0
             ) {
 
@@ -691,6 +586,38 @@ router.put(
             }
 
 
+            // =================================================
+            // CHECK CATEGORY
+            // =================================================
+
+            const [category] = await db.execute(
+                `
+                SELECT id
+                FROM categories
+                WHERE id = ?
+                `,
+                [Number(category_id)]
+            );
+
+
+            if (category.length === 0) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Category does not exist"
+
+                });
+
+            }
+
+
+            // =================================================
+            // VALIDATE STOCK
+            // =================================================
+
             const productStock =
                 stock === undefined ||
                 stock === null ||
@@ -700,9 +627,7 @@ router.put(
 
 
             if (
-                !Number.isInteger(
-                    productStock
-                ) ||
+                !Number.isInteger(productStock) ||
                 productStock < 0
             ) {
 
@@ -718,77 +643,59 @@ router.put(
             }
 
 
-            const [category] =
-                await db.execute(
-                    `
-                    SELECT id
-                    FROM categories
-                    WHERE id = ?
-                    `,
-                    [
-                        Number(category_id)
-                    ]
-                );
+            // =================================================
+            // CHECK AVAILABILITY
+            // =================================================
+
+            const available =
+                is_available === undefined ||
+                is_available === null ||
+                is_available === ""
+                    ? 1
+                    : Number(is_available);
 
 
-            if (
-                category.length === 0
-            ) {
+            // =================================================
+            // UPDATE PRODUCT
+            // =================================================
 
-                return res.status(400).json({
+            const [result] = await db.execute(
+                `
+                UPDATE products
+                SET
+                    name = ?,
+                    description = ?,
+                    price = ?,
+                    category_id = ?,
+                    stock = ?,
+                    is_available = ?
+                WHERE id = ?
+                `,
+                [
 
-                    success: false,
+                    name.trim(),
 
-                    message:
-                        "Category does not exist"
+                    description
+                        ? String(description).trim()
+                        : null,
 
-                });
+                    Number(price),
 
-            }
+                    Number(category_id),
+
+                    productStock,
+
+                    available,
+
+                    productId
+
+                ]
+            );
 
 
-            const [result] =
-                await db.execute(
-                    `
-                    UPDATE products
-                    SET
-                        name = ?,
-                        description = ?,
-                        price = ?,
-                        category_id = ?,
-                        stock = ?,
-                        is_available = ?
-                    WHERE id = ?
-                    `,
-                    [
-
-                        name.trim(),
-
-                        description
-                            ? String(
-                                description
-                              ).trim()
-                            : null,
-
-                        Number(price),
-
-                        Number(category_id),
-
-                        productStock,
-
-                        is_available === undefined ||
-                        is_available === null ||
-                        is_available === ""
-                            ? 1
-                            : Number(
-                                is_available
-                              ),
-
-                        productId
-
-                    ]
-                );
-
+            // =================================================
+            // PRODUCT NOT FOUND
+            // =================================================
 
             if (
                 result.affectedRows === 0
@@ -806,12 +713,57 @@ router.put(
             }
 
 
+            // =================================================
+            // NEW IMAGES
+            // =================================================
+
+            const uploadedImages =
+                req.files || [];
+
+
+            const images =
+                uploadedImages.map(
+                    function (file) {
+
+                        return {
+
+                            filename:
+                                file.filename,
+
+                            url:
+                                `/uploads/products/${file.filename}`,
+
+                            originalName:
+                                file.originalname,
+
+                            mimeType:
+                                file.mimetype,
+
+                            size:
+                                file.size
+
+                        };
+
+                    }
+                );
+
+
+            // =================================================
+            // SUCCESS
+            // =================================================
+
             return res.json({
 
                 success: true,
 
                 message:
-                    "Product updated successfully"
+                    "Product updated successfully",
+
+                productId:
+                    productId,
+
+                images:
+                    images
 
             });
 
@@ -840,10 +792,10 @@ router.put(
 );
 
 
-// =====================================================
+// =========================================================
 // DELETE PRODUCT
 // DELETE /api/admin/products/:id
-// =====================================================
+// =========================================================
 
 router.delete(
     "/:id",
@@ -856,10 +808,12 @@ router.delete(
                 Number(req.params.id);
 
 
+            // =================================================
+            // VALIDATE ID
+            // =================================================
+
             if (
-                !Number.isInteger(
-                    productId
-                ) ||
+                !Number.isInteger(productId) ||
                 productId <= 0
             ) {
 
@@ -875,17 +829,22 @@ router.delete(
             }
 
 
-            const [result] =
-                await db.execute(
-                    `
-                    DELETE FROM products
-                    WHERE id = ?
-                    `,
-                    [
-                        productId
-                    ]
-                );
+            // =================================================
+            // DELETE PRODUCT
+            // =================================================
 
+            const [result] = await db.execute(
+                `
+                DELETE FROM products
+                WHERE id = ?
+                `,
+                [productId]
+            );
+
+
+            // =================================================
+            // NOT FOUND
+            // =================================================
 
             if (
                 result.affectedRows === 0
@@ -902,6 +861,10 @@ router.delete(
 
             }
 
+
+            // =================================================
+            // SUCCESS
+            // =================================================
 
             return res.json({
 
@@ -937,61 +900,17 @@ router.delete(
 );
 
 
-// =====================================================
-// MULTER ERROR HANDLER
-// =====================================================
+// =========================================================
+// MULTER / UPLOAD ERROR HANDLER
+// =========================================================
 
 router.use(
     function (error, req, res, next) {
 
-        if (
-            error instanceof multer.MulterError
-        ) {
-
-            if (
-                error.code ===
-                "LIMIT_FILE_SIZE"
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Each image must be smaller than 5 MB."
-
-                });
-
-            }
-
-
-            if (
-                error.code ===
-                "LIMIT_FILE_COUNT"
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "You can upload a maximum of 10 images."
-
-                });
-
-            }
-
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    error.message
-
-            });
-
-        }
+        console.error(
+            "UPLOAD ERROR:",
+            error
+        );
 
 
         if (error) {
@@ -1002,7 +921,7 @@ router.use(
 
                 message:
                     error.message ||
-                    "File upload failed"
+                    "Image upload failed"
 
             });
 
@@ -1015,8 +934,8 @@ router.use(
 );
 
 
-// =====================================================
-// EXPORT
-// =====================================================
+// =========================================================
+// EXPORT ROUTER
+// =========================================================
 
 module.exports = router;
