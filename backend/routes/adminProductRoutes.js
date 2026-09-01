@@ -14,17 +14,39 @@ router.post("/", adminAuth, async (req, res) => {
 
     try {
 
+        // Safely get request body
         const {
             name,
             description,
             price,
             category_id,
             stock
-        } = req.body;
+        } = req.body || {};
 
 
-        // Validate name
-        if (!name || name.trim() === "") {
+        // =====================================================
+        // VALIDATE REQUEST BODY
+        // =====================================================
+
+        if (!req.body) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Request body is missing. Please send product data."
+            });
+
+        }
+
+
+        // =====================================================
+        // VALIDATE NAME
+        // =====================================================
+
+        if (
+            !name ||
+            typeof name !== "string" ||
+            name.trim() === ""
+        ) {
 
             return res.status(400).json({
                 success: false,
@@ -34,10 +56,15 @@ router.post("/", adminAuth, async (req, res) => {
         }
 
 
-        // Validate price
+        // =====================================================
+        // VALIDATE PRICE
+        // =====================================================
+
         if (
             price === undefined ||
             price === null ||
+            price === "" ||
+            !Number.isFinite(Number(price)) ||
             Number(price) <= 0
         ) {
 
@@ -49,18 +76,30 @@ router.post("/", adminAuth, async (req, res) => {
         }
 
 
-        // Validate category
-        if (!category_id) {
+        // =====================================================
+        // VALIDATE CATEGORY
+        // =====================================================
+
+        if (
+            category_id === undefined ||
+            category_id === null ||
+            category_id === "" ||
+            !Number.isInteger(Number(category_id)) ||
+            Number(category_id) <= 0
+        ) {
 
             return res.status(400).json({
                 success: false,
-                message: "Category is required"
+                message: "Valid category is required"
             });
 
         }
 
 
-        // Check category
+        // =====================================================
+        // CHECK CATEGORY EXISTS
+        // =====================================================
+
         const [category] = await db.execute(
             `
             SELECT id
@@ -81,9 +120,14 @@ router.post("/", adminAuth, async (req, res) => {
         }
 
 
-        // Validate stock
+        // =====================================================
+        // VALIDATE STOCK
+        // =====================================================
+
         const productStock =
-            stock === undefined || stock === ""
+            stock === undefined ||
+            stock === null ||
+            stock === ""
                 ? 0
                 : Number(stock);
 
@@ -101,7 +145,10 @@ router.post("/", adminAuth, async (req, res) => {
         }
 
 
-        // Insert product
+        // =====================================================
+        // INSERT PRODUCT
+        // =====================================================
+
         const [result] = await db.execute(
             `
             INSERT INTO products
@@ -116,7 +163,9 @@ router.post("/", adminAuth, async (req, res) => {
             `,
             [
                 name.trim(),
-                description || null,
+                description
+                    ? String(description).trim()
+                    : null,
                 Number(price),
                 Number(category_id),
                 productStock
@@ -124,20 +173,36 @@ router.post("/", adminAuth, async (req, res) => {
         );
 
 
-        res.status(201).json({
+        // =====================================================
+        // SUCCESS
+        // =====================================================
+
+        return res.status(201).json({
+
             success: true,
+
             message: "Product added successfully",
+
             productId: result.insertId
+
         });
 
 
     } catch (error) {
 
-        console.error("ADD PRODUCT ERROR:", error);
+        console.error(
+            "ADD PRODUCT ERROR:",
+            error
+        );
 
-        res.status(500).json({
+        return res.status(500).json({
+
             success: false,
-            message: error.message
+
+            message:
+                error.message ||
+                "Failed to add product"
+
         });
 
     }
@@ -175,19 +240,30 @@ router.get("/", adminAuth, async (req, res) => {
         );
 
 
-        res.json({
+        return res.json({
+
             success: true,
+
             products: products
+
         });
 
 
     } catch (error) {
 
-        console.error("GET ADMIN PRODUCTS ERROR:", error);
+        console.error(
+            "GET ADMIN PRODUCTS ERROR:",
+            error
+        );
 
-        res.status(500).json({
+        return res.status(500).json({
+
             success: false,
-            message: error.message
+
+            message:
+                error.message ||
+                "Failed to load products"
+
         });
 
     }
@@ -204,18 +280,33 @@ router.get("/:id", adminAuth, async (req, res) => {
 
     try {
 
-        const productId = Number(req.params.id);
+        const productId =
+            Number(req.params.id);
 
 
-        if (!Number.isInteger(productId) || productId <= 0) {
+        // =====================================================
+        // VALIDATE PRODUCT ID
+        // =====================================================
+
+        if (
+            !Number.isInteger(productId) ||
+            productId <= 0
+        ) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message: "Invalid product ID"
+
             });
 
         }
 
+
+        // =====================================================
+        // GET PRODUCT
+        // =====================================================
 
         const [products] = await db.execute(
             `
@@ -239,29 +330,51 @@ router.get("/:id", adminAuth, async (req, res) => {
         );
 
 
+        // =====================================================
+        // PRODUCT NOT FOUND
+        // =====================================================
+
         if (products.length === 0) {
 
             return res.status(404).json({
+
                 success: false,
+
                 message: "Product not found"
+
             });
 
         }
 
 
-        res.json({
+        // =====================================================
+        // SUCCESS
+        // =====================================================
+
+        return res.json({
+
             success: true,
+
             product: products[0]
+
         });
 
 
     } catch (error) {
 
-        console.error("GET ADMIN PRODUCT ERROR:", error);
+        console.error(
+            "GET ADMIN PRODUCT ERROR:",
+            error
+        );
 
-        res.status(500).json({
+        return res.status(500).json({
+
             success: false,
-            message: error.message
+
+            message:
+                error.message ||
+                "Failed to load product"
+
         });
 
     }
@@ -278,17 +391,33 @@ router.put("/:id", adminAuth, async (req, res) => {
 
     try {
 
-        const productId = Number(req.params.id);
+        const productId =
+            Number(req.params.id);
 
-        if (!Number.isInteger(productId) || productId <= 0) {
+
+        // =====================================================
+        // VALIDATE PRODUCT ID
+        // =====================================================
+
+        if (
+            !Number.isInteger(productId) ||
+            productId <= 0
+        ) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message: "Invalid product ID"
+
             });
 
         }
 
+
+        // =====================================================
+        // GET REQUEST BODY SAFELY
+        // =====================================================
 
         const {
             name,
@@ -297,45 +426,105 @@ router.put("/:id", adminAuth, async (req, res) => {
             category_id,
             stock,
             is_available
-        } = req.body;
+        } = req.body || {};
 
 
-        if (!name || name.trim() === "") {
+        // =====================================================
+        // CHECK BODY
+        // =====================================================
+
+        if (!req.body) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Product name is required"
+
+                message:
+                    "Request body is missing."
+
             });
 
         }
 
+
+        // =====================================================
+        // VALIDATE NAME
+        // =====================================================
+
+        if (
+            !name ||
+            typeof name !== "string" ||
+            name.trim() === ""
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Product name is required"
+
+            });
+
+        }
+
+
+        // =====================================================
+        // VALIDATE PRICE
+        // =====================================================
 
         if (
             price === undefined ||
             price === null ||
+            price === "" ||
+            !Number.isFinite(Number(price)) ||
             Number(price) <= 0
         ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Price must be greater than 0"
+
+                message:
+                    "Price must be greater than 0"
+
             });
 
         }
 
 
-        if (!category_id) {
+        // =====================================================
+        // VALIDATE CATEGORY
+        // =====================================================
+
+        if (
+            category_id === undefined ||
+            category_id === null ||
+            category_id === "" ||
+            !Number.isInteger(Number(category_id)) ||
+            Number(category_id) <= 0
+        ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Category is required"
+
+                message:
+                    "Valid category is required"
+
             });
 
         }
 
 
+        // =====================================================
+        // VALIDATE STOCK
+        // =====================================================
+
         const productStock =
-            stock === undefined || stock === ""
+            stock === undefined ||
+            stock === null ||
+            stock === ""
                 ? 0
                 : Number(stock);
 
@@ -346,12 +535,20 @@ router.put("/:id", adminAuth, async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Stock must be a non-negative integer"
+
+                message:
+                    "Stock must be a non-negative integer"
+
             });
 
         }
 
+
+        // =====================================================
+        // CHECK CATEGORY
+        // =====================================================
 
         const [category] = await db.execute(
             `
@@ -366,12 +563,20 @@ router.put("/:id", adminAuth, async (req, res) => {
         if (category.length === 0) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Category does not exist"
+
+                message:
+                    "Category does not exist"
+
             });
 
         }
 
+
+        // =====================================================
+        // UPDATE PRODUCT
+        // =====================================================
 
         const [result] = await db.execute(
             `
@@ -387,41 +592,75 @@ router.put("/:id", adminAuth, async (req, res) => {
             `,
             [
                 name.trim(),
-                description || null,
+
+                description
+                    ? String(description).trim()
+                    : null,
+
                 Number(price),
+
                 Number(category_id),
+
                 productStock,
-                is_available === undefined
+
+                is_available === undefined ||
+                is_available === null ||
+                is_available === ""
                     ? 1
                     : Number(is_available),
+
                 productId
             ]
         );
 
 
+        // =====================================================
+        // PRODUCT NOT FOUND
+        // =====================================================
+
         if (result.affectedRows === 0) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Product not found"
+
+                message:
+                    "Product not found"
+
             });
 
         }
 
 
-        res.json({
+        // =====================================================
+        // SUCCESS
+        // =====================================================
+
+        return res.json({
+
             success: true,
-            message: "Product updated successfully"
+
+            message:
+                "Product updated successfully"
+
         });
 
 
     } catch (error) {
 
-        console.error("UPDATE PRODUCT ERROR:", error);
+        console.error(
+            "UPDATE PRODUCT ERROR:",
+            error
+        );
 
-        res.status(500).json({
+        return res.status(500).json({
+
             success: false,
-            message: error.message
+
+            message:
+                error.message ||
+                "Failed to update product"
+
         });
 
     }
@@ -438,18 +677,34 @@ router.delete("/:id", adminAuth, async (req, res) => {
 
     try {
 
-        const productId = Number(req.params.id);
+        const productId =
+            Number(req.params.id);
 
 
-        if (!Number.isInteger(productId) || productId <= 0) {
+        // =====================================================
+        // VALIDATE PRODUCT ID
+        // =====================================================
+
+        if (
+            !Number.isInteger(productId) ||
+            productId <= 0
+        ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Invalid product ID"
+
+                message:
+                    "Invalid product ID"
+
             });
 
         }
 
+
+        // =====================================================
+        // DELETE PRODUCT
+        // =====================================================
 
         const [result] = await db.execute(
             `
@@ -460,34 +715,62 @@ router.delete("/:id", adminAuth, async (req, res) => {
         );
 
 
+        // =====================================================
+        // PRODUCT NOT FOUND
+        // =====================================================
+
         if (result.affectedRows === 0) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Product not found"
+
+                message:
+                    "Product not found"
+
             });
 
         }
 
 
-        res.json({
+        // =====================================================
+        // SUCCESS
+        // =====================================================
+
+        return res.json({
+
             success: true,
-            message: "Product deleted successfully"
+
+            message:
+                "Product deleted successfully"
+
         });
 
 
     } catch (error) {
 
-        console.error("DELETE PRODUCT ERROR:", error);
+        console.error(
+            "DELETE PRODUCT ERROR:",
+            error
+        );
 
-        res.status(500).json({
+        return res.status(500).json({
+
             success: false,
-            message: error.message
+
+            message:
+                error.message ||
+                "Failed to delete product"
+
         });
 
     }
 
 });
 
+
+// =====================================================
+// EXPORT ROUTER
+// =====================================================
 
 module.exports = router;
