@@ -1,941 +1,853 @@
+
 // =========================================================
 // AR E-COMMERCE
-// ADMIN PRODUCT ROUTES
-// PRODUCT + MULTIPLE IMAGE UPLOAD
+// EXPRESS SERVER
+// SESSION + USER + PRODUCT + CART + REVIEWS
 // =========================================================
+
+require("dotenv").config();
 
 const express = require("express");
-const router = express.Router();
+const path = require("path");
+const session = require("express-session");
 
-const db = require("../config/db");
-const adminAuth = require("../middleware/adminAuth");
-const upload = require("../middleware/uploadProduct");
+const app = express();
+
+const PORT = process.env.PORT || 3000;
 
 
 // =========================================================
-// ADD PRODUCT
-// POST /api/admin/products
+// PATHS
 // =========================================================
 
-router.post(
-    "/",
-    adminAuth,
-    upload.array("images", 10),
-    async (req, res) => {
 
-        try {
 
-            console.log("=================================");
-            console.log("ADD PRODUCT REQUEST");
-            console.log("CONTENT TYPE:", req.headers["content-type"]);
-            console.log("BODY:", req.body);
-            console.log("FILES:", req.files);
-            console.log("=================================");
+const frontendPath = path.join(
+    __dirname,
+    "../frontend"
+);
 
+const pagesPath = path.join(
+    frontendPath,
+    "pages"
+);
 
-            // =================================================
-            // GET FORM DATA
-            // =================================================
+const frontendImagesPath = path.join(
+    frontendPath,
+    "images"
+);
 
-            const {
-                name,
-                description,
-                price,
-                category_id,
-                stock
-            } = req.body || {};
-
-
-            // =================================================
-            // VALIDATE NAME
-            // =================================================
-
-            if (
-                !name ||
-                typeof name !== "string" ||
-                name.trim() === ""
-            ) {
-
-                return res.status(400).json({
-                    success: false,
-                    message: "Product name is required"
-                });
-
-            }
-
-
-            // =================================================
-            // VALIDATE PRICE
-            // =================================================
-
-            if (
-                price === undefined ||
-                price === null ||
-                price === "" ||
-                !Number.isFinite(Number(price)) ||
-                Number(price) <= 0
-            ) {
-
-                return res.status(400).json({
-                    success: false,
-                    message: "Price must be greater than 0"
-                });
-
-            }
-
-
-            // =================================================
-            // VALIDATE CATEGORY
-            // =================================================
-
-            if (
-                category_id === undefined ||
-                category_id === null ||
-                category_id === "" ||
-                !Number.isInteger(Number(category_id)) ||
-                Number(category_id) <= 0
-            ) {
-
-                return res.status(400).json({
-                    success: false,
-                    message: "Valid category is required"
-                });
-
-            }
-
-
-            // =================================================
-            // CHECK CATEGORY EXISTS
-            // =================================================
-
-            const [category] = await db.execute(
-                `
-                SELECT id
-                FROM categories
-                WHERE id = ?
-                `,
-                [Number(category_id)]
-            );
-
-
-            if (category.length === 0) {
-
-                return res.status(400).json({
-                    success: false,
-                    message: "Category does not exist"
-                });
-
-            }
-
-
-            // =================================================
-            // VALIDATE STOCK
-            // =================================================
-
-            const productStock =
-                stock === undefined ||
-                stock === null ||
-                stock === ""
-                    ? 0
-                    : Number(stock);
-
-
-            if (
-                !Number.isInteger(productStock) ||
-                productStock < 0
-            ) {
-
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Stock must be a non-negative integer"
-                });
-
-            }
-
-
-            // =================================================
-            // INSERT PRODUCT
-            // =================================================
-
-            const [result] = await db.execute(
-                `
-                INSERT INTO products
-                (
-                    name,
-                    description,
-                    price,
-                    category_id,
-                    stock
-                )
-                VALUES (?, ?, ?, ?, ?)
-                `,
-                [
-                    name.trim(),
-
-                    description
-                        ? String(description).trim()
-                        : null,
-
-                    Number(price),
-
-                    Number(category_id),
-
-                    productStock
-                ]
-            );
-
-
-            const productId = result.insertId;
-
-
-            // =================================================
-            // UPLOADED IMAGES
-            // =================================================
-
-            const uploadedImages = req.files || [];
-
-
-            const images = uploadedImages.map(
-                function (file) {
-
-                    return {
-                        filename: file.filename,
-
-                        url:
-                            `/uploads/products/${file.filename}`,
-
-                        originalName:
-                            file.originalname,
-
-                        mimeType:
-                            file.mimetype,
-
-                        size:
-                            file.size
-                    };
-
-                }
-            );
-
-
-            console.log(
-                "Product created:",
-                productId
-            );
-
-            console.log(
-                "Images uploaded:",
-                images.length
-            );
-
-
-            // =================================================
-            // SUCCESS
-            // =================================================
-
-            return res.status(201).json({
-
-                success: true,
-
-                message:
-                    "Product added successfully",
-
-                productId:
-                    productId,
-
-                images:
-                    images
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "ADD PRODUCT ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Failed to add product"
-
-            });
-
-        }
-
-    }
+const uploadsPath = path.join(
+    __dirname,
+    "uploads"
 );
 
 
 // =========================================================
-// GET ALL PRODUCTS
-// GET /api/admin/products
+// MIDDLEWARE
 // =========================================================
 
-router.get(
-    "/",
-    adminAuth,
-    async (req, res) => {
-
-        try {
-
-            const [products] = await db.execute(
-                `
-                SELECT
-                    p.id,
-                    p.name,
-                    p.description,
-                    p.price,
-                    p.stock,
-                    p.rating,
-                    p.is_available,
-                    p.created_at,
-                    p.category_id,
-                    c.name AS category_name
-                FROM products p
-                INNER JOIN categories c
-                    ON p.category_id = c.id
-                ORDER BY p.id DESC
-                `
-            );
+// JSON body
+app.use(
+    express.json({
+        limit: "10mb"
+    })
+);
 
 
-            return res.json({
-
-                success: true,
-
-                products:
-                    products
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "GET ADMIN PRODUCTS ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Failed to load products"
-
-            });
-
-        }
-
-    }
+// Form body
+app.use(
+    express.urlencoded({
+        extended: true,
+        limit: "10mb"
+    })
 );
 
 
 // =========================================================
-// GET SINGLE PRODUCT
-// GET /api/admin/products/:id
+// SESSION
 // =========================================================
 
-router.get(
-    "/:id",
-    adminAuth,
-    async (req, res) => {
+app.use(
+    session({
 
-        try {
+        secret:
+            process.env.SESSION_SECRET ||
+            "ar-ecommerce-secret-key",
 
-            const productId =
-                Number(req.params.id);
+        resave: false,
 
+        saveUninitialized: false,
 
-            // =================================================
-            // VALIDATE ID
-            // =================================================
+        cookie: {
 
-            if (
-                !Number.isInteger(productId) ||
-                productId <= 0
-            ) {
+            httpOnly: true,
 
-                return res.status(400).json({
+            secure: false,
 
-                    success: false,
+            sameSite: "lax",
 
-                    message:
-                        "Invalid product ID"
-
-                });
-
-            }
-
-
-            // =================================================
-            // GET PRODUCT
-            // =================================================
-
-            const [products] = await db.execute(
-                `
-                SELECT
-                    p.id,
-                    p.name,
-                    p.description,
-                    p.price,
-                    p.stock,
-                    p.rating,
-                    p.is_available,
-                    p.created_at,
-                    p.category_id,
-                    c.name AS category_name
-                FROM products p
-                INNER JOIN categories c
-                    ON p.category_id = c.id
-                WHERE p.id = ?
-                `,
-                [productId]
-            );
-
-
-            // =================================================
-            // NOT FOUND
-            // =================================================
-
-            if (products.length === 0) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "Product not found"
-
-                });
-
-            }
-
-
-            // =================================================
-            // SUCCESS
-            // =================================================
-
-            return res.json({
-
-                success: true,
-
-                product:
-                    products[0]
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "GET ADMIN PRODUCT ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Failed to load product"
-
-            });
+            maxAge:
+                24 *
+                60 *
+                60 *
+                1000
 
         }
 
-    }
+    })
 );
 
 
 // =========================================================
-// UPDATE PRODUCT
-// PUT /api/admin/products/:id
+// STATIC FRONTEND
+// =========================================================
 //
-// IMPORTANT:
-// admin.js also sends FormData when updating.
-// Therefore upload.array() is required here too.
+// This serves:
+//
+// frontend/css/...
+// frontend/js/...
+// frontend/images/...
+//
+// Example:
+//
+// frontend/images/products/glasses.jpg
+//
+// Browser:
+//
+// http://localhost:3000/images/products/glasses.jpg
+//
 // =========================================================
 
-router.put(
-    "/:id",
-    adminAuth,
-    upload.array("images", 10),
-    async (req, res) => {
+app.use(
+    express.static(
+        frontendPath
+    )
+);
+
+
+// =========================================================
+// EXPLICIT IMAGE ROUTE
+// =========================================================
+//
+// This guarantees that:
+//
+// /images/products/filename.jpg
+//
+// maps to:
+//
+// frontend/images/products/filename.jpg
+//
+// =========================================================
+
+app.use(
+    "/images",
+    express.static(
+        frontendImagesPath
+    )
+);
+
+
+// =========================================================
+// BACKEND UPLOADS
+// =========================================================
+//
+// If you later use backend/uploads:
+//
+// backend/uploads/products/example.jpg
+//
+// Browser:
+//
+// /uploads/products/example.jpg
+//
+// =========================================================
+
+app.use(
+    "/uploads",
+    express.static(
+        uploadsPath
+    )
+);
+
+
+// =========================================================
+// IMPORT ROUTES
+// =========================================================
+
+const userRoutes =
+    require("./routes/userRoutes");
+
+const productRoutes =
+    require("./routes/productRoutes");
+
+const adminProductRoutes =
+    require("./routes/adminProductRoutes");
+
+const cartRoutes =
+    require("./routes/cartRoutes");
+
+const reviewRoutes =
+    require("./routes/reviewRoutes");
+
+
+// =========================================================
+// USER API
+// =========================================================
+
+app.use(
+    "/api/users",
+    userRoutes
+);
+
+
+// =========================================================
+// PUBLIC PRODUCT API
+// =========================================================
+
+app.use(
+    "/api/products",
+    productRoutes
+);
+
+
+// =========================================================
+// ADMIN PRODUCT API
+// =========================================================
+
+app.use(
+    "/api/admin/products",
+    adminProductRoutes
+);
+
+
+// =========================================================
+// CART API
+// =========================================================
 
-        try {
+app.use(
+    "/api/cart",
+    cartRoutes
+);
 
-            const productId =
-                Number(req.params.id);
 
+// =========================================================
+// REVIEW API
+// =========================================================
 
-            // =================================================
-            // VALIDATE ID
-            // =================================================
+app.use(
+    "/api/reviews",
+    reviewRoutes
+);
 
-            if (
-                !Number.isInteger(productId) ||
-                productId <= 0
-            ) {
 
-                return res.status(400).json({
+// =========================================================
+// HOME
+// GET /
+// =========================================================
 
-                    success: false,
+app.get(
+    "/",
+    (req, res) => {
 
-                    message:
-                        "Invalid product ID"
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "index.html"
+            ),
+            (error) => {
 
-                });
+                if (error) {
 
-            }
+                    console.error(
+                        "HOME PAGE ERROR:",
+                        error
+                    );
 
+                    if (!res.headersSent) {
 
-            // =================================================
-            // GET FORM DATA
-            // =================================================
-
-            const {
-                name,
-                description,
-                price,
-                category_id,
-                stock,
-                is_available
-            } = req.body || {};
-
-
-            // =================================================
-            // VALIDATE NAME
-            // =================================================
-
-            if (
-                !name ||
-                typeof name !== "string" ||
-                name.trim() === ""
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Product name is required"
-
-                });
-
-            }
-
-
-            // =================================================
-            // VALIDATE PRICE
-            // =================================================
-
-            if (
-                price === undefined ||
-                price === null ||
-                price === "" ||
-                !Number.isFinite(Number(price)) ||
-                Number(price) <= 0
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Price must be greater than 0"
-
-                });
-
-            }
-
-
-            // =================================================
-            // VALIDATE CATEGORY
-            // =================================================
-
-            if (
-                category_id === undefined ||
-                category_id === null ||
-                category_id === "" ||
-                !Number.isInteger(Number(category_id)) ||
-                Number(category_id) <= 0
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Valid category is required"
-
-                });
-
-            }
-
-
-            // =================================================
-            // CHECK CATEGORY
-            // =================================================
-
-            const [category] = await db.execute(
-                `
-                SELECT id
-                FROM categories
-                WHERE id = ?
-                `,
-                [Number(category_id)]
-            );
-
-
-            if (category.length === 0) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Category does not exist"
-
-                });
-
-            }
-
-
-            // =================================================
-            // VALIDATE STOCK
-            // =================================================
-
-            const productStock =
-                stock === undefined ||
-                stock === null ||
-                stock === ""
-                    ? 0
-                    : Number(stock);
-
-
-            if (
-                !Number.isInteger(productStock) ||
-                productStock < 0
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Stock must be a non-negative integer"
-
-                });
-
-            }
-
-
-            // =================================================
-            // CHECK AVAILABILITY
-            // =================================================
-
-            const available =
-                is_available === undefined ||
-                is_available === null ||
-                is_available === ""
-                    ? 1
-                    : Number(is_available);
-
-
-            // =================================================
-            // UPDATE PRODUCT
-            // =================================================
-
-            const [result] = await db.execute(
-                `
-                UPDATE products
-                SET
-                    name = ?,
-                    description = ?,
-                    price = ?,
-                    category_id = ?,
-                    stock = ?,
-                    is_available = ?
-                WHERE id = ?
-                `,
-                [
-
-                    name.trim(),
-
-                    description
-                        ? String(description).trim()
-                        : null,
-
-                    Number(price),
-
-                    Number(category_id),
-
-                    productStock,
-
-                    available,
-
-                    productId
-
-                ]
-            );
-
-
-            // =================================================
-            // PRODUCT NOT FOUND
-            // =================================================
-
-            if (
-                result.affectedRows === 0
-            ) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "Product not found"
-
-                });
-
-            }
-
-
-            // =================================================
-            // NEW IMAGES
-            // =================================================
-
-            const uploadedImages =
-                req.files || [];
-
-
-            const images =
-                uploadedImages.map(
-                    function (file) {
-
-                        return {
-
-                            filename:
-                                file.filename,
-
-                            url:
-                                `/uploads/products/${file.filename}`,
-
-                            originalName:
-                                file.originalname,
-
-                            mimeType:
-                                file.mimetype,
-
-                            size:
-                                file.size
-
-                        };
+                        res.status(404).send(
+                            "Home page not found."
+                        );
 
                     }
-                );
 
-
-            // =================================================
-            // SUCCESS
-            // =================================================
-
-            return res.json({
-
-                success: true,
-
-                message:
-                    "Product updated successfully",
-
-                productId:
-                    productId,
-
-                images:
-                    images
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "UPDATE PRODUCT ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Failed to update product"
-
-            });
-
-        }
-
-    }
-);
-
-
-// =========================================================
-// DELETE PRODUCT
-// DELETE /api/admin/products/:id
-// =========================================================
-
-router.delete(
-    "/:id",
-    adminAuth,
-    async (req, res) => {
-
-        try {
-
-            const productId =
-                Number(req.params.id);
-
-
-            // =================================================
-            // VALIDATE ID
-            // =================================================
-
-            if (
-                !Number.isInteger(productId) ||
-                productId <= 0
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Invalid product ID"
-
-                });
+                }
 
             }
-
-
-            // =================================================
-            // DELETE PRODUCT
-            // =================================================
-
-            const [result] = await db.execute(
-                `
-                DELETE FROM products
-                WHERE id = ?
-                `,
-                [productId]
-            );
-
-
-            // =================================================
-            // NOT FOUND
-            // =================================================
-
-            if (
-                result.affectedRows === 0
-            ) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "Product not found"
-
-                });
-
-            }
-
-
-            // =================================================
-            // SUCCESS
-            // =================================================
-
-            return res.json({
-
-                success: true,
-
-                message:
-                    "Product deleted successfully"
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "DELETE PRODUCT ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Failed to delete product"
-
-            });
-
-        }
-
-    }
-);
-
-
-// =========================================================
-// MULTER / UPLOAD ERROR HANDLER
-// =========================================================
-
-router.use(
-    function (error, req, res, next) {
-
-        console.error(
-            "UPLOAD ERROR:",
-            error
         );
 
-
-        if (error) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Image upload failed"
-
-            });
-
-        }
+    }
+);
 
 
-        next();
+// =========================================================
+// LOGIN
+// GET /login
+// =========================================================
+
+app.get(
+    "/login",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "login.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "LOGIN PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Login page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
 
     }
 );
 
 
 // =========================================================
-// EXPORT ROUTER
+// REGISTER
+// GET /register
 // =========================================================
 
-module.exports = router;
+app.get(
+    "/register",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "register.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "REGISTER PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Register page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// PRODUCTS
+// GET /products
+// =========================================================
+
+app.get(
+    "/products",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "products.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "PRODUCTS PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Products page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// PRODUCT DETAILS
+// GET /product_details.html
+// =========================================================
+
+app.get(
+    "/product_details.html",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "product_details.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "PRODUCT DETAILS ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Product details page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// PRODUCT DETAILS
+// GET /product_details
+// =========================================================
+
+app.get(
+    "/product_details",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "product_details.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "PRODUCT DETAILS ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Product details page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// HYPHEN PRODUCT DETAILS
+// GET /product-details.html
+// =========================================================
+
+app.get(
+    "/product-details.html",
+    (req, res) => {
+
+        const queryString =
+            new URLSearchParams(
+                req.query
+            ).toString();
+
+        const redirectUrl =
+            queryString
+                ? `/product_details.html?${queryString}`
+                : "/product_details.html";
+
+        res.redirect(
+            redirectUrl
+        );
+
+    }
+);
+
+
+// =========================================================
+// HYPHEN PRODUCT DETAILS
+// GET /product-details
+// =========================================================
+
+app.get(
+    "/product-details",
+    (req, res) => {
+
+        const queryString =
+            new URLSearchParams(
+                req.query
+            ).toString();
+
+        const redirectUrl =
+            queryString
+                ? `/product_details.html?${queryString}`
+                : "/product_details.html";
+
+        res.redirect(
+            redirectUrl
+        );
+
+    }
+);
+
+
+// =========================================================
+// CART
+// GET /cart
+// =========================================================
+
+app.get(
+    "/cart",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "cart.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "CART PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Cart page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// SERVICES
+// GET /services
+// =========================================================
+
+app.get(
+    "/services",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "services.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "SERVICES PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Services page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// ABOUT
+// GET /about
+// =========================================================
+
+app.get(
+    "/about",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "about.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "ABOUT PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "About page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// PROFILE
+// GET /profile
+// =========================================================
+
+app.get(
+    "/profile",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "profile.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "PROFILE PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Profile page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// ADMIN
+// GET /admin
+// =========================================================
+
+app.get(
+    "/admin",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                pagesPath,
+                "admin.html"
+            ),
+            (error) => {
+
+                if (error) {
+
+                    console.error(
+                        "ADMIN PAGE ERROR:",
+                        error
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            "Admin page not found."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// =========================================================
+// API 404
+// =========================================================
+
+app.use(
+    "/api",
+    (req, res) => {
+
+        res.status(404).json({
+
+            success: false,
+
+            message:
+                "API endpoint not found."
+
+        });
+
+    }
+);
+
+
+// =========================================================
+// GENERAL 404
+// =========================================================
+
+app.use(
+    (req, res) => {
+
+        res.status(404).send(
+            "Page not found"
+        );
+
+    }
+);
+
+
+// =========================================================
+// ERROR HANDLER
+// =========================================================
+
+app.use(
+    (err, req, res, next) => {
+
+        console.error(
+            "SERVER ERROR:",
+            err
+        );
+
+        if (res.headersSent) {
+
+            return next(err);
+
+        }
+
+        res.status(500).json({
+
+            success: false,
+
+            message:
+                "Internal server error."
+
+        });
+
+    }
+);
+
+
+// =========================================================
+// START SERVER
+// =========================================================
+
+app.listen(
+    PORT,
+    () => {
+
+        console.log(
+            "========================================"
+        );
+
+        console.log(
+            "AR E-Commerce Server Started"
+        );
+
+        console.log(
+            `http://localhost:${PORT}`
+        );
+
+        console.log(
+            "========================================"
+        );
+
+        console.log(
+            "Frontend:",
+            frontendPath
+        );
+
+        console.log(
+            "Pages:",
+            pagesPath
+        );
+
+        console.log(
+            "Images:",
+            frontendImagesPath
+        );
+
+        console.log(
+            "Uploads:",
+            uploadsPath
+        );
+
+        console.log(
+            "========================================"
+        );
+
+    }
+);
