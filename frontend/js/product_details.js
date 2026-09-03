@@ -6036,43 +6036,25 @@ if (loginModal) {
 
 // =========================================================
 // PRELOAD MEDIAPIPE
-//
-// No "mediapipe-ready" event is required.
 // =========================================================
 
 (async function preloadFaceLandmarker() {
-
     try {
+        console.log("Starting MediaPipe Face Landmarker preload...");
 
-        const ready =
-            await waitForFaceLandmarker();
-
+        const ready = await waitForFaceLandmarker();
 
         if (ready) {
-
-            console.log(
-                "AR face tracking is ready."
-            );
-
-        }
-
-        else {
-
+            console.log("✅ AR face tracking is ready.");
+        } else {
             console.warn(
-                "AR face tracking could not be initialized during preload. It will be retried when AR starts."
+                "⚠️ AR face tracking could not be initialized during preload."
             );
         }
 
+    } catch (error) {
+        console.error("❌ AR PRELOAD ERROR:", error);
     }
-
-    catch (error) {
-
-        console.error(
-            "AR PRELOAD ERROR:",
-            error
-        );
-    }
-
 })();
 
 
@@ -6082,37 +6064,35 @@ if (loginModal) {
 
 async function initialize() {
 
-    console.log(
-        "========================================"
-    );
+    console.log("========================================");
+    console.log("PRODUCT DETAILS INITIALIZING");
+    console.log("========================================");
 
+    try {
 
-    console.log(
-        "PRODUCT DETAILS INITIALIZING"
-    );
+        const productId = getProductId();
 
+        if (!productId) {
+            console.error("No product ID found.");
+            showError();
+            return;
+        }
 
-    console.log(
-        "========================================"
-    );
+        console.log("Product ID:", productId);
 
+        await checkUserLogin();
 
-    const productId =
-        getProductId();
+        await loadProduct();
 
+        console.log("✅ Product details initialized.");
 
-    if (!productId) {
+    } catch (error) {
 
-        showError();
-
-        return;
+        console.error(
+            "❌ APPLICATION INITIALIZATION ERROR:",
+            error
+        );
     }
-
-
-    await checkUserLogin();
-
-
-    await loadProduct();
 }
 
 
@@ -6120,4 +6100,10 @@ async function initialize() {
 // START APPLICATION
 // =========================================================
 
-initialize();
+document.addEventListener("DOMContentLoaded", () => {
+
+    console.log("DOM loaded.");
+
+    initialize();
+
+});
