@@ -273,8 +273,8 @@ let smoothedEyeDistance = null;
 let smoothedRotation = null;
 
 
-// Lower value = smoother but slower.
-// Higher value = faster but less smooth.
+// Lower = smoother.
+// Higher = faster.
 const FACE_SMOOTHING = 0.30;
 
 const ROTATION_SMOOTHING = 0.25;
@@ -380,7 +380,7 @@ function getProductImage(product) {
     }
 
 
-    // External image URL
+    // External image
     if (
         image.startsWith("http://") ||
         image.startsWith("https://")
@@ -390,7 +390,7 @@ function getProductImage(product) {
     }
 
 
-    // Base64 image
+    // Base64
     if (
         image.startsWith("data:image/")
     ) {
@@ -399,7 +399,7 @@ function getProductImage(product) {
     }
 
 
-    // Convert Windows path
+    // Windows path -> web path
     image =
         image.replace(/\\/g, "/");
 
@@ -409,7 +409,7 @@ function getProductImage(product) {
         image.replace(/^\.\/+/, "");
 
 
-    // Already absolute URL path
+    // Already absolute path
     if (
         image.startsWith("/")
     ) {
@@ -855,14 +855,14 @@ function prepareARProductImage() {
     arProductImage.style.display =
         "block";
 
-
     arProductImage.style.maxWidth =
         "none";
-
 
     arProductImage.style.userSelect =
         "none";
 
+    arProductImage.style.pointerEvents =
+        "none";
 
     arProductImage.draggable =
         false;
@@ -993,20 +993,21 @@ async function startARCamera() {
 
     resetFaceSmoothing();
 
-
     arDragging =
         false;
 
-
     automaticTrackingEnabled =
         true;
-
 
     currentARMode =
         "camera";
 
 
     try {
+
+        // =================================================
+        // CHECK CAMERA API
+        // =================================================
 
         if (
             !navigator.mediaDevices ||
@@ -1017,6 +1018,22 @@ async function startARCamera() {
                 "Camera API is not supported by this browser."
             );
         }
+
+
+        if (arInstruction) {
+
+            arInstruction.textContent =
+                "Requesting camera permission...";
+        }
+
+
+        // =================================================
+        // GET CAMERA
+        // =================================================
+
+        console.log(
+            "Requesting camera permission..."
+        );
 
 
         arCameraStream =
@@ -1039,19 +1056,29 @@ async function startARCamera() {
                     frameRate: {
                         ideal: 30
                     }
+
                 },
 
                 audio: false
             });
 
 
+        console.log(
+            "✅ Camera permission granted."
+        );
+
+
         if (!arCamera) {
 
             throw new Error(
-                "Camera element not found."
+                "Camera video element #arCamera was not found."
             );
         }
 
+
+        // =================================================
+        // ATTACH CAMERA
+        // =================================================
 
         arCamera.srcObject =
             arCameraStream;
@@ -1062,6 +1089,10 @@ async function startARCamera() {
             ""
         );
 
+        arCamera.setAttribute(
+            "webkit-playsinline",
+            ""
+        );
 
         arCamera.setAttribute(
             "autoplay",
@@ -1070,6 +1101,9 @@ async function startARCamera() {
 
 
         arCamera.muted =
+            true;
+
+        arCamera.playsInline =
             true;
 
 
@@ -1089,77 +1123,95 @@ async function startARCamera() {
         );
 
 
-        const waitForCamera =
-            async () => {
+        // =================================================
+        // START VIDEO
+        // =================================================
 
-                try {
+        try {
 
-                    await arCamera.play();
+            await arCamera.play();
 
-                }
+        } catch (error) {
 
-                catch (error) {
-
-                    console.warn(
-                        "Camera play warning:",
-                        error
-                    );
-                }
-
-
-                if (arInstruction) {
-
-                    arInstruction.textContent =
-                        "Loading face tracking...";
-                }
-
-
-                const ready =
-                    await waitForFaceLandmarker();
-
-
-                if (ready) {
-
-                    if (arInstruction) {
-
-                        arInstruction.textContent =
-                            "Detecting your face...";
-                    }
-
-
-                    startFaceTracking();
-
-                }
-
-                else {
-
-                    console.error(
-                        "Face Landmarker could not be initialized."
-                    );
-
-
-                    if (arInstruction) {
-
-                        arInstruction.textContent =
-                            "Face tracking is unavailable. You can position the product manually.";
-                    }
-                }
-            };
-
-
-        if (
-            arCamera.readyState >=
-            HTMLMediaElement.HAVE_METADATA
-        ) {
-
-            await waitForCamera();
-
+            console.warn(
+                "Camera play warning:",
+                error
+            );
         }
 
-        else {
 
-            arCamera.onloadedmetadata =
-                waitForCamera;
+        console.log(
+            "Camera play requested."
+        );
+
+
+        // =================================================
+        // WAIT FOR VIDEO
+        // =================================================
+
+        await waitForVideoReady(
+            arCamera
+        );
+
+
+        console.log(
+            "✅ Camera video ready:",
+            arCamera.videoWidth,
+            "x",
+            arCamera.videoHeight
+        );
+
+
+        if (arInstruction) {
+
+            arInstruction.textContent =
+                "Loading face tracking...";
+        }
+
+
+        // =================================================
+        // INITIALIZE MEDIAPIPE
+        // =================================================
+
+        const ready =
+            await waitForFaceLandmarker();
+
+
+        // =================================================
+        // START TRACKING
+        // =================================================
+
+        if (
+            ready &&
+            faceLandmarker
+        ) {
+
+            console.log(
+                "✅ Face Landmarker is ready."
+            );
+
+
+            if (arInstruction) {
+
+                arInstruction.textContent =
+                    "Detecting your face...";
+            }
+
+
+            startFaceTracking();
+
+        } else {
+
+            console.error(
+                "❌ Face Landmarker is NOT available."
+            );
+
+
+            if (arInstruction) {
+
+                arInstruction.textContent =
+                    "Face tracking could not be loaded. Check the browser console for the exact error.";
+            }
         }
 
     }
@@ -1167,8 +1219,19 @@ async function startARCamera() {
     catch (error) {
 
         console.error(
-            "AR CAMERA ERROR:",
+            "========================================"
+        );
+
+        console.error(
+            "❌ AR CAMERA ERROR"
+        );
+
+        console.error(
             error
+        );
+
+        console.error(
+            "========================================"
         );
 
 
@@ -1185,26 +1248,196 @@ async function startARCamera() {
         if (arInstruction) {
 
             arInstruction.textContent =
-                "Camera access was blocked. You can upload a photo instead.";
+                "Camera access failed. You can upload a photo instead.";
         }
     }
 }
 
 
 // =========================================================
+// WAIT FOR VIDEO READY
+// =========================================================
+
+function waitForVideoReady(video) {
+
+    return new Promise(
+        (
+            resolve,
+            reject
+        ) => {
+
+            if (!video) {
+
+                reject(
+                    new Error(
+                        "Video element not found."
+                    )
+                );
+
+                return;
+            }
+
+
+            // Already ready
+            if (
+                video.readyState >=
+                HTMLMediaElement.HAVE_METADATA &&
+                video.videoWidth > 0 &&
+                video.videoHeight > 0
+            ) {
+
+                resolve();
+
+                return;
+            }
+
+
+            let finished =
+                false;
+
+
+            const cleanup =
+                () => {
+
+                    video.removeEventListener(
+                        "loadedmetadata",
+                        onReady
+                    );
+
+                    video.removeEventListener(
+                        "canplay",
+                        onReady
+                    );
+
+                    video.removeEventListener(
+                        "error",
+                        onError
+                    );
+                };
+
+
+            const onReady =
+                () => {
+
+                    if (finished) {
+                        return;
+                    }
+
+
+                    if (
+                        video.videoWidth > 0 &&
+                        video.videoHeight > 0
+                    ) {
+
+                        finished =
+                            true;
+
+                        cleanup();
+
+                        resolve();
+                    }
+                };
+
+
+            const onError =
+                () => {
+
+                    if (finished) {
+                        return;
+                    }
+
+
+                    finished =
+                        true;
+
+                    cleanup();
+
+
+                    reject(
+                        new Error(
+                            "Camera video failed to load."
+                        )
+                    );
+                };
+
+
+            video.addEventListener(
+                "loadedmetadata",
+                onReady
+            );
+
+
+            video.addEventListener(
+                "canplay",
+                onReady
+            );
+
+
+            video.addEventListener(
+                "error",
+                onError
+            );
+
+
+            // Safety timeout
+            setTimeout(
+                () => {
+
+                    if (finished) {
+                        return;
+                    }
+
+
+                    if (
+                        video.videoWidth > 0 &&
+                        video.videoHeight > 0
+                    ) {
+
+                        finished =
+                            true;
+
+                        cleanup();
+
+                        resolve();
+
+                    } else {
+
+                        finished =
+                            true;
+
+                        cleanup();
+
+
+                        reject(
+                            new Error(
+                                "Camera video did not become ready."
+                            )
+                        );
+                    }
+
+                },
+                10000
+            );
+        }
+    );
+}
+
+
+// =========================================================
 // LOAD MEDIAPIPE LIBRARY
-//
-// IMPORTANT:
-// This function does NOT depend on a custom
-// "mediapipe-ready" event.
 // =========================================================
 
 async function loadMediaPipeLibrary() {
 
+    // Already loaded
     if (
         window.FaceLandmarker &&
         window.FilesetResolver
     ) {
+
+        console.log(
+            "MediaPipe library already loaded."
+        );
 
         return true;
     }
@@ -1213,23 +1446,35 @@ async function loadMediaPipeLibrary() {
     try {
 
         console.log(
-            "Loading MediaPipe Face Landmarker..."
+            "========================================"
+        );
+
+        console.log(
+            "LOADING MEDIAPIPE TASKS VISION"
+        );
+
+        console.log(
+            "========================================"
         );
 
 
+        /*
+         * ESM build.
+         */
         const vision =
             await import(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs"
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm"
             );
 
 
         if (
+            !vision ||
             !vision.FaceLandmarker ||
             !vision.FilesetResolver
         ) {
 
             throw new Error(
-                "FaceLandmarker or FilesetResolver was not exported."
+                "FaceLandmarker or FilesetResolver was not exported by MediaPipe."
             );
         }
 
@@ -1243,7 +1488,7 @@ async function loadMediaPipeLibrary() {
 
 
         console.log(
-            "MediaPipe library loaded successfully."
+            "✅ MediaPipe Tasks Vision library loaded."
         );
 
 
@@ -1254,8 +1499,19 @@ async function loadMediaPipeLibrary() {
     catch (error) {
 
         console.error(
-            "MEDIAPIPE LIBRARY LOAD ERROR:",
+            "========================================"
+        );
+
+        console.error(
+            "❌ MEDIAPIPE LIBRARY LOAD ERROR"
+        );
+
+        console.error(
             error
+        );
+
+        console.error(
+            "========================================"
         );
 
 
@@ -1265,9 +1521,278 @@ async function loadMediaPipeLibrary() {
 
 
 // =========================================================
-// WAIT FOR MEDIAPIPE
+// INITIALIZE FACE LANDMARKER
 //
-// FIXED INITIALIZATION RACE
+// One promise controls initialization.
+// This prevents multiple instances from being
+// created when preload + camera start happen together.
+// =========================================================
+
+function initializeFaceLandmarker() {
+
+    // Already ready
+    if (
+        faceTrackingReady &&
+        faceLandmarker
+    ) {
+
+        return Promise.resolve(
+            true
+        );
+    }
+
+
+    // Initialization already running
+    if (
+        faceTrackingInitPromise
+    ) {
+
+        return faceTrackingInitPromise;
+    }
+
+
+    faceTrackingInitPromise =
+        (async () => {
+
+            faceTrackingInitializing =
+                true;
+
+
+            try {
+
+                console.log(
+                    "========================================"
+                );
+
+                console.log(
+                    "INITIALIZING FACE LANDMARKER"
+                );
+
+                console.log(
+                    "========================================"
+                );
+
+
+                // =================================================
+                // STEP 1
+                // =================================================
+
+                const libraryReady =
+                    await loadMediaPipeLibrary();
+
+
+                if (!libraryReady) {
+
+                    throw new Error(
+                        "MediaPipe JavaScript library could not be loaded."
+                    );
+                }
+
+
+                console.log(
+                    "✅ Step 1: MediaPipe library ready."
+                );
+
+
+                // =================================================
+                // STEP 2 - WASM
+                // =================================================
+
+                console.log(
+                    "Loading MediaPipe WASM..."
+                );
+
+
+                const vision =
+                    await window.FilesetResolver.forVisionTasks(
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+                    );
+
+
+                if (!vision) {
+
+                    throw new Error(
+                        "MediaPipe WASM could not be initialized."
+                    );
+                }
+
+
+                console.log(
+                    "✅ Step 2: MediaPipe WASM ready."
+                );
+
+
+                // =================================================
+                // STEP 3 - MODEL
+                // =================================================
+
+                console.log(
+                    "Loading Face Landmarker model..."
+                );
+
+
+                const modelURL =
+                    "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+
+
+                faceLandmarker =
+                    await window.FaceLandmarker.createFromOptions(
+                        vision,
+                        {
+
+                            baseOptions: {
+
+                                modelAssetPath:
+                                    modelURL
+
+                            },
+
+
+                            runningMode:
+                                "VIDEO",
+
+
+                            numFaces:
+                                1,
+
+
+                            minFaceDetectionConfidence:
+                                0.35,
+
+
+                            minFacePresenceConfidence:
+                                0.35,
+
+
+                            minTrackingConfidence:
+                                0.35,
+
+
+                            outputFaceBlendshapes:
+                                false,
+
+
+                            outputFacialTransformationMatrixes:
+                                true
+
+                        }
+                    );
+
+
+                if (!faceLandmarker) {
+
+                    throw new Error(
+                        "Face Landmarker was created but returned null."
+                    );
+                }
+
+
+                faceTrackingReady =
+                    true;
+
+
+                console.log(
+                    "========================================"
+                );
+
+                console.log(
+                    "✅ MEDIAPIPE FACE LANDMARKER READY"
+                );
+
+                console.log(
+                    "========================================"
+                );
+
+
+                return true;
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "========================================"
+                );
+
+                console.error(
+                    "❌ MEDIAPIPE INITIALIZATION FAILED"
+                );
+
+                console.error(
+                    error
+                );
+
+                console.error(
+                    "========================================"
+                );
+
+
+                faceTrackingReady =
+                    false;
+
+
+                if (faceLandmarker) {
+
+                    try {
+
+                        faceLandmarker.close();
+
+                    } catch (closeError) {
+
+                        console.warn(
+                            "Could not close failed Face Landmarker:",
+                            closeError
+                        );
+                    }
+                }
+
+
+                faceLandmarker =
+                    null;
+
+
+                return false;
+
+            }
+
+            finally {
+
+                faceTrackingInitializing =
+                    false;
+
+
+                /*
+                 * Clear the promise only after all
+                 * callers have received the result.
+                 */
+                const completedPromise =
+                    faceTrackingInitPromise;
+
+
+                queueMicrotask(
+                    () => {
+
+                        if (
+                            faceTrackingInitPromise ===
+                            completedPromise
+                        ) {
+
+                            faceTrackingInitPromise =
+                                null;
+                        }
+                    }
+                );
+            }
+
+        })();
+
+
+    return faceTrackingInitPromise;
+}
+
+
+// =========================================================
+// WAIT FOR FACE LANDMARKER
 // =========================================================
 
 async function waitForFaceLandmarker() {
@@ -1281,210 +1806,28 @@ async function waitForFaceLandmarker() {
     }
 
 
-    if (
-        faceTrackingInitPromise
-    ) {
-
-        return await faceTrackingInitPromise;
-    }
-
-
-    faceTrackingInitPromise =
-        initializeFaceLandmarker();
-
-
     try {
 
-        return await faceTrackingInitPromise;
-
-    }
-
-    finally {
-
-        faceTrackingInitPromise =
-            null;
-    }
-}
+        const ready =
+            await initializeFaceLandmarker();
 
 
-// =========================================================
-// INITIALIZE MEDIAPIPE
-// =========================================================
-
-async function initializeFaceLandmarker() {
-
-    if (
-        faceTrackingReady &&
-        faceLandmarker
-    ) {
-
-        return true;
-    }
-
-
-    if (faceTrackingInitializing) {
-
-        /*
-         * Another caller is already
-         * initializing MediaPipe.
-         *
-         * Wait for that promise instead
-         * of returning false.
-         */
-        if (
-            faceTrackingInitPromise
-        ) {
-
-            return await faceTrackingInitPromise;
-        }
-
-
-        return false;
-    }
-
-
-    faceTrackingInitializing =
-        true;
-
-
-    try {
-
-        // ---------------------------------------------
-        // LOAD LIBRARY
-        // ---------------------------------------------
-
-        const libraryReady =
-            await loadMediaPipeLibrary();
-
-
-        if (!libraryReady) {
-
-            throw new Error(
-                "MediaPipe library failed to load."
-            );
-        }
-
-
-        // ---------------------------------------------
-        // LOAD WASM
-        // ---------------------------------------------
-
-        const vision =
-            await window.FilesetResolver.forVisionTasks(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
-            );
-
-
-        // ---------------------------------------------
-        // CREATE FACE LANDMARKER
-        // ---------------------------------------------
-
-        faceLandmarker =
-            await window.FaceLandmarker.createFromOptions(
-                vision,
-                {
-
-                    baseOptions: {
-
-                        modelAssetPath:
-                            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
-                    },
-
-
-                    runningMode:
-                        "VIDEO",
-
-
-                    numFaces:
-                        1,
-
-
-                    minFaceDetectionConfidence:
-                        0.35,
-
-
-                    minFacePresenceConfidence:
-                        0.35,
-
-
-                    minTrackingConfidence:
-                        0.35,
-
-
-                    outputFaceBlendshapes:
-                        false,
-
-
-                    outputFacialTransformationMatrixes:
-                        true
-                }
-            );
-
-
-        if (!faceLandmarker) {
-
-            throw new Error(
-                "Face Landmarker instance was not created."
-            );
-        }
-
-
-        faceTrackingReady =
-            true;
-
-
-        console.log(
-            "========================================"
+        return (
+            ready === true &&
+            !!faceLandmarker
         );
-
-        console.log(
-            "MEDIAPIPE FACE LANDMARKER READY"
-        );
-
-        console.log(
-            "========================================"
-        );
-
-
-        return true;
 
     }
 
     catch (error) {
 
         console.error(
-            "========================================"
-        );
-
-        console.error(
-            "MEDIAPIPE INITIALIZATION ERROR"
-        );
-
-        console.error(
+            "❌ WAIT FOR FACE LANDMARKER ERROR:",
             error
         );
 
-        console.error(
-            "========================================"
-        );
-
-
-        faceTrackingReady =
-            false;
-
-
-        faceLandmarker =
-            null;
-
 
         return false;
-
-    }
-
-    finally {
-
-        faceTrackingInitializing =
-            false;
     }
 }
 
@@ -1505,8 +1848,10 @@ function startFaceTracking() {
             "Cannot start face tracking:",
             {
                 faceTrackingReady,
-                faceLandmarker,
-                arCamera
+                faceLandmarkerExists:
+                    !!faceLandmarker,
+                cameraExists:
+                    !!arCamera
             }
         );
 
@@ -1526,12 +1871,25 @@ function startFaceTracking() {
         0;
 
 
+    console.log(
+        "========================================"
+    );
+
+    console.log(
+        "STARTING REAL-TIME FACE TRACKING"
+    );
+
+    console.log(
+        "========================================"
+    );
+
+
     const trackingLoop =
         () => {
 
-            // -----------------------------------------
-            // CHECK AR MODAL
-            // -----------------------------------------
+            // =================================================
+            // CHECK MODAL
+            // =================================================
 
             if (
                 !arModal ||
@@ -1547,9 +1905,9 @@ function startFaceTracking() {
             }
 
 
-            // -----------------------------------------
-            // ONLY CAMERA MODE
-            // -----------------------------------------
+            // =================================================
+            // CAMERA MODE ONLY
+            // =================================================
 
             if (
                 currentARMode !==
@@ -1565,9 +1923,9 @@ function startFaceTracking() {
             }
 
 
-            // -----------------------------------------
+            // =================================================
             // CHECK STREAM
-            // -----------------------------------------
+            // =================================================
 
             if (
                 !arCameraStream ||
@@ -1583,9 +1941,9 @@ function startFaceTracking() {
             }
 
 
-            // -----------------------------------------
+            // =================================================
             // CHECK VIDEO
-            // -----------------------------------------
+            // =================================================
 
             if (
                 arCamera.readyState >=
@@ -1598,6 +1956,7 @@ function startFaceTracking() {
                     arCamera.currentTime;
 
 
+                // Only process a new frame
                 if (
                     currentVideoTime !==
                     lastVideoTime
@@ -1606,13 +1965,14 @@ function startFaceTracking() {
                     try {
 
                         /*
-                         * MediaPipe requires a
-                         * monotonically increasing
-                         * timestamp.
+                         * MediaPipe VIDEO mode requires
+                         * increasing timestamps.
                          */
                         const timestamp =
                             Math.max(
-                                performance.now(),
+                                Math.round(
+                                    performance.now()
+                                ),
                                 lastDetectionTimestamp + 1
                             );
 
@@ -1641,7 +2001,7 @@ function startFaceTracking() {
                     catch (error) {
 
                         console.error(
-                            "FACE DETECTION ERROR:",
+                            "❌ FACE DETECTION ERROR:",
                             error
                         );
                     }
@@ -1663,7 +2023,7 @@ function startFaceTracking() {
 
 
     console.log(
-        "Face tracking started."
+        "✅ Face tracking loop started."
     );
 }
 
@@ -1703,8 +2063,6 @@ function stopFaceTracking() {
 
 // =========================================================
 // GET VIDEO DISPLAY RECTANGLE
-//
-// Handles object-fit: cover.
 // =========================================================
 
 function getVideoDisplayRect() {
@@ -1796,8 +2154,6 @@ function getVideoDisplayRect() {
 
 // =========================================================
 // CONVERT LANDMARK TO DISPLAY COORDINATES
-//
-// Camera is mirrored, so X is mirrored here.
 // =========================================================
 
 function landmarkToDisplay(
@@ -1818,8 +2174,8 @@ function landmarkToDisplay(
 
 
     /*
-     * Mirror X because the front camera
-     * is displayed like a mirror.
+     * Mirror X because front camera
+     * is displayed as a mirror.
      */
     const mirroredX =
         1 -
@@ -1878,7 +2234,7 @@ function distanceBetween(
 
 
 // =========================================================
-// CALCULATE ANGLE BETWEEN EYES
+// CALCULATE EYE ANGLE
 // =========================================================
 
 function calculateEyeAngle(
@@ -1914,11 +2270,6 @@ function calculateEyeAngle(
     }
 
 
-    /*
-     * CSS positive rotation rotates clockwise.
-     * Screen Y increases downward, so this
-     * naturally follows head tilt.
-     */
     const angle =
         Math.atan2(
             dy,
@@ -1928,10 +2279,6 @@ function calculateEyeAngle(
         Math.PI;
 
 
-    /*
-     * Prevent extreme rotation caused
-     * by occasional bad landmarks.
-     */
     return Math.max(
         -45,
         Math.min(
@@ -1944,16 +2291,6 @@ function calculateEyeAngle(
 
 // =========================================================
 // PROCESS CAMERA FACE RESULT
-//
-// IMPORTANT:
-// For glasses we use eye landmarks rather
-// than the whole face bounding box.
-//
-// MediaPipe landmark numbers:
-// 33  = right eye outer corner
-// 133 = right eye inner corner
-// 263 = left eye outer corner
-// 362 = left eye inner corner
 // =========================================================
 
 function processFaceResult(result) {
@@ -2005,21 +2342,18 @@ function processFaceResult(result) {
     }
 
 
-    // =====================================================
+    // =================================================
     // EYE LANDMARKS
-    // =====================================================
+    // =================================================
 
     const rightEyeOuter =
         landmarks[33];
 
-
     const rightEyeInner =
         landmarks[133];
 
-
     const leftEyeOuter =
         landmarks[263];
-
 
     const leftEyeInner =
         landmarks[362];
@@ -2036,14 +2370,13 @@ function processFaceResult(result) {
             "Eye landmarks unavailable."
         );
 
-
         return;
     }
 
 
-    // =====================================================
-    // CONVERT EYES TO SCREEN COORDINATES
-    // =====================================================
+    // =================================================
+    // SCREEN COORDINATES
+    // =================================================
 
     const rightOuter =
         landmarkToDisplay(
@@ -2073,9 +2406,9 @@ function processFaceResult(result) {
         );
 
 
-    // =====================================================
+    // =================================================
     // EYE CENTERS
-    // =====================================================
+    // =================================================
 
     const rightEyeCenter = {
 
@@ -2109,9 +2442,9 @@ function processFaceResult(result) {
     };
 
 
-    // =====================================================
-    // CENTER BETWEEN BOTH EYES
-    // =====================================================
+    // =================================================
+    // CENTER BETWEEN EYES
+    // =================================================
 
     const eyeCenterX =
         (
@@ -2127,9 +2460,9 @@ function processFaceResult(result) {
         ) / 2;
 
 
-    // =====================================================
+    // =================================================
     // EYE DISTANCE
-    // =====================================================
+    // =================================================
 
     const eyeDistance =
         distanceBetween(
@@ -2149,14 +2482,10 @@ function processFaceResult(result) {
     }
 
 
-    // =====================================================
+    // =================================================
     // EYE ANGLE
-    // =====================================================
+    // =================================================
 
-    /*
-     * Because the displayed camera is mirrored,
-     * leftEyeCenter is visually on the left.
-     */
     const eyeAngle =
         calculateEyeAngle(
             leftEyeCenter,
@@ -2164,9 +2493,9 @@ function processFaceResult(result) {
         );
 
 
-    // =====================================================
-    // SMOOTH EYE POSITION
-    // =====================================================
+    // =================================================
+    // SMOOTH
+    // =================================================
 
     smoothedFaceX =
         smoothValue(
@@ -2199,11 +2528,9 @@ function processFaceResult(result) {
         );
 
 
-    // =====================================================
-    // ALSO CALCULATE FACE BOUNDING BOX
-    //
-    // Used for non-glasses products.
-    // =====================================================
+    // =================================================
+    // FACE BOUNDING BOX
+    // =================================================
 
     let minX =
         Infinity;
@@ -2292,9 +2619,9 @@ function processFaceResult(result) {
         true;
 
 
-    // =====================================================
-    // AUTOMATIC AR POSITION
-    // =====================================================
+    // =================================================
+    // AUTOMATIC POSITIONING
+    // =================================================
 
     if (
         automaticTrackingEnabled &&
@@ -2315,17 +2642,14 @@ function processFaceResult(result) {
         ) {
 
             /*
-             * Put the center of the glasses
-             * directly between the eyes.
+             * Center glasses between eyes.
              */
             arPositionX =
                 smoothedFaceX;
 
 
             /*
-             * Slightly move glasses downward
-             * because the image itself may have
-             * transparent padding.
+             * Small downward adjustment.
              */
             arPositionY =
                 smoothedFaceY +
@@ -2333,10 +2657,8 @@ function processFaceResult(result) {
 
 
             /*
-             * Width based on distance between
-             * the eyes.
-             *
-             * 2.25 gives a natural glasses width.
+             * Glasses width is based on
+             * distance between eyes.
              */
             const glassesWidth =
                 Math.max(
@@ -2358,17 +2680,10 @@ function processFaceResult(result) {
             }
 
 
-            /*
-             * We use CSS width for glasses,
-             * so scale remains 1.
-             */
             arScale =
                 1;
 
 
-            /*
-             * Rotate according to head tilt.
-             */
             arRotation =
                 smoothedRotation;
 
@@ -2451,9 +2766,7 @@ function stopARCamera() {
 
                         track.stop();
 
-                    }
-
-                    catch (error) {
+                    } catch (error) {
 
                         console.warn(
                             "Unable to stop camera track:",
@@ -2475,9 +2788,7 @@ function stopARCamera() {
 
             arCamera.pause();
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             // Ignore pause errors.
         }
@@ -2649,10 +2960,9 @@ if (arImageInput) {
                         }
 
 
+                        // Switch VIDEO -> IMAGE
                         const result =
-                            faceLandmarker.detect(
-                                arUserImage
-                            );
+                            await detectFaceInUploadedImage();
 
 
                         processUploadedImageFace(
@@ -2683,6 +2993,68 @@ if (arImageInput) {
             );
         }
     );
+}
+
+
+// =========================================================
+// DETECT FACE IN UPLOADED IMAGE
+// =========================================================
+
+async function detectFaceInUploadedImage() {
+
+    if (!faceLandmarker) {
+
+        throw new Error(
+            "Face Landmarker is not initialized."
+        );
+    }
+
+
+    // =================================================
+    // SWITCH TO IMAGE MODE
+    // =================================================
+
+    await faceLandmarker.setOptions({
+
+        runningMode:
+            "IMAGE"
+
+    });
+
+
+    console.log(
+        "MediaPipe switched to IMAGE mode."
+    );
+
+
+    // =================================================
+    // DETECT
+    // =================================================
+
+    const result =
+        faceLandmarker.detect(
+            arUserImage
+        );
+
+
+    // =================================================
+    // SWITCH BACK TO VIDEO
+    // =================================================
+
+    await faceLandmarker.setOptions({
+
+        runningMode:
+            "VIDEO"
+
+    });
+
+
+    console.log(
+        "MediaPipe switched back to VIDEO mode."
+    );
+
+
+    return result;
 }
 
 
@@ -2778,21 +3150,18 @@ function processUploadedImageFace(result) {
     }
 
 
-    // =====================================================
+    // =================================================
     // EYE LANDMARKS
-    // =====================================================
+    // =================================================
 
     const rightEyeOuter =
         landmarks[33];
 
-
     const rightEyeInner =
         landmarks[133];
 
-
     const leftEyeOuter =
         landmarks[263];
-
 
     const leftEyeInner =
         landmarks[362];
@@ -2809,10 +3178,10 @@ function processUploadedImageFace(result) {
     }
 
 
-    /*
-     * Uploaded image is not mirrored.
-     * Therefore we convert coordinates directly.
-     */
+    // =================================================
+    // IMAGE DIMENSIONS
+    // =================================================
+
     const imageWidth =
         arUserImage.clientWidth ||
         arUserImage.naturalWidth ||
@@ -2824,6 +3193,10 @@ function processUploadedImageFace(result) {
         arUserImage.naturalHeight ||
         1;
 
+
+    // =================================================
+    // EYE POSITIONS
+    // =================================================
 
     const rightOuter = {
 
@@ -2872,6 +3245,10 @@ function processUploadedImageFace(result) {
             imageHeight
     };
 
+
+    // =================================================
+    // EYE CENTERS
+    // =================================================
 
     const rightEyeCenter = {
 
@@ -2937,9 +3314,9 @@ function processUploadedImageFace(result) {
         getARProductType();
 
 
-    // =====================================================
+    // =================================================
     // GLASSES
-    // =====================================================
+    // =================================================
 
     if (
         productType ===
@@ -2991,11 +3368,12 @@ function processUploadedImageFace(result) {
 
     }
 
-    else {
 
-        // =================================================
-        // GENERIC FACE BOUNDING BOX
-        // =================================================
+    // =================================================
+    // OTHER PRODUCTS
+    // =================================================
+
+    else {
 
         let minX =
             Infinity;
@@ -3018,35 +3396,40 @@ function processUploadedImageFace(result) {
                     Number.isFinite(point.y)
                 ) {
 
+                    const x =
+                        point.x *
+                        imageWidth;
+
+                    const y =
+                        point.y *
+                        imageHeight;
+
+
                     minX =
                         Math.min(
                             minX,
-                            point.x *
-                                imageWidth
+                            x
                         );
 
 
                     maxX =
                         Math.max(
                             maxX,
-                            point.x *
-                                imageWidth
+                            x
                         );
 
 
                     minY =
                         Math.min(
                             minY,
-                            point.y *
-                                imageHeight
+                            y
                         );
 
 
                     maxY =
                         Math.max(
                             maxY,
-                            point.y *
-                                imageHeight
+                            y
                         );
                 }
             }
@@ -3294,7 +3677,6 @@ function resetARPosition() {
 
         arProductOverlay.style.width =
             "";
-
 
         arProductOverlay.style.height =
             "";
@@ -3619,9 +4001,7 @@ if (arProductOverlay) {
                     );
                 }
 
-            }
-
-            catch (error) {
+            } catch (error) {
 
                 // Ignore pointer capture errors.
             }
@@ -3725,9 +4105,7 @@ async function checkUserLogin() {
             currentUser =
                 data.user;
 
-        }
-
-        else {
+        } else {
 
             userLoggedIn =
                 false;
@@ -3787,9 +4165,7 @@ function updateReviewLoginUI() {
                 "block";
         }
 
-    }
-
-    else {
+    } else {
 
         reviewLoginMessage.style.display =
             "flex";
@@ -4365,7 +4741,6 @@ if (addToCartBtn) {
 
                 showLoginModal();
 
-
                 return;
             }
 
@@ -4375,7 +4750,6 @@ if (addToCartBtn) {
                 alert(
                     "Product is not loaded yet."
                 );
-
 
                 return;
             }
@@ -4400,7 +4774,6 @@ if (addToCartBtn) {
                     "This product is out of stock."
                 );
 
-
                 return;
             }
 
@@ -4410,7 +4783,6 @@ if (addToCartBtn) {
                 alert(
                     "Requested quantity is not available."
                 );
-
 
                 return;
             }
@@ -4434,6 +4806,7 @@ if (addToCartBtn) {
                     await fetch(
                         "/api/cart/add",
                         {
+
                             method:
                                 "POST",
 
@@ -4473,16 +4846,12 @@ if (addToCartBtn) {
                     userLoggedIn =
                         false;
 
-
                     currentUser =
                         null;
 
-
                     updateReviewLoginUI();
 
-
                     showLoginModal();
-
 
                     return;
                 }
@@ -4498,7 +4867,6 @@ if (addToCartBtn) {
                         "Failed to add product to cart."
                     );
 
-
                     return;
                 }
 
@@ -4512,7 +4880,6 @@ if (addToCartBtn) {
 
                         addToCartBtn.textContent =
                             oldText;
-
 
                         addToCartBtn.disabled =
                             false;
@@ -4572,7 +4939,6 @@ if (buyNowBtn) {
 
                 showLoginModal();
 
-
                 return;
             }
 
@@ -4605,7 +4971,6 @@ if (buyNowBtn) {
                     "Requested quantity is not available."
                 );
 
-
                 return;
             }
 
@@ -4616,6 +4981,7 @@ if (buyNowBtn) {
                     await fetch(
                         "/api/cart/add",
                         {
+
                             method:
                                 "POST",
 
@@ -4655,16 +5021,12 @@ if (buyNowBtn) {
                     userLoggedIn =
                         false;
 
-
                     currentUser =
                         null;
 
-
                     updateReviewLoginUI();
 
-
                     showLoginModal();
-
 
                     return;
                 }
@@ -4679,7 +5041,6 @@ if (buyNowBtn) {
                         data.message ||
                         "Unable to continue."
                     );
-
 
                     return;
                 }
@@ -4853,9 +5214,7 @@ if (reviewImage) {
                 reviewImage.value =
                     "";
 
-
                 clearReviewImage();
-
 
                 return;
             }
@@ -4874,9 +5233,7 @@ if (reviewImage) {
                 reviewImage.value =
                     "";
 
-
                 clearReviewImage();
-
 
                 return;
             }
@@ -4980,7 +5337,6 @@ if (reviewForm) {
 
                 showLoginModal();
 
-
                 return;
             }
 
@@ -4990,7 +5346,6 @@ if (reviewForm) {
                 alert(
                     "Product is not loaded yet."
                 );
-
 
                 return;
             }
@@ -5012,7 +5367,6 @@ if (reviewForm) {
                 alert(
                     "Invalid product ID."
                 );
-
 
                 return;
             }
@@ -5036,7 +5390,6 @@ if (reviewForm) {
                     "Please select a rating."
                 );
 
-
                 return;
             }
 
@@ -5052,7 +5405,6 @@ if (reviewForm) {
                     "Please write your review."
                 );
 
-
                 return;
             }
 
@@ -5065,7 +5417,6 @@ if (reviewForm) {
                 alert(
                     "Review must be 1000 characters or less."
                 );
-
 
                 return;
             }
@@ -5109,7 +5460,6 @@ if (reviewForm) {
                 submitReviewBtn.disabled =
                     true;
 
-
                 submitReviewBtn.textContent =
                     "Submitting...";
             }
@@ -5128,6 +5478,7 @@ if (reviewForm) {
                     await fetch(
                         REVIEW_SUBMIT_URL,
                         {
+
                             method:
                                 "POST",
 
@@ -5168,10 +5519,8 @@ if (reviewForm) {
                     userLoggedIn =
                         false;
 
-
                     currentUser =
                         null;
-
 
                     updateReviewLoginUI();
 
@@ -5183,7 +5532,6 @@ if (reviewForm) {
 
 
                     showLoginModal();
-
 
                     return;
                 }
@@ -5199,7 +5547,6 @@ if (reviewForm) {
                         "Review API route was not found."
                     );
 
-
                     return;
                 }
 
@@ -5214,7 +5561,6 @@ if (reviewForm) {
                         data?.message ||
                         "Failed to submit review."
                     );
-
 
                     return;
                 }
@@ -5248,6 +5594,7 @@ if (reviewForm) {
                 alert(
                     "Unable to submit review. Please check that the server is running."
                 );
+
             }
 
             finally {
@@ -5256,7 +5603,6 @@ if (reviewForm) {
 
                     submitReviewBtn.disabled =
                         false;
-
 
                     submitReviewBtn.textContent =
                         "Submit Review";
@@ -5343,6 +5689,7 @@ async function loadReviews(productId) {
                     productId
                 )}`,
                 {
+
                     method:
                         "GET",
 
@@ -5545,9 +5892,7 @@ function updateReviewSummary(
                 total /
                 reviews.length;
 
-        }
-
-        else {
+        } else {
 
             average =
                 0;
@@ -5650,6 +5995,7 @@ function createReviewCard(review) {
                 date.toLocaleDateString(
                     undefined,
                     {
+
                         year:
                             "numeric",
 
@@ -5809,6 +6155,7 @@ async function refreshProduct() {
                     productId
                 )}`,
                 {
+
                     method:
                         "GET",
 
@@ -6039,22 +6386,52 @@ if (loginModal) {
 // =========================================================
 
 (async function preloadFaceLandmarker() {
+
+    console.log(
+        "========================================"
+    );
+
+    console.log(
+        "PRELOADING FACE LANDMARKER"
+    );
+
+    console.log(
+        "========================================"
+    );
+
+
     try {
-        console.log("Starting MediaPipe Face Landmarker preload...");
 
-        const ready = await waitForFaceLandmarker();
+        const ready =
+            await initializeFaceLandmarker();
 
-        if (ready) {
-            console.log("✅ AR face tracking is ready.");
+
+        if (
+            ready &&
+            faceLandmarker
+        ) {
+
+            console.log(
+                "✅ AR FACE TRACKING PRELOADED SUCCESSFULLY."
+            );
+
         } else {
+
             console.warn(
-                "⚠️ AR face tracking could not be initialized during preload."
+                "⚠️ AR FACE TRACKING PRELOAD FAILED."
             );
         }
 
-    } catch (error) {
-        console.error("❌ AR PRELOAD ERROR:", error);
     }
+
+    catch (error) {
+
+        console.error(
+            "❌ AR PRELOAD ERROR:",
+            error
+        );
+    }
+
 })();
 
 
@@ -6064,29 +6441,55 @@ if (loginModal) {
 
 async function initialize() {
 
-    console.log("========================================");
-    console.log("PRODUCT DETAILS INITIALIZING");
-    console.log("========================================");
+    console.log(
+        "========================================"
+    );
+
+    console.log(
+        "PRODUCT DETAILS INITIALIZING"
+    );
+
+    console.log(
+        "========================================"
+    );
+
 
     try {
 
-        const productId = getProductId();
+        const productId =
+            getProductId();
+
 
         if (!productId) {
-            console.error("No product ID found.");
+
+            console.error(
+                "No product ID found."
+            );
+
             showError();
+
             return;
         }
 
-        console.log("Product ID:", productId);
+
+        console.log(
+            "Product ID:",
+            productId
+        );
+
 
         await checkUserLogin();
 
         await loadProduct();
 
-        console.log("✅ Product details initialized.");
 
-    } catch (error) {
+        console.log(
+            "✅ Product details initialized."
+        );
+
+    }
+
+    catch (error) {
 
         console.error(
             "❌ APPLICATION INITIALIZATION ERROR:",
@@ -6100,10 +6503,29 @@ async function initialize() {
 // START APPLICATION
 // =========================================================
 
-document.addEventListener("DOMContentLoaded", () => {
+if (
+    document.readyState ===
+    "loading"
+) {
 
-    console.log("DOM loaded.");
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+
+            console.log(
+                "DOM loaded."
+            );
+
+            initialize();
+
+        }
+    );
+
+} else {
+
+    console.log(
+        "DOM already loaded."
+    );
 
     initialize();
-
-});
+}
