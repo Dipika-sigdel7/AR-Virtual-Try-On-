@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -24,18 +23,15 @@
       </a>
 
       <div class="nav-links">
-
         <a href="/">Home</a>
-
         <a href="/products">Products</a>
-
         <a href="/cart">Cart</a>
 
         <a href="/login" id="loginNav">
           Login
         </a>
-
       </div>
+
     </div>
   </nav>
 
@@ -49,11 +45,8 @@
     <!-- LOADING -->
 
     <div id="loading" class="loading">
-
       <div class="loader"></div>
-
       <p>Loading product...</p>
-
     </div>
 
 
@@ -276,7 +269,7 @@
 
     <!-- =====================================================
          REVIEWS SECTION
-    ===================================================== -->
+    ====================================================== -->
 
     <section
       id="reviewsSection"
@@ -695,6 +688,7 @@
           type="button"
           id="closeArModal"
           class="ar-close-btn"
+          aria-label="Close AR"
         >
           &times;
         </button>
@@ -749,6 +743,7 @@
           autoplay
           playsinline
           muted
+          webkit-playsinline="true"
         ></video>
 
 
@@ -756,26 +751,46 @@
           id="arUserImage"
           class="ar-user-image"
           alt="Your uploaded image"
+          draggable="false"
         >
 
+
+        <!--
+          Glasses/product overlay.
+
+          product_details.js will automatically update:
+          left
+          top
+          width
+          height
+          transform
+
+          according to the detected face landmarks.
+        -->
 
         <div
           id="arProductOverlay"
           class="ar-product-overlay"
+          aria-hidden="true"
         >
 
           <img
             id="arProductImage"
             src=""
             alt="Product"
+            draggable="false"
           >
 
         </div>
 
 
+        <!-- FACE TRACKING STATUS -->
+
         <div
           id="arInstruction"
           class="ar-instruction"
+          role="status"
+          aria-live="polite"
         >
           Allow camera access to start AR
         </div>
@@ -783,7 +798,9 @@
       </div>
 
 
-      <!-- CONTROLS -->
+      <!-- =================================================
+           MANUAL AR CONTROLS
+      ================================================== -->
 
       <div class="ar-controls">
 
@@ -839,8 +856,8 @@
 
 
       <p class="ar-help-text">
-        Drag the product to position it.
-        Use + and − to adjust its size.
+        Face tracking automatically positions the glasses.
+        Dragging and + / − can be used for manual adjustment.
       </p>
 
     </div>
@@ -849,35 +866,108 @@
 
 
   <!-- =====================================================
-       MEDIAPIPE
+       MEDIAPIPE FACE LANDMARK TRACKING
   ====================================================== -->
+
+  <!--
+    Hidden canvas for processing camera frames.
+  -->
+
+  <canvas
+    id="faceTrackingCanvas"
+    width="640"
+    height="480"
+    hidden
+  ></canvas>
+
+
+  <!--
+    MediaPipe Tasks Vision.
+
+    We use the +esm build so the browser can import the package
+    directly as an ES module.
+  -->
 
   <script type="module">
 
-    import {
-      FaceLandmarker,
-      FilesetResolver
-    } from
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22";
+    window.mediapipeReadyPromise = (async () => {
 
-    window.FaceLandmarker =
-      FaceLandmarker;
+      try {
 
-    window.FilesetResolver =
-      FilesetResolver;
+        const vision = await import(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm"
+        );
 
-    window.dispatchEvent(
-      new Event("mediapipe-ready")
-    );
+
+        /*
+         * Make MediaPipe classes available globally so
+         * product_details.js can use them.
+         */
+
+        window.FaceLandmarker =
+          vision.FaceLandmarker;
+
+        window.FilesetResolver =
+          vision.FilesetResolver;
+
+
+        /*
+         * Tell product_details.js that MediaPipe is ready.
+         */
+
+        window.dispatchEvent(
+          new Event("mediapipe-ready")
+        );
+
+
+        console.log(
+          "MediaPipe FaceLandmarker loaded successfully."
+        );
+
+
+        return {
+          FaceLandmarker:
+            vision.FaceLandmarker,
+
+          FilesetResolver:
+            vision.FilesetResolver
+        };
+
+      } catch (error) {
+
+        console.error(
+          "Failed to load MediaPipe:",
+          error
+        );
+
+
+        window.dispatchEvent(
+          new CustomEvent(
+            "mediapipe-error",
+            {
+              detail: error
+            }
+          )
+        );
+
+
+        throw error;
+      }
+
+    })();
 
   </script>
 
+
+  <!-- =====================================================
+       PRODUCT DETAILS JAVASCRIPT
+  ====================================================== -->
 
   <script
     src="/js/product_details.js"
     defer
   ></script>
 
+
 </body>
 </html>
-

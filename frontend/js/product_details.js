@@ -221,6 +221,8 @@ let arPositionX = 0;
 
 let arPositionY = 0;
 
+let arRotation = 0;
+
 
 // =========================================================
 // MANUAL AR CONTROL STATE
@@ -243,9 +245,13 @@ let faceTrackingReady = false;
 
 let faceTrackingInitializing = false;
 
+let faceTrackingInitPromise = null;
+
 let arAnimationFrame = null;
 
 let lastVideoTime = -1;
+
+let lastDetectionTimestamp = 0;
 
 let lastFaceDetected = false;
 
@@ -262,7 +268,16 @@ let smoothedFaceWidth = null;
 
 let smoothedFaceHeight = null;
 
+let smoothedEyeDistance = null;
+
+let smoothedRotation = null;
+
+
+// Lower value = smoother but slower.
+// Higher value = faster but less smooth.
 const FACE_SMOOTHING = 0.30;
+
+const ROTATION_SMOOTHING = 0.25;
 
 
 // =========================================================
@@ -326,7 +341,6 @@ function escapeAttribute(value) {
 
 // =========================================================
 // GET PRODUCT IMAGE
-// IMPORTANT IMAGE FIX
 // =========================================================
 
 function getProductImage(product) {
@@ -335,10 +349,7 @@ function getProductImage(product) {
         return null;
     }
 
-    /*
-     * Different APIs/databases may return
-     * the product image using different fields.
-     */
+
     let image =
         product.image_url ||
         product.image ||
@@ -347,6 +358,7 @@ function getProductImage(product) {
         product.imageUrl ||
         product.imagePath ||
         null;
+
 
     if (!image) {
 
@@ -358,19 +370,17 @@ function getProductImage(product) {
         return null;
     }
 
+
     image =
         String(image).trim();
+
 
     if (!image) {
         return null;
     }
 
-    /*
-     * Complete external URL.
-     *
-     * Example:
-     * https://example.com/image.jpg
-     */
+
+    // External image URL
     if (
         image.startsWith("http://") ||
         image.startsWith("https://")
@@ -379,9 +389,8 @@ function getProductImage(product) {
         return image;
     }
 
-    /*
-     * Base64 image.
-     */
+
+    // Base64 image
     if (
         image.startsWith("data:image/")
     ) {
@@ -389,30 +398,18 @@ function getProductImage(product) {
         return image;
     }
 
-    /*
-     * Convert Windows path to URL path.
-     *
-     * uploads\products\watch.jpg
-     *
-     * becomes:
-     *
-     * uploads/products/watch.jpg
-     */
+
+    // Convert Windows path
     image =
         image.replace(/\\/g, "/");
 
-    /*
-     * Remove ./ from beginning.
-     */
+
+    // Remove ./ prefix
     image =
         image.replace(/^\.\/+/, "");
 
-    /*
-     * If the backend already returned
-     * an absolute website path:
-     *
-     * /uploads/products/watch.jpg
-     */
+
+    // Already absolute URL path
     if (
         image.startsWith("/")
     ) {
@@ -420,10 +417,8 @@ function getProductImage(product) {
         return image;
     }
 
-    /*
-     * Remove unnecessary "frontend/"
-     * if your database accidentally stores it.
-     */
+
+    // Remove frontend/
     if (
         image.startsWith("frontend/")
     ) {
@@ -434,35 +429,25 @@ function getProductImage(product) {
             );
     }
 
-    /*
-     * Convert relative path to
-     * browser URL.
-     *
-     * uploads/products/watch.jpg
-     *
-     * becomes:
-     *
-     * /uploads/products/watch.jpg
-     */
+
     return `/${image}`;
 }
 
 
 // =========================================================
 // SET PRODUCT IMAGE
-// CENTRAL IMAGE FUNCTION
 // =========================================================
 
-function setProductImage(
-    product
-) {
+function setProductImage(product) {
 
     if (!productImage) {
         return null;
     }
 
+
     const image =
         getProductImage(product);
+
 
     console.log(
         "========================================"
@@ -473,7 +458,7 @@ function setProductImage(
     );
 
     console.log(
-        "Database/API image:",
+        "API image:",
         product?.image
     );
 
@@ -493,7 +478,7 @@ function setProductImage(
     );
 
     console.log(
-        "Final browser image URL:",
+        "Final image:",
         image
     );
 
@@ -511,20 +496,18 @@ function setProductImage(
             "src"
         );
 
+
         if (imageFallback) {
 
             imageFallback.style.display =
                 "flex";
         }
 
+
         return null;
     }
 
 
-    /*
-     * Prevent previous handlers from
-     * affecting the new image.
-     */
     productImage.onerror =
         null;
 
@@ -532,17 +515,10 @@ function setProductImage(
         null;
 
 
-    /*
-     * Show image.
-     */
     productImage.style.display =
         "block";
 
 
-    /*
-     * Show fallback until image
-     * successfully loads.
-     */
     if (imageFallback) {
 
         imageFallback.style.display =
@@ -550,9 +526,6 @@ function setProductImage(
     }
 
 
-    /*
-     * Handle successful loading.
-     */
     productImage.onload =
         function () {
 
@@ -561,8 +534,10 @@ function setProductImage(
                 image
             );
 
+
             productImage.style.display =
                 "block";
+
 
             if (imageFallback) {
 
@@ -572,37 +547,18 @@ function setProductImage(
         };
 
 
-    /*
-     * Handle failed loading.
-     */
     productImage.onerror =
         function () {
 
             console.error(
-                "========================================"
-            );
-
-            console.error(
-                "PRODUCT IMAGE FAILED TO LOAD"
-            );
-
-            console.error(
-                "Requested URL:",
+                "PRODUCT IMAGE FAILED:",
                 image
-            );
-
-            console.error(
-                "Product:",
-                product
-            );
-
-            console.error(
-                "========================================"
             );
 
 
             productImage.style.display =
                 "none";
+
 
             if (imageFallback) {
 
@@ -612,9 +568,6 @@ function setProductImage(
         };
 
 
-    /*
-     * Finally set the source.
-     */
     productImage.src =
         image;
 
@@ -629,13 +582,11 @@ function setProductImage(
 
 function getARProductImage() {
 
-    /*
-     * First use the product object.
-     */
     const productImageURL =
         getProductImage(
             currentProduct
         );
+
 
     if (productImageURL) {
 
@@ -643,11 +594,6 @@ function getARProductImage() {
     }
 
 
-    /*
-     * If product object doesn't contain
-     * image, use the already displayed
-     * product image.
-     */
     if (
         productImage &&
         productImage.src &&
@@ -676,11 +622,13 @@ function getARProductType() {
             ""
         ).toLowerCase();
 
+
     const name =
         String(
             currentProduct?.name ||
             ""
         ).toLowerCase();
+
 
     const combined =
         `${category} ${name}`;
@@ -734,6 +682,56 @@ function getARProductType() {
 
 
     return "generic";
+}
+
+
+// =========================================================
+// RESET FACE SMOOTHING
+// =========================================================
+
+function resetFaceSmoothing() {
+
+    smoothedFaceX = null;
+
+    smoothedFaceY = null;
+
+    smoothedFaceWidth = null;
+
+    smoothedFaceHeight = null;
+
+    smoothedEyeDistance = null;
+
+    smoothedRotation = null;
+}
+
+
+// =========================================================
+// SMOOTH VALUE
+// =========================================================
+
+function smoothValue(
+    previous,
+    next,
+    amount = FACE_SMOOTHING
+) {
+
+    if (
+        previous === null ||
+        !Number.isFinite(previous)
+    ) {
+
+        return next;
+    }
+
+
+    return (
+        previous +
+        (
+            next -
+            previous
+        ) *
+        amount
+    );
 }
 
 
@@ -806,8 +804,7 @@ function getARAnchor(
                 x: faceX,
 
                 y:
-                    faceY +
-                    faceHeight * 0.02,
+                    faceY,
 
                 scale:
                     faceWidth / 180
@@ -845,47 +842,30 @@ function getARAnchor(
 
 
 // =========================================================
-// RESET FACE SMOOTHING
+// PREPARE AR PRODUCT IMAGE
 // =========================================================
 
-function resetFaceSmoothing() {
+function prepareARProductImage() {
 
-    smoothedFaceX = null;
-
-    smoothedFaceY = null;
-
-    smoothedFaceWidth = null;
-
-    smoothedFaceHeight = null;
-}
-
-
-// =========================================================
-// SMOOTH VALUE
-// =========================================================
-
-function smoothValue(
-    previous,
-    next
-) {
-
-    if (
-        previous === null ||
-        !Number.isFinite(previous)
-    ) {
-
-        return next;
+    if (!arProductImage) {
+        return;
     }
 
 
-    return (
-        previous +
-        (
-            next -
-            previous
-        ) *
-        FACE_SMOOTHING
-    );
+    arProductImage.style.display =
+        "block";
+
+
+    arProductImage.style.maxWidth =
+        "none";
+
+
+    arProductImage.style.userSelect =
+        "none";
+
+
+    arProductImage.draggable =
+        false;
 }
 
 
@@ -920,7 +900,7 @@ async function openAR() {
 
 
     console.log(
-        "Opening AR with image:",
+        "Opening AR:",
         image
     );
 
@@ -970,11 +950,15 @@ async function openAR() {
                     "AR PRODUCT IMAGE LOADED:",
                     image
                 );
+
+
+                prepareARProductImage();
             };
 
 
         arProductImage.src =
             image;
+
 
         arProductImage.style.display =
             "block";
@@ -1000,7 +984,7 @@ async function openAR() {
 
 
 // =========================================================
-// START CAMERA
+// START AR CAMERA
 // =========================================================
 
 async function startARCamera() {
@@ -1009,11 +993,14 @@ async function startARCamera() {
 
     resetFaceSmoothing();
 
+
     arDragging =
         false;
 
+
     automaticTrackingEnabled =
         true;
+
 
     currentARMode =
         "camera";
@@ -1027,7 +1014,7 @@ async function startARCamera() {
         ) {
 
             throw new Error(
-                "Camera API is not supported."
+                "Camera API is not supported by this browser."
             );
         }
 
@@ -1052,7 +1039,6 @@ async function startARCamera() {
                     frameRate: {
                         ideal: 30
                     }
-
                 },
 
                 audio: false
@@ -1071,6 +1057,22 @@ async function startARCamera() {
             arCameraStream;
 
 
+        arCamera.setAttribute(
+            "playsinline",
+            ""
+        );
+
+
+        arCamera.setAttribute(
+            "autoplay",
+            ""
+        );
+
+
+        arCamera.muted =
+            true;
+
+
         arCamera.style.display =
             "block";
 
@@ -1087,7 +1089,7 @@ async function startARCamera() {
         );
 
 
-        const playCamera =
+        const waitForCamera =
             async () => {
 
                 try {
@@ -1108,7 +1110,7 @@ async function startARCamera() {
                 if (arInstruction) {
 
                     arInstruction.textContent =
-                        "Detecting your face...";
+                        "Loading face tracking...";
                 }
 
 
@@ -1118,11 +1120,23 @@ async function startARCamera() {
 
                 if (ready) {
 
+                    if (arInstruction) {
+
+                        arInstruction.textContent =
+                            "Detecting your face...";
+                    }
+
+
                     startFaceTracking();
 
                 }
 
                 else {
+
+                    console.error(
+                        "Face Landmarker could not be initialized."
+                    );
+
 
                     if (arInstruction) {
 
@@ -1138,14 +1152,14 @@ async function startARCamera() {
             HTMLMediaElement.HAVE_METADATA
         ) {
 
-            await playCamera();
+            await waitForCamera();
 
         }
 
         else {
 
             arCamera.onloadedmetadata =
-                playCamera;
+                waitForCamera;
         }
 
     }
@@ -1178,107 +1192,118 @@ async function startARCamera() {
 
 
 // =========================================================
-// WAIT FOR MEDIAPIPE
+// LOAD MEDIAPIPE LIBRARY
+//
+// IMPORTANT:
+// This function does NOT depend on a custom
+// "mediapipe-ready" event.
 // =========================================================
 
-async function waitForFaceLandmarker() {
-
-    if (faceTrackingReady) {
-
-        return true;
-    }
-
+async function loadMediaPipeLibrary() {
 
     if (
         window.FaceLandmarker &&
         window.FilesetResolver
     ) {
 
-        return await initializeFaceLandmarker();
+        return true;
     }
 
 
-    return new Promise(
-        resolve => {
+    try {
 
-            let completed =
-                false;
-
-
-            const finish =
-                async () => {
-
-                    if (completed) {
-
-                        return;
-                    }
+        console.log(
+            "Loading MediaPipe Face Landmarker..."
+        );
 
 
-                    completed =
-                        true;
-
-
-                    window.removeEventListener(
-                        "mediapipe-ready",
-                        finish
-                    );
-
-
-                    const result =
-                        await initializeFaceLandmarker();
-
-
-                    resolve(result);
-                };
-
-
-            window.addEventListener(
-                "mediapipe-ready",
-                finish,
-                {
-                    once: true
-                }
+        const vision =
+            await import(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs"
             );
 
 
-            setTimeout(
-                async () => {
+        if (
+            !vision.FaceLandmarker ||
+            !vision.FilesetResolver
+        ) {
 
-                    if (completed) {
-
-                        return;
-                    }
-
-
-                    if (
-                        window.FaceLandmarker &&
-                        window.FilesetResolver
-                    ) {
-
-                        await finish();
-
-                    }
-
-                    else {
-
-                        completed =
-                            true;
-
-
-                        window.removeEventListener(
-                            "mediapipe-ready",
-                            finish
-                        );
-
-
-                        resolve(false);
-                    }
-
-                },
-                10000
+            throw new Error(
+                "FaceLandmarker or FilesetResolver was not exported."
             );
         }
-    );
+
+
+        window.FaceLandmarker =
+            vision.FaceLandmarker;
+
+
+        window.FilesetResolver =
+            vision.FilesetResolver;
+
+
+        console.log(
+            "MediaPipe library loaded successfully."
+        );
+
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "MEDIAPIPE LIBRARY LOAD ERROR:",
+            error
+        );
+
+
+        return false;
+    }
+}
+
+
+// =========================================================
+// WAIT FOR MEDIAPIPE
+//
+// FIXED INITIALIZATION RACE
+// =========================================================
+
+async function waitForFaceLandmarker() {
+
+    if (
+        faceTrackingReady &&
+        faceLandmarker
+    ) {
+
+        return true;
+    }
+
+
+    if (
+        faceTrackingInitPromise
+    ) {
+
+        return await faceTrackingInitPromise;
+    }
+
+
+    faceTrackingInitPromise =
+        initializeFaceLandmarker();
+
+
+    try {
+
+        return await faceTrackingInitPromise;
+
+    }
+
+    finally {
+
+        faceTrackingInitPromise =
+            null;
+    }
 }
 
 
@@ -1288,7 +1313,10 @@ async function waitForFaceLandmarker() {
 
 async function initializeFaceLandmarker() {
 
-    if (faceTrackingReady) {
+    if (
+        faceTrackingReady &&
+        faceLandmarker
+    ) {
 
         return true;
     }
@@ -1296,18 +1324,20 @@ async function initializeFaceLandmarker() {
 
     if (faceTrackingInitializing) {
 
-        return false;
-    }
+        /*
+         * Another caller is already
+         * initializing MediaPipe.
+         *
+         * Wait for that promise instead
+         * of returning false.
+         */
+        if (
+            faceTrackingInitPromise
+        ) {
 
+            return await faceTrackingInitPromise;
+        }
 
-    if (
-        !window.FaceLandmarker ||
-        !window.FilesetResolver
-    ) {
-
-        console.error(
-            "MediaPipe Face Landmarker library is not loaded."
-        );
 
         return false;
     }
@@ -1319,11 +1349,35 @@ async function initializeFaceLandmarker() {
 
     try {
 
+        // ---------------------------------------------
+        // LOAD LIBRARY
+        // ---------------------------------------------
+
+        const libraryReady =
+            await loadMediaPipeLibrary();
+
+
+        if (!libraryReady) {
+
+            throw new Error(
+                "MediaPipe library failed to load."
+            );
+        }
+
+
+        // ---------------------------------------------
+        // LOAD WASM
+        // ---------------------------------------------
+
         const vision =
             await window.FilesetResolver.forVisionTasks(
                 "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
             );
 
+
+        // ---------------------------------------------
+        // CREATE FACE LANDMARKER
+        // ---------------------------------------------
 
         faceLandmarker =
             await window.FaceLandmarker.createFromOptions(
@@ -1336,23 +1390,30 @@ async function initializeFaceLandmarker() {
                             "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
                     },
 
+
                     runningMode:
                         "VIDEO",
+
 
                     numFaces:
                         1,
 
+
                     minFaceDetectionConfidence:
-                        0.5,
+                        0.35,
+
 
                     minFacePresenceConfidence:
-                        0.5,
+                        0.35,
+
 
                     minTrackingConfidence:
-                        0.5,
+                        0.35,
+
 
                     outputFaceBlendshapes:
                         false,
+
 
                     outputFacialTransformationMatrixes:
                         true
@@ -1360,12 +1421,28 @@ async function initializeFaceLandmarker() {
             );
 
 
+        if (!faceLandmarker) {
+
+            throw new Error(
+                "Face Landmarker instance was not created."
+            );
+        }
+
+
         faceTrackingReady =
             true;
 
 
         console.log(
-            "MediaPipe Face Landmarker ready."
+            "========================================"
+        );
+
+        console.log(
+            "MEDIAPIPE FACE LANDMARKER READY"
+        );
+
+        console.log(
+            "========================================"
         );
 
 
@@ -1376,13 +1453,25 @@ async function initializeFaceLandmarker() {
     catch (error) {
 
         console.error(
-            "MEDIAPIPE INITIALIZATION ERROR:",
+            "========================================"
+        );
+
+        console.error(
+            "MEDIAPIPE INITIALIZATION ERROR"
+        );
+
+        console.error(
             error
+        );
+
+        console.error(
+            "========================================"
         );
 
 
         faceTrackingReady =
             false;
+
 
         faceLandmarker =
             null;
@@ -1406,15 +1495,22 @@ async function initializeFaceLandmarker() {
 
 function startFaceTracking() {
 
-    if (!faceTrackingReady) {
-        return;
-    }
+    if (
+        !faceTrackingReady ||
+        !faceLandmarker ||
+        !arCamera
+    ) {
 
-    if (!faceLandmarker) {
-        return;
-    }
+        console.error(
+            "Cannot start face tracking:",
+            {
+                faceTrackingReady,
+                faceLandmarker,
+                arCamera
+            }
+        );
 
-    if (!arCamera) {
+
         return;
     }
 
@@ -1426,8 +1522,16 @@ function startFaceTracking() {
         -1;
 
 
+    lastDetectionTimestamp =
+        0;
+
+
     const trackingLoop =
         () => {
+
+            // -----------------------------------------
+            // CHECK AR MODAL
+            // -----------------------------------------
 
             if (
                 !arModal ||
@@ -1436,49 +1540,92 @@ function startFaceTracking() {
                 )
             ) {
 
+                arAnimationFrame =
+                    null;
+
                 return;
             }
 
+
+            // -----------------------------------------
+            // ONLY CAMERA MODE
+            // -----------------------------------------
 
             if (
                 currentARMode !==
                 "camera"
             ) {
 
+                arAnimationFrame =
+                    requestAnimationFrame(
+                        trackingLoop
+                    );
+
                 return;
             }
 
+
+            // -----------------------------------------
+            // CHECK STREAM
+            // -----------------------------------------
 
             if (
                 !arCameraStream ||
                 !arCamera.srcObject
             ) {
 
+                arAnimationFrame =
+                    requestAnimationFrame(
+                        trackingLoop
+                    );
+
                 return;
             }
 
 
+            // -----------------------------------------
+            // CHECK VIDEO
+            // -----------------------------------------
+
             if (
                 arCamera.readyState >=
-                HTMLMediaElement.HAVE_CURRENT_DATA
+                HTMLMediaElement.HAVE_CURRENT_DATA &&
+                arCamera.videoWidth > 0 &&
+                arCamera.videoHeight > 0
             ) {
 
-                const videoTime =
+                const currentVideoTime =
                     arCamera.currentTime;
 
 
                 if (
-                    videoTime !==
+                    currentVideoTime !==
                     lastVideoTime
                 ) {
 
                     try {
 
+                        /*
+                         * MediaPipe requires a
+                         * monotonically increasing
+                         * timestamp.
+                         */
+                        const timestamp =
+                            Math.max(
+                                performance.now(),
+                                lastDetectionTimestamp + 1
+                            );
+
+
                         const result =
                             faceLandmarker.detectForVideo(
                                 arCamera,
-                                performance.now()
+                                timestamp
                             );
+
+
+                        lastDetectionTimestamp =
+                            timestamp;
 
 
                         processFaceResult(
@@ -1487,7 +1634,7 @@ function startFaceTracking() {
 
 
                         lastVideoTime =
-                            videoTime;
+                            currentVideoTime;
 
                     }
 
@@ -1513,6 +1660,11 @@ function startFaceTracking() {
         requestAnimationFrame(
             trackingLoop
         );
+
+
+    console.log(
+        "Face tracking started."
+    );
 }
 
 
@@ -1540,6 +1692,10 @@ function stopFaceTracking() {
         -1;
 
 
+    lastDetectionTimestamp =
+        0;
+
+
     lastFaceDetected =
         false;
 }
@@ -1547,11 +1703,14 @@ function stopFaceTracking() {
 
 // =========================================================
 // GET VIDEO DISPLAY RECTANGLE
+//
+// Handles object-fit: cover.
 // =========================================================
 
 function getVideoDisplayRect() {
 
     if (!arCamera) {
+
         return null;
     }
 
@@ -1559,11 +1718,14 @@ function getVideoDisplayRect() {
     const videoWidth =
         arCamera.videoWidth;
 
+
     const videoHeight =
         arCamera.videoHeight;
 
+
     const displayWidth =
         arCamera.clientWidth;
+
 
     const displayHeight =
         arCamera.clientHeight;
@@ -1590,6 +1752,7 @@ function getVideoDisplayRect() {
     const renderedWidth =
         videoWidth *
         scale;
+
 
     const renderedHeight =
         videoHeight *
@@ -1633,6 +1796,8 @@ function getVideoDisplayRect() {
 
 // =========================================================
 // CONVERT LANDMARK TO DISPLAY COORDINATES
+//
+// Camera is mirrored, so X is mirrored here.
 // =========================================================
 
 function landmarkToDisplay(
@@ -1640,7 +1805,10 @@ function landmarkToDisplay(
     rect
 ) {
 
-    if (!point || !rect) {
+    if (
+        !point ||
+        !rect
+    ) {
 
         return {
             x: 0,
@@ -1649,6 +1817,10 @@ function landmarkToDisplay(
     }
 
 
+    /*
+     * Mirror X because the front camera
+     * is displayed like a mirror.
+     */
     const mirroredX =
         1 -
         point.x;
@@ -1680,12 +1852,111 @@ function landmarkToDisplay(
 
 
 // =========================================================
-// PROCESS CAMERA FACE RESULT
+// DISTANCE BETWEEN TWO POINTS
 // =========================================================
 
-function processFaceResult(
-    result
+function distanceBetween(
+    point1,
+    point2
 ) {
+
+    const dx =
+        point2.x -
+        point1.x;
+
+
+    const dy =
+        point2.y -
+        point1.y;
+
+
+    return Math.sqrt(
+        dx * dx +
+        dy * dy
+    );
+}
+
+
+// =========================================================
+// CALCULATE ANGLE BETWEEN EYES
+// =========================================================
+
+function calculateEyeAngle(
+    leftEye,
+    rightEye
+) {
+
+    if (
+        !leftEye ||
+        !rightEye
+    ) {
+
+        return 0;
+    }
+
+
+    const dx =
+        rightEye.x -
+        leftEye.x;
+
+
+    const dy =
+        rightEye.y -
+        leftEye.y;
+
+
+    if (
+        Math.abs(dx) <
+        0.001
+    ) {
+
+        return 0;
+    }
+
+
+    /*
+     * CSS positive rotation rotates clockwise.
+     * Screen Y increases downward, so this
+     * naturally follows head tilt.
+     */
+    const angle =
+        Math.atan2(
+            dy,
+            dx
+        ) *
+        180 /
+        Math.PI;
+
+
+    /*
+     * Prevent extreme rotation caused
+     * by occasional bad landmarks.
+     */
+    return Math.max(
+        -45,
+        Math.min(
+            45,
+            angle
+        )
+    );
+}
+
+
+// =========================================================
+// PROCESS CAMERA FACE RESULT
+//
+// IMPORTANT:
+// For glasses we use eye landmarks rather
+// than the whole face bounding box.
+//
+// MediaPipe landmark numbers:
+// 33  = right eye outer corner
+// 133 = right eye inner corner
+// 263 = left eye outer corner
+// 362 = left eye inner corner
+// =========================================================
+
+function processFaceResult(result) {
 
     if (
         !result ||
@@ -1717,7 +1988,7 @@ function processFaceResult(
 
     if (
         !landmarks ||
-        landmarks.length === 0
+        landmarks.length < 400
     ) {
 
         return;
@@ -1733,6 +2004,206 @@ function processFaceResult(
         return;
     }
 
+
+    // =====================================================
+    // EYE LANDMARKS
+    // =====================================================
+
+    const rightEyeOuter =
+        landmarks[33];
+
+
+    const rightEyeInner =
+        landmarks[133];
+
+
+    const leftEyeOuter =
+        landmarks[263];
+
+
+    const leftEyeInner =
+        landmarks[362];
+
+
+    if (
+        !rightEyeOuter ||
+        !rightEyeInner ||
+        !leftEyeOuter ||
+        !leftEyeInner
+    ) {
+
+        console.warn(
+            "Eye landmarks unavailable."
+        );
+
+
+        return;
+    }
+
+
+    // =====================================================
+    // CONVERT EYES TO SCREEN COORDINATES
+    // =====================================================
+
+    const rightOuter =
+        landmarkToDisplay(
+            rightEyeOuter,
+            rect
+        );
+
+
+    const rightInner =
+        landmarkToDisplay(
+            rightEyeInner,
+            rect
+        );
+
+
+    const leftOuter =
+        landmarkToDisplay(
+            leftEyeOuter,
+            rect
+        );
+
+
+    const leftInner =
+        landmarkToDisplay(
+            leftEyeInner,
+            rect
+        );
+
+
+    // =====================================================
+    // EYE CENTERS
+    // =====================================================
+
+    const rightEyeCenter = {
+
+        x:
+            (
+                rightOuter.x +
+                rightInner.x
+            ) / 2,
+
+        y:
+            (
+                rightOuter.y +
+                rightInner.y
+            ) / 2
+    };
+
+
+    const leftEyeCenter = {
+
+        x:
+            (
+                leftOuter.x +
+                leftInner.x
+            ) / 2,
+
+        y:
+            (
+                leftOuter.y +
+                leftInner.y
+            ) / 2
+    };
+
+
+    // =====================================================
+    // CENTER BETWEEN BOTH EYES
+    // =====================================================
+
+    const eyeCenterX =
+        (
+            leftEyeCenter.x +
+            rightEyeCenter.x
+        ) / 2;
+
+
+    const eyeCenterY =
+        (
+            leftEyeCenter.y +
+            rightEyeCenter.y
+        ) / 2;
+
+
+    // =====================================================
+    // EYE DISTANCE
+    // =====================================================
+
+    const eyeDistance =
+        distanceBetween(
+            leftEyeCenter,
+            rightEyeCenter
+        );
+
+
+    if (
+        !Number.isFinite(
+            eyeDistance
+        ) ||
+        eyeDistance < 10
+    ) {
+
+        return;
+    }
+
+
+    // =====================================================
+    // EYE ANGLE
+    // =====================================================
+
+    /*
+     * Because the displayed camera is mirrored,
+     * leftEyeCenter is visually on the left.
+     */
+    const eyeAngle =
+        calculateEyeAngle(
+            leftEyeCenter,
+            rightEyeCenter
+        );
+
+
+    // =====================================================
+    // SMOOTH EYE POSITION
+    // =====================================================
+
+    smoothedFaceX =
+        smoothValue(
+            smoothedFaceX,
+            eyeCenterX -
+                rect.displayWidth / 2
+        );
+
+
+    smoothedFaceY =
+        smoothValue(
+            smoothedFaceY,
+            eyeCenterY -
+                rect.displayHeight / 2
+        );
+
+
+    smoothedEyeDistance =
+        smoothValue(
+            smoothedEyeDistance,
+            eyeDistance
+        );
+
+
+    smoothedRotation =
+        smoothValue(
+            smoothedRotation,
+            eyeAngle,
+            ROTATION_SMOOTHING
+        );
+
+
+    // =====================================================
+    // ALSO CALCULATE FACE BOUNDING BOX
+    //
+    // Used for non-glasses products.
+    // =====================================================
 
     let minX =
         Infinity;
@@ -1793,73 +2264,14 @@ function processFaceResult(
     );
 
 
-    if (
-        !Number.isFinite(minX) ||
-        !Number.isFinite(maxX) ||
-        !Number.isFinite(minY) ||
-        !Number.isFinite(maxY)
-    ) {
-
-        return;
-    }
-
-
     const faceWidth =
         maxX -
         minX;
 
+
     const faceHeight =
         maxY -
         minY;
-
-
-    if (
-        faceWidth <= 0 ||
-        faceHeight <= 0
-    ) {
-
-        return;
-    }
-
-
-    const faceCenterX =
-        (
-            minX +
-            maxX
-        ) /
-        2;
-
-
-    const faceCenterY =
-        (
-            minY +
-            maxY
-        ) /
-        2;
-
-
-    const rawFaceX =
-        faceCenterX -
-        rect.displayWidth / 2;
-
-
-    const rawFaceY =
-        faceCenterY -
-        rect.displayHeight / 2;
-
-
-    smoothedFaceX =
-        smoothValue(
-            smoothedFaceX,
-            rawFaceX
-        );
-
-
-    smoothedFaceY =
-        smoothValue(
-            smoothedFaceY,
-            rawFaceY
-        );
 
 
     smoothedFaceWidth =
@@ -1880,39 +2292,134 @@ function processFaceResult(
         true;
 
 
+    // =====================================================
+    // AUTOMATIC AR POSITION
+    // =====================================================
+
     if (
         automaticTrackingEnabled &&
         !arDragging
     ) {
 
-        const anchor =
-            getARAnchor(
-                smoothedFaceX,
-                smoothedFaceY,
-                smoothedFaceWidth,
-                smoothedFaceHeight
+        const productType =
+            getARProductType();
+
+
+        // =================================================
+        // GLASSES
+        // =================================================
+
+        if (
+            productType ===
+            "glasses"
+        ) {
+
+            /*
+             * Put the center of the glasses
+             * directly between the eyes.
+             */
+            arPositionX =
+                smoothedFaceX;
+
+
+            /*
+             * Slightly move glasses downward
+             * because the image itself may have
+             * transparent padding.
+             */
+            arPositionY =
+                smoothedFaceY +
+                3;
+
+
+            /*
+             * Width based on distance between
+             * the eyes.
+             *
+             * 2.25 gives a natural glasses width.
+             */
+            const glassesWidth =
+                Math.max(
+                    80,
+                    Math.min(
+                        rect.displayWidth * 0.95,
+                        smoothedEyeDistance * 2.25
+                    )
+                );
+
+
+            if (arProductOverlay) {
+
+                arProductOverlay.style.width =
+                    `${glassesWidth}px`;
+
+                arProductOverlay.style.height =
+                    "auto";
+            }
+
+
+            /*
+             * We use CSS width for glasses,
+             * so scale remains 1.
+             */
+            arScale =
+                1;
+
+
+            /*
+             * Rotate according to head tilt.
+             */
+            arRotation =
+                smoothedRotation;
+
+
+            updateARProduct(
+                arRotation
             );
+        }
 
 
-        arPositionX =
-            anchor.x;
+        // =================================================
+        // OTHER PRODUCTS
+        // =================================================
+
+        else {
+
+            const anchor =
+                getARAnchor(
+                    smoothedFaceX,
+                    smoothedFaceY,
+                    smoothedFaceWidth,
+                    smoothedFaceHeight
+                );
 
 
-        arPositionY =
-            anchor.y;
+            arPositionX =
+                anchor.x;
 
 
-        arScale =
-            Math.max(
-                0.25,
-                Math.min(
-                    3,
-                    anchor.scale
-                )
+            arPositionY =
+                anchor.y;
+
+
+            arScale =
+                Math.max(
+                    0.25,
+                    Math.min(
+                        3,
+                        anchor.scale
+                    )
+                );
+
+
+            arRotation =
+                0;
+
+
+            updateARProduct(
+                arRotation
             );
-
-
-        updateARProduct();
+        }
     }
 
 
@@ -1964,7 +2471,17 @@ function stopARCamera() {
 
     if (arCamera) {
 
-        arCamera.pause();
+        try {
+
+            arCamera.pause();
+
+        }
+
+        catch (error) {
+
+            // Ignore pause errors.
+        }
+
 
         arCamera.srcObject =
             null;
@@ -2006,6 +2523,7 @@ if (arImageInput) {
 
 
             if (!file) {
+
                 return;
             }
 
@@ -2058,6 +2576,7 @@ if (arImageInput) {
 
                     resetFaceSmoothing();
 
+
                     arDragging =
                         false;
 
@@ -2081,6 +2600,7 @@ if (arImageInput) {
 
                         arUserImage.src =
                             event.target.result;
+
 
                         arUserImage.style.display =
                             "block";
@@ -2170,9 +2690,7 @@ if (arImageInput) {
 // WAIT FOR IMAGE LOAD
 // =========================================================
 
-function waitForImageLoad(
-    image
-) {
+function waitForImageLoad(image) {
 
     return new Promise(
         (
@@ -2221,12 +2739,10 @@ function waitForImageLoad(
 
 
 // =========================================================
-// PROCESS UPLOADED IMAGE
+// PROCESS UPLOADED IMAGE FACE
 // =========================================================
 
-function processUploadedImageFace(
-    result
-) {
+function processUploadedImageFace(result) {
 
     if (
         !result ||
@@ -2253,63 +2769,50 @@ function processUploadedImageFace(
         result.faceLandmarks[0];
 
 
-    if (!landmarks) {
+    if (
+        !landmarks ||
+        landmarks.length < 400
+    ) {
+
         return;
     }
 
 
-    let minX =
-        Infinity;
+    // =====================================================
+    // EYE LANDMARKS
+    // =====================================================
 
-    let maxX =
-        -Infinity;
-
-    let minY =
-        Infinity;
-
-    let maxY =
-        -Infinity;
+    const rightEyeOuter =
+        landmarks[33];
 
 
-    landmarks.forEach(
-        point => {
-
-            if (
-                Number.isFinite(point.x) &&
-                Number.isFinite(point.y)
-            ) {
-
-                minX =
-                    Math.min(
-                        minX,
-                        point.x
-                    );
+    const rightEyeInner =
+        landmarks[133];
 
 
-                maxX =
-                    Math.max(
-                        maxX,
-                        point.x
-                    );
+    const leftEyeOuter =
+        landmarks[263];
 
 
-                minY =
-                    Math.min(
-                        minY,
-                        point.y
-                    );
+    const leftEyeInner =
+        landmarks[362];
 
 
-                maxY =
-                    Math.max(
-                        maxY,
-                        point.y
-                    );
-            }
-        }
-    );
+    if (
+        !rightEyeOuter ||
+        !rightEyeInner ||
+        !leftEyeOuter ||
+        !leftEyeInner
+    ) {
+
+        return;
+    }
 
 
+    /*
+     * Uploaded image is not mirrored.
+     * Therefore we convert coordinates directly.
+     */
     const imageWidth =
         arUserImage.clientWidth ||
         arUserImage.naturalWidth ||
@@ -2322,86 +2825,299 @@ function processUploadedImageFace(
         1;
 
 
-    const faceWidth =
+    const rightOuter = {
+
+        x:
+            rightEyeOuter.x *
+            imageWidth,
+
+        y:
+            rightEyeOuter.y *
+            imageHeight
+    };
+
+
+    const rightInner = {
+
+        x:
+            rightEyeInner.x *
+            imageWidth,
+
+        y:
+            rightEyeInner.y *
+            imageHeight
+    };
+
+
+    const leftOuter = {
+
+        x:
+            leftEyeOuter.x *
+            imageWidth,
+
+        y:
+            leftEyeOuter.y *
+            imageHeight
+    };
+
+
+    const leftInner = {
+
+        x:
+            leftEyeInner.x *
+            imageWidth,
+
+        y:
+            leftEyeInner.y *
+            imageHeight
+    };
+
+
+    const rightEyeCenter = {
+
+        x:
+            (
+                rightOuter.x +
+                rightInner.x
+            ) / 2,
+
+        y:
+            (
+                rightOuter.y +
+                rightInner.y
+            ) / 2
+    };
+
+
+    const leftEyeCenter = {
+
+        x:
+            (
+                leftOuter.x +
+                leftInner.x
+            ) / 2,
+
+        y:
+            (
+                leftOuter.y +
+                leftInner.y
+            ) / 2
+    };
+
+
+    const eyeCenterX =
         (
+            leftEyeCenter.x +
+            rightEyeCenter.x
+        ) / 2;
+
+
+    const eyeCenterY =
+        (
+            leftEyeCenter.y +
+            rightEyeCenter.y
+        ) / 2;
+
+
+    const eyeDistance =
+        distanceBetween(
+            leftEyeCenter,
+            rightEyeCenter
+        );
+
+
+    const angle =
+        calculateEyeAngle(
+            leftEyeCenter,
+            rightEyeCenter
+        );
+
+
+    const productType =
+        getARProductType();
+
+
+    // =====================================================
+    // GLASSES
+    // =====================================================
+
+    if (
+        productType ===
+        "glasses"
+    ) {
+
+        arPositionX =
+            eyeCenterX -
+            imageWidth / 2;
+
+
+        arPositionY =
+            eyeCenterY -
+            imageHeight / 2 +
+            3;
+
+
+        const glassesWidth =
+            Math.max(
+                80,
+                Math.min(
+                    imageWidth * 0.95,
+                    eyeDistance * 2.25
+                )
+            );
+
+
+        if (arProductOverlay) {
+
+            arProductOverlay.style.width =
+                `${glassesWidth}px`;
+
+            arProductOverlay.style.height =
+                "auto";
+        }
+
+
+        arScale =
+            1;
+
+
+        arRotation =
+            angle;
+
+
+        updateARProduct(
+            arRotation
+        );
+
+    }
+
+    else {
+
+        // =================================================
+        // GENERIC FACE BOUNDING BOX
+        // =================================================
+
+        let minX =
+            Infinity;
+
+        let maxX =
+            -Infinity;
+
+        let minY =
+            Infinity;
+
+        let maxY =
+            -Infinity;
+
+
+        landmarks.forEach(
+            point => {
+
+                if (
+                    Number.isFinite(point.x) &&
+                    Number.isFinite(point.y)
+                ) {
+
+                    minX =
+                        Math.min(
+                            minX,
+                            point.x *
+                                imageWidth
+                        );
+
+
+                    maxX =
+                        Math.max(
+                            maxX,
+                            point.x *
+                                imageWidth
+                        );
+
+
+                    minY =
+                        Math.min(
+                            minY,
+                            point.y *
+                                imageHeight
+                        );
+
+
+                    maxY =
+                        Math.max(
+                            maxY,
+                            point.y *
+                                imageHeight
+                        );
+                }
+            }
+        );
+
+
+        const faceWidth =
             maxX -
-            minX
-        ) *
-        imageWidth;
+            minX;
 
 
-    const faceHeight =
-        (
+        const faceHeight =
             maxY -
-            minY
-        ) *
-        imageHeight;
+            minY;
 
 
-    const faceCenterX =
-        (
-            minX +
-            maxX
-        ) /
-        2;
+        const faceCenterX =
+            (
+                minX +
+                maxX
+            ) / 2;
 
 
-    const faceCenterY =
-        (
-            minY +
-            maxY
-        ) /
-        2;
+        const faceCenterY =
+            (
+                minY +
+                maxY
+            ) / 2;
 
 
-    const imageX =
-        (
-            faceCenterX -
-            0.5
-        ) *
-        imageWidth;
+        const anchor =
+            getARAnchor(
+                faceCenterX -
+                    imageWidth / 2,
+                faceCenterY -
+                    imageHeight / 2,
+                faceWidth,
+                faceHeight
+            );
 
 
-    const imageY =
-        (
-            faceCenterY -
-            0.5
-        ) *
-        imageHeight;
+        arPositionX =
+            anchor.x;
 
 
-    const anchor =
-        getARAnchor(
-            imageX,
-            imageY,
-            faceWidth,
-            faceHeight
+        arPositionY =
+            anchor.y;
+
+
+        arScale =
+            Math.max(
+                0.25,
+                Math.min(
+                    3,
+                    anchor.scale
+                )
+            );
+
+
+        arRotation =
+            0;
+
+
+        updateARProduct(
+            arRotation
         );
-
-
-    arPositionX =
-        anchor.x;
-
-
-    arPositionY =
-        anchor.y;
-
-
-    arScale =
-        Math.max(
-            0.25,
-            Math.min(
-                3,
-                anchor.scale
-            )
-        );
+    }
 
 
     lastFaceDetected =
         true;
-
-
-    updateARProduct();
 
 
     if (arInstruction) {
@@ -2416,9 +3132,7 @@ function processUploadedImageFace(
 // SET ACTIVE AR MODE
 // =========================================================
 
-function setActiveARMode(
-    button
-) {
+function setActiveARMode(button) {
 
     document
         .querySelectorAll(
@@ -2563,14 +3277,33 @@ function resetARPosition() {
     arScale =
         1;
 
+
     arPositionX =
         0;
+
 
     arPositionY =
         0;
 
 
-    updateARProduct();
+    arRotation =
+        0;
+
+
+    if (arProductOverlay) {
+
+        arProductOverlay.style.width =
+            "";
+
+
+        arProductOverlay.style.height =
+            "";
+    }
+
+
+    updateARProduct(
+        0
+    );
 }
 
 
@@ -2578,20 +3311,56 @@ function resetARPosition() {
 // UPDATE AR PRODUCT
 // =========================================================
 
-function updateARProduct() {
+function updateARProduct(
+    rotation = 0
+) {
 
     if (!arProductOverlay) {
+
         return;
     }
+
+
+    const safeRotation =
+        Number.isFinite(
+            Number(rotation)
+        )
+            ? Number(rotation)
+            : 0;
+
+
+    const safeScale =
+        Number.isFinite(
+            Number(arScale)
+        )
+            ? Number(arScale)
+            : 1;
+
+
+    const safeX =
+        Number.isFinite(
+            Number(arPositionX)
+        )
+            ? Number(arPositionX)
+            : 0;
+
+
+    const safeY =
+        Number.isFinite(
+            Number(arPositionY)
+        )
+            ? Number(arPositionY)
+            : 0;
 
 
     arProductOverlay.style.transform =
         `
         translate(
-            calc(-50% + ${arPositionX}px),
-            calc(-50% + ${arPositionY}px)
+            calc(-50% + ${safeX}px),
+            calc(-50% + ${safeY}px)
         )
-        scale(${arScale})
+        rotate(${safeRotation}deg)
+        scale(${safeScale})
         `;
 }
 
@@ -2617,7 +3386,9 @@ if (arZoomIn) {
                 );
 
 
-            updateARProduct();
+            updateARProduct(
+                arRotation
+            );
         }
     );
 }
@@ -2644,7 +3415,9 @@ if (arZoomOut) {
                 );
 
 
-            updateARProduct();
+            updateARProduct(
+                arRotation
+            );
         }
     );
 }
@@ -2666,11 +3439,14 @@ function moveARProduct(
     arPositionX +=
         x;
 
+
     arPositionY +=
         y;
 
 
-    updateARProduct();
+    updateARProduct(
+        arRotation
+    );
 }
 
 
@@ -2759,6 +3535,7 @@ if (arProductOverlay) {
     arProductOverlay.style.cursor =
         "grab";
 
+
     arProductOverlay.style.touchAction =
         "none";
 
@@ -2801,6 +3578,7 @@ if (arProductOverlay) {
         event => {
 
             if (!arDragging) {
+
                 return;
             }
 
@@ -2815,7 +3593,9 @@ if (arProductOverlay) {
                 arStartY;
 
 
-            updateARProduct();
+            updateARProduct(
+                arRotation
+            );
         }
     );
 
@@ -2830,7 +3610,8 @@ if (arProductOverlay) {
             try {
 
                 if (
-                    event.pointerId !== undefined
+                    event.pointerId !==
+                    undefined
                 ) {
 
                     arProductOverlay.releasePointerCapture(
@@ -2914,7 +3695,8 @@ async function checkUserLogin() {
             await fetch(
                 "/api/users/me",
                 {
-                    method: "GET",
+                    method:
+                        "GET",
 
                     credentials:
                         "include",
@@ -2939,6 +3721,7 @@ async function checkUserLogin() {
             userLoggedIn =
                 true;
 
+
             currentUser =
                 data.user;
 
@@ -2948,6 +3731,7 @@ async function checkUserLogin() {
 
             userLoggedIn =
                 false;
+
 
             currentUser =
                 null;
@@ -2966,15 +3750,9 @@ async function checkUserLogin() {
         userLoggedIn =
             false;
 
+
         currentUser =
             null;
-    }
-
-
-    if (loginNav) {
-
-        loginNav.textContent =
-            "Login";
     }
 
 
@@ -2992,6 +3770,7 @@ async function checkUserLogin() {
 function updateReviewLoginUI() {
 
     if (!reviewLoginMessage) {
+
         return;
     }
 
@@ -3130,11 +3909,6 @@ async function loadProduct() {
             !data.product
         ) {
 
-            console.error(
-                "Invalid product response:",
-                data
-            );
-
             showError();
 
             return;
@@ -3177,9 +3951,7 @@ async function loadProduct() {
 // DISPLAY PRODUCT
 // =========================================================
 
-function displayProduct(
-    product
-) {
+function displayProduct(product) {
 
     if (!product) {
 
@@ -3216,10 +3988,6 @@ function displayProduct(
             "block";
     }
 
-
-    // =====================================================
-    // PRODUCT INFORMATION
-    // =====================================================
 
     if (productCategory) {
 
@@ -3264,10 +4032,6 @@ function displayProduct(
     }
 
 
-    // =====================================================
-    // STOCK
-    // =====================================================
-
     const stock =
         Number(
             product.stock || 0
@@ -3289,28 +4053,22 @@ function displayProduct(
     }
 
 
-    // =====================================================
-    // QUANTITY
-    // =====================================================
-
     if (quantityInput) {
 
         quantityInput.min =
             "1";
+
 
         quantityInput.max =
             stock > 0
                 ? String(stock)
                 : "1";
 
+
         quantityInput.value =
             "1";
     }
 
-
-    // =====================================================
-    // CART BUTTONS
-    // =====================================================
 
     if (addToCartBtn) {
 
@@ -3325,10 +4083,6 @@ function displayProduct(
             stock <= 0;
     }
 
-
-    // =====================================================
-    // PRODUCT IMAGE
-    // =====================================================
 
     setProductImage(
         product
@@ -3382,6 +4136,7 @@ if (decreaseBtn) {
         () => {
 
             if (!quantityInput) {
+
                 return;
             }
 
@@ -3417,6 +4172,7 @@ if (increaseBtn) {
         () => {
 
             if (!quantityInput) {
+
                 return;
             }
 
@@ -3526,6 +4282,7 @@ function showLoginModal() {
 function hideLoginModal() {
 
     if (!loginModal) {
+
         return;
     }
 
@@ -3716,10 +4473,13 @@ if (addToCartBtn) {
                     userLoggedIn =
                         false;
 
+
                     currentUser =
                         null;
 
+
                     updateReviewLoginUI();
+
 
                     showLoginModal();
 
@@ -3753,6 +4513,7 @@ if (addToCartBtn) {
                         addToCartBtn.textContent =
                             oldText;
 
+
                         addToCartBtn.disabled =
                             false;
 
@@ -3777,6 +4538,7 @@ if (addToCartBtn) {
 
                 addToCartBtn.textContent =
                     oldText;
+
 
                 addToCartBtn.disabled =
                     false;
@@ -3816,6 +4578,7 @@ if (buyNowBtn) {
 
 
             if (!currentProduct) {
+
                 return;
             }
 
@@ -3892,10 +4655,13 @@ if (buyNowBtn) {
                     userLoggedIn =
                         false;
 
+
                     currentUser =
                         null;
 
+
                     updateReviewLoginUI();
+
 
                     showLoginModal();
 
@@ -4343,6 +5109,7 @@ if (reviewForm) {
                 submitReviewBtn.disabled =
                     true;
 
+
                 submitReviewBtn.textContent =
                     "Submitting...";
             }
@@ -4401,8 +5168,10 @@ if (reviewForm) {
                     userLoggedIn =
                         false;
 
+
                     currentUser =
                         null;
+
 
                     updateReviewLoginUI();
 
@@ -4488,6 +5257,7 @@ if (reviewForm) {
                     submitReviewBtn.disabled =
                         false;
 
+
                     submitReviewBtn.textContent =
                         "Submit Review";
                 }
@@ -4544,11 +5314,10 @@ function resetReviewForm() {
 // LOAD REVIEWS
 // =========================================================
 
-async function loadReviews(
-    productId
-) {
+async function loadReviews(productId) {
 
     if (!reviewsList) {
+
         return;
     }
 
@@ -4820,9 +5589,7 @@ function updateReviewSummary(
 // CREATE REVIEW CARD
 // =========================================================
 
-function createReviewCard(
-    review
-) {
+function createReviewCard(review) {
 
     const card =
         document.createElement(
@@ -4924,9 +5691,6 @@ function createReviewCard(
         null;
 
 
-    /*
-     * Fix review image paths too.
-     */
     if (reviewImageURL) {
 
         reviewImageURL =
@@ -5032,6 +5796,7 @@ async function refreshProduct() {
 
 
     if (!productId) {
+
         return;
     }
 
@@ -5103,6 +5868,7 @@ function updateProductInformation(
 ) {
 
     if (!product) {
+
         return;
     }
 
@@ -5205,11 +5971,6 @@ function updateProductInformation(
     }
 
 
-    // =====================================================
-    // IMPORTANT:
-    // UPDATE IMAGE AFTER PRODUCT REFRESH
-    // =====================================================
-
     setProductImage(
         product
     );
@@ -5274,34 +6035,45 @@ if (loginModal) {
 
 
 // =========================================================
-// MEDIAPIPE READY EVENT
+// PRELOAD MEDIAPIPE
+//
+// No "mediapipe-ready" event is required.
 // =========================================================
 
-window.addEventListener(
-    "mediapipe-ready",
-    async () => {
+(async function preloadFaceLandmarker() {
 
-        console.log(
-            "MediaPipe library is ready."
-        );
+    try {
+
+        const ready =
+            await waitForFaceLandmarker();
 
 
-        await initializeFaceLandmarker();
+        if (ready) {
+
+            console.log(
+                "AR face tracking is ready."
+            );
+
+        }
+
+        else {
+
+            console.warn(
+                "AR face tracking could not be initialized during preload. It will be retried when AR starts."
+            );
+        }
+
     }
-);
 
+    catch (error) {
 
-// =========================================================
-// MEDIAPIPE ALREADY LOADED
-// =========================================================
+        console.error(
+            "AR PRELOAD ERROR:",
+            error
+        );
+    }
 
-if (
-    window.FaceLandmarker &&
-    window.FilesetResolver
-) {
-
-    initializeFaceLandmarker();
-}
+})();
 
 
 // =========================================================
@@ -5314,9 +6086,11 @@ async function initialize() {
         "========================================"
     );
 
+
     console.log(
         "PRODUCT DETAILS INITIALIZING"
     );
+
 
     console.log(
         "========================================"
