@@ -321,7 +321,9 @@
       </div>
 
 
-      <!-- REVIEW FORM -->
+      <!-- =================================================
+           REVIEW FORM
+      ================================================== -->
 
       <div class="review-form-card">
 
@@ -564,7 +566,9 @@
       </div>
 
 
-      <!-- REVIEWS LIST -->
+      <!-- =================================================
+           REVIEWS LIST
+      ================================================== -->
 
       <div class="reviews-list-header">
 
@@ -758,14 +762,14 @@
         <!--
           Glasses/product overlay.
 
-          product_details.js will automatically update:
-          left
-          top
+          product_details.js automatically updates:
+          position
           width
           height
-          transform
+          rotation
+          scale
 
-          according to the detected face landmarks.
+          using MediaPipe FaceLandmarker eye landmarks.
         -->
 
         <div
@@ -792,7 +796,7 @@
           role="status"
           aria-live="polite"
         >
-          Allow camera access to start AR
+          Loading face tracking...
         </div>
 
       </div>
@@ -808,6 +812,7 @@
           type="button"
           id="arMoveUp"
           class="ar-control-btn"
+          aria-label="Move product up"
         >
           ↑
         </button>
@@ -816,6 +821,7 @@
           type="button"
           id="arMoveDown"
           class="ar-control-btn"
+          aria-label="Move product down"
         >
           ↓
         </button>
@@ -824,6 +830,7 @@
           type="button"
           id="arMoveLeft"
           class="ar-control-btn"
+          aria-label="Move product left"
         >
           ←
         </button>
@@ -832,6 +839,7 @@
           type="button"
           id="arMoveRight"
           class="ar-control-btn"
+          aria-label="Move product right"
         >
           →
         </button>
@@ -840,6 +848,7 @@
           type="button"
           id="arZoomOut"
           class="ar-control-btn"
+          aria-label="Zoom out"
         >
           −
         </button>
@@ -848,6 +857,7 @@
           type="button"
           id="arZoomIn"
           class="ar-control-btn"
+          aria-label="Zoom in"
         >
           +
         </button>
@@ -866,12 +876,8 @@
 
 
   <!-- =====================================================
-       MEDIAPIPE FACE LANDMARK TRACKING
+       FACE TRACKING CANVAS
   ====================================================== -->
-
-  <!--
-    Hidden canvas for processing camera frames.
-  -->
 
   <canvas
     id="faceTrackingCanvas"
@@ -881,93 +887,19 @@
   ></canvas>
 
 
-  <!--
-    MediaPipe Tasks Vision.
-
-    We use the +esm build so the browser can import the package
-    directly as an ES module.
-  -->
-
-  <script type="module">
-
-    window.mediapipeReadyPromise = (async () => {
-
-      try {
-
-        const vision = await import(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm"
-        );
-
-
-        /*
-         * Make MediaPipe classes available globally so
-         * product_details.js can use them.
-         */
-
-        window.FaceLandmarker =
-          vision.FaceLandmarker;
-
-        window.FilesetResolver =
-          vision.FilesetResolver;
-
-
-        /*
-         * Tell product_details.js that MediaPipe is ready.
-         */
-
-        window.dispatchEvent(
-          new Event("mediapipe-ready")
-        );
-
-
-        console.log(
-          "MediaPipe FaceLandmarker loaded successfully."
-        );
-
-
-        return {
-          FaceLandmarker:
-            vision.FaceLandmarker,
-
-          FilesetResolver:
-            vision.FilesetResolver
-        };
-
-      } catch (error) {
-
-        console.error(
-          "Failed to load MediaPipe:",
-          error
-        );
-
-
-        window.dispatchEvent(
-          new CustomEvent(
-            "mediapipe-error",
-            {
-              detail: error
-            }
-          )
-        );
-
-
-        throw error;
-      }
-
-    })();
-
-  </script>
-
-
   <!-- =====================================================
        PRODUCT DETAILS JAVASCRIPT
+       
+       IMPORTANT:
+       MediaPipe is loaded by product_details.js.
+
+       DO NOT add another MediaPipe module loader here.
   ====================================================== -->
 
   <script
     src="/js/product_details.js"
     defer
   ></script>
-
 
 </body>
 </html>
