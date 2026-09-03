@@ -12,7 +12,6 @@
 // =========================================================
 
 window.currentUser = null;
-
 let userLoggedIn = false;
 
 

@@ -1,3 +1,4 @@
+
 // =========================================================
 // AR E-COMMERCE
 // ADMIN PRODUCT ROUTES
@@ -195,28 +196,70 @@ router.post(
 
             const uploadedImages = req.files || [];
 
+            const images = [];
 
-            const images = uploadedImages.map(
-                function (file) {
 
-                    return {
-                        filename: file.filename,
+            // =================================================
+            // SAVE IMAGES TO product_images TABLE
+            // =================================================
 
-                        url:
-                            `/uploads/products/${file.filename}`,
+            for (let i = 0; i < uploadedImages.length; i++) {
 
-                        originalName:
-                            file.originalname,
+                const file = uploadedImages[i];
 
-                        mimeType:
-                            file.mimetype,
+                const imageUrl =
+                    `/uploads/products/${file.filename}`;
 
-                        size:
-                            file.size
-                    };
 
-                }
-            );
+                const isPrimary =
+                    i === 0 ? 1 : 0;
+
+
+                const [imageResult] =
+                    await db.execute(
+                        `
+                        INSERT INTO product_images
+                        (
+                            product_id,
+                            image_url,
+                            is_primary
+                        )
+                        VALUES (?, ?, ?)
+                        `,
+                        [
+                            productId,
+                            imageUrl,
+                            isPrimary
+                        ]
+                    );
+
+
+                images.push({
+
+                    id:
+                        imageResult.insertId,
+
+                    filename:
+                        file.filename,
+
+                    url:
+                        imageUrl,
+
+                    originalName:
+                        file.originalname,
+
+                    mimeType:
+                        file.mimetype,
+
+                    size:
+                        file.size,
+
+                    isPrimary:
+                        isPrimary === 1
+
+                });
+
+            }
 
 
             console.log(
@@ -305,6 +348,33 @@ router.get(
                 ORDER BY p.id DESC
                 `
             );
+
+
+            // =================================================
+            // LOAD IMAGES FOR EACH PRODUCT
+            // =================================================
+
+            for (const product of products) {
+
+                const [images] = await db.execute(
+                    `
+                    SELECT
+                        id,
+                        product_id,
+                        image_url,
+                        is_primary,
+                        created_at
+                    FROM product_images
+                    WHERE product_id = ?
+                    ORDER BY is_primary DESC, id ASC
+                    `,
+                    [product.id]
+                );
+
+
+                product.images = images;
+
+            }
 
 
             return res.json({
@@ -420,6 +490,29 @@ router.get(
                 });
 
             }
+
+
+            // =================================================
+            // LOAD PRODUCT IMAGES
+            // =================================================
+
+            const [images] = await db.execute(
+                `
+                SELECT
+                    id,
+                    product_id,
+                    image_url,
+                    is_primary,
+                    created_at
+                FROM product_images
+                WHERE product_id = ?
+                ORDER BY is_primary DESC, id ASC
+                `,
+                [productId]
+            );
+
+
+            products[0].images = images;
 
 
             // =================================================
@@ -720,31 +813,122 @@ router.put(
             const uploadedImages =
                 req.files || [];
 
+            const images = [];
 
-            const images =
-                uploadedImages.map(
-                    function (file) {
 
-                        return {
+            // =================================================
+            // CHECK EXISTING PRIMARY IMAGE
+            // =================================================
 
-                            filename:
-                                file.filename,
+            const [existingPrimary] =
+                await db.execute(
+                    `
+                    SELECT id
+                    FROM product_images
+                    WHERE product_id = ?
+                    AND is_primary = 1
+                    LIMIT 1
+                    `,
+                    [productId]
+                );
 
-                            url:
-                                `/uploads/products/${file.filename}`,
 
-                            originalName:
-                                file.originalname,
+            // =================================================
+            // SAVE NEW IMAGES
+            // =================================================
 
-                            mimeType:
-                                file.mimetype,
+            for (
+                let i = 0;
+                i < uploadedImages.length;
+                i++
+            ) {
 
-                            size:
-                                file.size
+                const file =
+                    uploadedImages[i];
 
-                        };
 
-                    }
+                const imageUrl =
+                    `/uploads/products/${file.filename}`;
+
+
+                let isPrimary = 0;
+
+
+                if (
+                    existingPrimary.length === 0 &&
+                    i === 0
+                ) {
+
+                    isPrimary = 1;
+
+                }
+
+
+                const [imageResult] =
+                    await db.execute(
+                        `
+                        INSERT INTO product_images
+                        (
+                            product_id,
+                            image_url,
+                            is_primary
+                        )
+                        VALUES (?, ?, ?)
+                        `,
+                        [
+                            productId,
+                            imageUrl,
+                            isPrimary
+                        ]
+                    );
+
+
+                images.push({
+
+                    id:
+                        imageResult.insertId,
+
+                    filename:
+                        file.filename,
+
+                    url:
+                        imageUrl,
+
+                    originalName:
+                        file.originalname,
+
+                    mimeType:
+                        file.mimetype,
+
+                    size:
+                        file.size,
+
+                    isPrimary:
+                        isPrimary === 1
+
+                });
+
+            }
+
+
+            // =================================================
+            // GET ALL PRODUCT IMAGES
+            // =================================================
+
+            const [allImages] =
+                await db.execute(
+                    `
+                    SELECT
+                        id,
+                        product_id,
+                        image_url,
+                        is_primary,
+                        created_at
+                    FROM product_images
+                    WHERE product_id = ?
+                    ORDER BY is_primary DESC, id ASC
+                    `,
+                    [productId]
                 );
 
 
@@ -763,7 +947,7 @@ router.put(
                     productId,
 
                 images:
-                    images
+                    allImages
 
             });
 
@@ -827,6 +1011,19 @@ router.delete(
                 });
 
             }
+
+
+            // =================================================
+            // DELETE PRODUCT IMAGES FIRST
+            // =================================================
+
+            await db.execute(
+                `
+                DELETE FROM product_images
+                WHERE product_id = ?
+                `,
+                [productId]
+            );
 
 
             // =================================================
@@ -939,3 +1136,4 @@ router.use(
 // =========================================================
 
 module.exports = router;
+

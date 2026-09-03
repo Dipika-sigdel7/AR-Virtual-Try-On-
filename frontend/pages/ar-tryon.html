@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Virtual Try-On</title>
+
+    <link rel="stylesheet" href="/css/ar-tryon.css">
+</head>
+
+<body>
+
+    <div class="ar-page">
+
+        <div class="ar-header">
+            <button id="backBtn">← Back</button>
+
+            <h1>Virtual Try-On</h1>
+
+            <div></div>
+        </div>
+
+
+        <div class="ar-container">
+
+            <video
+                id="camera"
+                autoplay
+                muted
+                playsinline
+            ></video>
+
+            <canvas id="arCanvas"></canvas>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Starting camera...</p>
+            </div>
+
+            <div id="noFace" class="no-face">
+                <p>👤</p>
+                <span>Move your face inside the camera</span>
+            </div>
+
+        </div>
+
+
+        <div class="ar-controls">
+
+            <div class="product-info">
+
+                <img
+                    id="productPreview"
+                    src=""
+                    alt="Product"
+                >
+
+                <div>
+                    <h2 id="productName">
+                        Virtual Try-On
+                    </h2>
+
+                    <p>
+                        Move your face naturally.
+                        The glasses will follow your face.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <button
+                id="switchCamera"
+                class="control-btn"
+            >
+                🔄 Switch Camera
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- MediaPipe -->
+    <script type="module" src="/js/ar-tryon.js"></script>
+
+</body>
+</html>
