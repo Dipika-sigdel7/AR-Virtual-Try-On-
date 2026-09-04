@@ -1422,7 +1422,6 @@ function waitForVideoReady(video) {
     );
 }
 
-
 // =========================================================
 // LOAD MEDIAPIPE LIBRARY
 // =========================================================
@@ -1442,7 +1441,6 @@ async function loadMediaPipeLibrary() {
         return true;
     }
 
-
     try {
 
         console.log(
@@ -1457,15 +1455,11 @@ async function loadMediaPipeLibrary() {
             "========================================"
         );
 
-
-        /*
-         * ESM build.
-         */
+        // Load MediaPipe Tasks Vision
         const vision =
             await import(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm"
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22"
             );
-
 
         if (
             !vision ||
@@ -1478,19 +1472,15 @@ async function loadMediaPipeLibrary() {
             );
         }
 
-
         window.FaceLandmarker =
             vision.FaceLandmarker;
-
 
         window.FilesetResolver =
             vision.FilesetResolver;
 
-
         console.log(
             "✅ MediaPipe Tasks Vision library loaded."
         );
-
 
         return true;
 
@@ -1514,10 +1504,10 @@ async function loadMediaPipeLibrary() {
             "========================================"
         );
 
-
         return false;
     }
 }
+
 
 
 // =========================================================
