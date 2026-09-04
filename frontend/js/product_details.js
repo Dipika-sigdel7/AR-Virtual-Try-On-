@@ -1424,65 +1424,96 @@ function waitForVideoReady(video) {
 
 
 // =========================================================
-// LOAD MEDIAPIPE LIBRARY
+// MEDIAPIPE TASKS VISION - LOCAL VERSION
 // =========================================================
 
 async function loadMediaPipeLibrary() {
 
-    // Already loaded
-    if (
-        window.FaceLandmarker &&
-        window.FilesetResolver
-    ) {
-
-        console.log(
-            "MediaPipe library already loaded."
-        );
-
-        return true;
-    }
-
+    console.log("========================================");
+    console.log("LOADING LOCAL MEDIAPIPE");
+    console.log("========================================");
 
     try {
 
+        // -------------------------------------------------
+        // Check if already loaded
+        // -------------------------------------------------
+
+        if (
+            window.FaceLandmarker &&
+            window.FilesetResolver
+        ) {
+            console.log("✅ MediaPipe already loaded.");
+            return true;
+        }
+
+        // -------------------------------------------------
+        // Local MediaPipe bundle
+        // -------------------------------------------------
+
+        const mediaPipeURL =
+            "/mediapipe/vision_bundle.mjs";
+
+        console.log(
+            "Loading MediaPipe:",
+            mediaPipeURL
+        );
+
+        const vision =
+            await import(mediaPipeURL);
+
+        console.log(
+            "MediaPipe module loaded:",
+            vision
+        );
+
+        // -------------------------------------------------
+        // Check exports
+        // -------------------------------------------------
+
+        if (!vision.FaceLandmarker) {
+            throw new Error(
+                "FaceLandmarker was not exported by MediaPipe."
+            );
+        }
+
+        if (!vision.FilesetResolver) {
+            throw new Error(
+                "FilesetResolver was not exported by MediaPipe."
+            );
+        }
+
+        // -------------------------------------------------
+        // Save globally
+        // -------------------------------------------------
+
+        window.FaceLandmarker =
+            vision.FaceLandmarker;
+
+        window.FilesetResolver =
+            vision.FilesetResolver;
+
+        console.log(
+            "✅ FaceLandmarker loaded."
+        );
+
+        console.log(
+            "✅ FilesetResolver loaded."
+        );
+
+        console.log(
+            "========================================"
+        );
+        console.log(
+            "✅ MEDIAPIPE LIBRARY READY"
+        );
         console.log(
             "========================================"
         );
 
-        console.log(
-            "LOADING MEDIAPIPE TASKS VISION"
-        );
+        return true;
 
-        console.log(
-            "========================================"
-        );
-
-        // Load MediaPipe Tasks Vision
-const vision =
-    await import(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs"
-    );
-
-if (
-    !vision ||
-    !vision.FaceLandmarker ||
-    !vision.FilesetResolver
-) {
-    throw new Error(
-        "FaceLandmarker or FilesetResolver was not exported by MediaPipe."
-    );
-}
-
-window.FaceLandmarker = vision.FaceLandmarker;
-window.FilesetResolver = vision.FilesetResolver;
-
-console.log("✅ MediaPipe Tasks Vision library loaded.");
-
-return true;
-
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "========================================"
@@ -1492,14 +1523,11 @@ return true;
             "❌ MEDIAPIPE LIBRARY LOAD ERROR"
         );
 
-        console.error(
-            error
-        );
+        console.error(error);
 
         console.error(
             "========================================"
         );
-
 
         return false;
     }
