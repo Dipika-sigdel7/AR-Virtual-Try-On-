@@ -1422,6 +1422,7 @@ function waitForVideoReady(video) {
     );
 }
 
+
 // =========================================================
 // LOAD MEDIAPIPE LIBRARY
 // =========================================================
@@ -1441,6 +1442,7 @@ async function loadMediaPipeLibrary() {
         return true;
     }
 
+
     try {
 
         console.log(
@@ -1456,33 +1458,27 @@ async function loadMediaPipeLibrary() {
         );
 
         // Load MediaPipe Tasks Vision
-        const vision =
-            await import(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22"
-            );
+const vision =
+    await import(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs"
+    );
 
-        if (
-            !vision ||
-            !vision.FaceLandmarker ||
-            !vision.FilesetResolver
-        ) {
+if (
+    !vision ||
+    !vision.FaceLandmarker ||
+    !vision.FilesetResolver
+) {
+    throw new Error(
+        "FaceLandmarker or FilesetResolver was not exported by MediaPipe."
+    );
+}
 
-            throw new Error(
-                "FaceLandmarker or FilesetResolver was not exported by MediaPipe."
-            );
-        }
+window.FaceLandmarker = vision.FaceLandmarker;
+window.FilesetResolver = vision.FilesetResolver;
 
-        window.FaceLandmarker =
-            vision.FaceLandmarker;
+console.log("✅ MediaPipe Tasks Vision library loaded.");
 
-        window.FilesetResolver =
-            vision.FilesetResolver;
-
-        console.log(
-            "✅ MediaPipe Tasks Vision library loaded."
-        );
-
-        return true;
+return true;
 
     }
 
@@ -1504,10 +1500,10 @@ async function loadMediaPipeLibrary() {
             "========================================"
         );
 
+
         return false;
     }
 }
-
 
 
 // =========================================================
