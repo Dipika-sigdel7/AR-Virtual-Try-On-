@@ -1,4 +1,3 @@
-
 // =========================================================
 // AR E-COMMERCE
 // EXPRESS SERVER
@@ -15,183 +14,102 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-
 // =========================================================
 // PATHS
 // =========================================================
 
+const frontendPath = path.join(__dirname, "../frontend");
+const pagesPath = path.join(frontendPath, "pages");
+const frontendImagesPath = path.join(frontendPath, "images");
+const uploadsPath = path.join(__dirname, "uploads");
 
+// =========================================================
+// MEDIAPIPE TASKS VISION
+// =========================================================
 
-const frontendPath = path.join(
+const mediapipePath = path.join(
     __dirname,
-    "../frontend"
+    "node_modules",
+    "@mediapipe",
+    "tasks-vision"
 );
-
-const pagesPath = path.join(
-    frontendPath,
-    "pages"
-);
-
-const frontendImagesPath = path.join(
-    frontendPath,
-    "images"
-);
-
-const uploadsPath = path.join(
-    __dirname,
-    "uploads"
-);
-
 
 // =========================================================
 // MIDDLEWARE
 // =========================================================
 
-// JSON body
-app.use(
-    express.json({
-        limit: "10mb"
-    })
-);
+app.use(express.json({
+    limit: "10mb"
+}));
 
-
-// Form body
-app.use(
-    express.urlencoded({
-        extended: true,
-        limit: "10mb"
-    })
-);
-
+app.use(express.urlencoded({
+    extended: true,
+    limit: "10mb"
+}));
 
 // =========================================================
 // SESSION
 // =========================================================
 
-app.use(
-    session({
-
-        secret:
-            process.env.SESSION_SECRET ||
-            "ar-ecommerce-secret-key",
-
-        resave: false,
-
-        saveUninitialized: false,
-
-        cookie: {
-
-            httpOnly: true,
-
-            secure: false,
-
-            sameSite: "lax",
-
-            maxAge:
-                24 *
-                60 *
-                60 *
-                1000
-
-        }
-
-    })
-);
-
+app.use(session({
+    secret: process.env.SESSION_SECRET || "ar-ecommerce-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000
+    }
+}));
 
 // =========================================================
 // STATIC FRONTEND
 // =========================================================
-//
-// This serves:
-//
-// frontend/css/...
-// frontend/js/...
-// frontend/images/...
-//
-// Example:
-//
-// frontend/images/products/glasses.jpg
-//
-// Browser:
-//
-// http://localhost:3000/images/products/glasses.jpg
-//
-// =========================================================
 
 app.use(
-    express.static(
-        frontendPath
-    )
+    express.static(frontendPath)
 );
-
 
 // =========================================================
 // EXPLICIT IMAGE ROUTE
 // =========================================================
-//
-// This guarantees that:
-//
-// /images/products/filename.jpg
-//
-// maps to:
-//
-// frontend/images/products/filename.jpg
-//
-// =========================================================
 
 app.use(
     "/images",
-    express.static(
-        frontendImagesPath
-    )
+    express.static(frontendImagesPath)
 );
-
 
 // =========================================================
 // BACKEND UPLOADS
 // =========================================================
-//
-// If you later use backend/uploads:
-//
-// backend/uploads/products/example.jpg
-//
-// Browser:
-//
-// /uploads/products/example.jpg
-//
-// =========================================================
 
 app.use(
     "/uploads",
-    express.static(
-        uploadsPath
-    )
+    express.static(uploadsPath)
 );
 
+// =========================================================
+// SERVE MEDIAPIPE LOCALLY
+// =========================================================
+
+app.use(
+    "/mediapipe",
+    express.static(mediapipePath)
+);
 
 // =========================================================
 // IMPORT ROUTES
 // =========================================================
 
-const userRoutes =
-    require("./routes/userRoutes");
-
-const productRoutes =
-    require("./routes/productRoutes");
-
-const adminProductRoutes =
-    require("./routes/adminProductRoutes");
-
-const cartRoutes =
-    require("./routes/cartRoutes");
-
-const reviewRoutes =
-    require("./routes/reviewRoutes");
-
+const userRoutes = require("./routes/userRoutes");
+const productRoutes = require("./routes/productRoutes");
+const adminProductRoutes = require("./routes/adminProductRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 // =========================================================
-// USER API
+// API MOUNTS
 // =========================================================
 
 app.use(
@@ -199,40 +117,20 @@ app.use(
     userRoutes
 );
 
-
-// =========================================================
-// PUBLIC PRODUCT API
-// =========================================================
-
 app.use(
     "/api/products",
     productRoutes
 );
-
-
-// =========================================================
-// ADMIN PRODUCT API
-// =========================================================
 
 app.use(
     "/api/admin/products",
     adminProductRoutes
 );
 
-
-// =========================================================
-// CART API
-// =========================================================
-
 app.use(
     "/api/cart",
     cartRoutes
 );
-
-
-// =========================================================
-// REVIEW API
-// =========================================================
 
 app.use(
     "/api/reviews",
